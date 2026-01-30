@@ -1,0 +1,21 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  # السطرين دول هما اللي هيحلوا مشكلة الـ .loading والـ .success
+  enable-experiment:
+    - dot-shorthands
+  
+  # استبعاد الملفات المولدة عشان الـ build_runner ميهنجش
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+
+linter:
+  rules:
+    prefer_single_quotes: true
+    prefer_const_constructors: true
+    prefer_const_declarations: true
+    prefer_const_constructors_in_immutables: true
+    unnecessary_const: true
+    prefer_relative_imports: false
+    always_use_package_imports: true
