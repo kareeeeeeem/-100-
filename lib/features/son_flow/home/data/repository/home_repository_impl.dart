@@ -146,10 +146,10 @@ class HomeRepositoryImpl implements HomeRepository {
   }
 
   @override
-  Future<Result<void>> logout() async {
+  Future<Result<NoOutput>> logout() async {
     try {
       await homeApiService.logout();
-      return Result.success(null);
+      return  const Result.success(NoOutput());
     } catch (e) {
       return Result.error(ErrorHandler.getFailure(e));
     }

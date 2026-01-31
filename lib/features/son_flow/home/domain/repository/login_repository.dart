@@ -28,7 +28,7 @@ abstract class HomeRepository {
     required String cvv,
     required String paymentType,
   });
-  Future<Result<void>> logout();
+  Future<Result<NoOutput>> logout();
   Future<Result<void>> deleteAccount();
   Future<Result<bool>> toggleFavorite(int courseId);
 }
