@@ -23,11 +23,15 @@ class AuthInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    if (options.extra.containsKey(ApiConstants.requiresAuthKey)) {
+    // التعديل هنا: فحص المفتاح داخل headers بناءً على طلبك
+    if (options.headers.containsKey(ApiConstants.requiresAuthKey)) {
       final accessToken = await jwtService.getAccessToken();
       options.headers.addAll({
         HttpHeaders.authorizationHeader: 'Bearer $accessToken',
       });
+      
+      // اختيارياً: يمكنك مسح المفتاح بعد التأكد منه حتى لا يرسل للسيرفر
+      // options.headers.remove(ApiConstants.requiresAuthKey);
     }
     handler.next(options);
   }
@@ -37,7 +41,9 @@ class AuthInterceptor extends Interceptor {
     final dio = _getNewDio(GetIt.instance<Dio>());
 
     final isAuthError = err.response?.statusCode == HttpStatus.unauthorized;
-    final isPublicEndPoint = !err.requestOptions.extra.containsKey(
+    
+    // التعديل هنا أيضاً ليتوافق مع نفس المنطق في onError
+    final isPublicEndPoint = !err.requestOptions.headers.containsKey(
       ApiConstants.requiresAuthKey,
     );
 
@@ -49,7 +55,6 @@ class AuthInterceptor extends Interceptor {
       try {
         await _refreshTokenCompleter!.future;
 
-        // Retry the original request with the new token
         final newAccessToken = await jwtService.getAccessToken();
         final headers = Map<String, dynamic>.from(err.requestOptions.headers);
         headers[HttpHeaders.authorizationHeader] = 'Bearer $newAccessToken';
@@ -84,10 +89,9 @@ class AuthInterceptor extends Interceptor {
           jwtService.saveRefreshToken(newRefreshToken),
         ]);
 
-        _refreshTokenCompleter?.complete(); // unblock all waiting requests
+        _refreshTokenCompleter?.complete(); 
         _refreshTokenCompleter = null;
 
-        // Retry the original request with the new access token
         final headersWithNewAccessToken = err.requestOptions.headers;
         headersWithNewAccessToken[HttpHeaders.authorizationHeader] =
             'Bearer $newAccessToken';

@@ -49,13 +49,13 @@ class _RegisterPageState extends State<RegisterPage> {
         if (state.registerStatus == RequestStatus.loading) {
           context.showLoading();
         } else if (state.registerStatus == RequestStatus.success) {
-          context.hidLoading();
+          context.hidLoading(); // رجعناها للاسم اللي متعرف عندك في الـ Extension
           context.showSuccessToast(
-            title: 'تم التسجيل بنجاح',
+            title: 'تم التسجيل الحساب بنجاح',
           );
-          context.go(AppRoutes.login);
+          context.go(AppRoutes.login); // ده هينقلك لصفحة اللوجين فوراً
         } else if (state.registerStatus == RequestStatus.error) {
-          context.hidLoading();
+          context.hidLoading(); 
           context.showErrorToast(
             title: state.registerErrorMessage ?? 'حدث خطأ ما',
           );
@@ -116,22 +116,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Expanded(
-                            child: RadioListTile<String>(
-                              title: const Text('طالب'),
-                              value: 'student',
-                              groupValue: _selectedUserType,
-                              onChanged: (value) => setState(() => _selectedUserType = value!),
-                            ),
-                          ),
-                          Expanded(
-                            child: RadioListTile<String>(
-                              title: const Text('ولي أمر'),
-                              value: 'parent',
-                              groupValue: _selectedUserType,
-                              onChanged: (value) => setState(() => _selectedUserType = value!),
-                            ),
-                          ),
+                         
                         ],
                       ),
                       const SizedBox(height: 20),

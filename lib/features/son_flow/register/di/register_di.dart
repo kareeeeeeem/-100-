@@ -19,6 +19,6 @@ class RegisterDi extends AppDi {
         sl<DeviceInfoService>(),
       ),
     );
-    sl.registerLazySingleton(() => RegisterCubit(sl<RegisterRepository>()));
+    sl.registerFactory(() => RegisterCubit(sl<RegisterRepository>()));
   }
 }

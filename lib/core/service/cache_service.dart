@@ -5,5 +5,5 @@ abstract class CacheService {
 
   Future<void> remove(String key);
 
-  Future<void> clearAll();
+  Future<void> clear();
 }

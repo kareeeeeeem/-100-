@@ -9,9 +9,26 @@ import 'package:lms/core/widgets/profile_image_and_edit.dart';
 import 'package:lms/features/on_boarding/presentation/manger/my_courses_cubit.dart';
 import 'package:lms/features/parent_flow/course/presentation/widgets/running_course_item_view.dart';
 import 'package:lms/features/parent_flow/home/presentation/widgets/notifications_bottom_sheet.dart';
+import 'package:lms/features/parent_flow/presentation/manager/parent_cubit.dart';
+import 'package:lms/features/parent_flow/presentation/manager/parent_state.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+    final cubit = context.read<ParentCubit>();
+    cubit.getProfile();
+    cubit.getChildren();
+    cubit.getParentCourses();
+    cubit.getLiveSessions();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,22 +41,109 @@ class HomePage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // بروفايل الابن
-                ProfileImageAndEdit(
-                  imageSize: 150,
-                  onEditTap: () {
-                    context.pushNamed(AppRoutes.sonProfileDetails);
+                BlocBuilder<ParentCubit, ParentState>(
+                  builder: (context, state) {
+                    if (state.status == ParentStatus.loading && state.profile == null) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (state.profile != null) {
+                      final profile = state.profile!;
+                      return Column(
+                        children: [
+                          ProfileImageAndEdit(
+                            imageSize: 150,
+                            imagePath: profile.image,
+                            onEditTap: () {
+                              // context.pushNamed(AppRoutes.editProfileDetailsParent); // Use appropriate route if exists
+                            },
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            profile.name,
+                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      );
+                    }
+                    if (state.status == ParentStatus.error) {
+                      return Text(state.errorMessage ?? 'Unknown Error');
+                    }
+                    return const SizedBox(); // Fallback
                   },
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  'محمد الصعيدي',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 20),
 
                 // قسم الإشعارات
                 _buildNotificationTile(context),
                 const SizedBox(height: 20),
+
+                // البثوث المباشرة
+                BlocBuilder<ParentCubit, ParentState>(
+                  builder: (context, state) {
+                    if (state.liveSessions.isNotEmpty) {
+                      return Column(
+                        children: [
+                          const Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                               Text(
+                                'البثوث المباشرة',
+                                style: TextStyle(fontSize: 18.66, fontWeight: FontWeight.w700, color: AppColors.c303030),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          SizedBox(
+                            height: 180,
+                            child: ListView.separated(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: state.liveSessions.length,
+                              separatorBuilder: (context, index) => const SizedBox(width: 10),
+                              itemBuilder: (context, index) {
+                                final session = state.liveSessions[index];
+                                return Container(
+                                  width: 250,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+                                        child: Image.network(
+                                          session['thumbnail'] ?? '',
+                                          height: 120,
+                                          width: double.infinity,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (context, error, stackTrace) =>
+                                              Container(height: 120, color: Colors.grey[200], child: const Icon(Icons.error)),
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Text(
+                                          session['title'] ?? 'No Title',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                        ],
+                      );
+                    }
+                    return const SizedBox();
+                  },
+                ),
 
                 // عنوان قسم الدورات
                 Row(
@@ -58,37 +162,33 @@ class HomePage extends StatelessWidget {
                 const SizedBox(height: 10),
 
                 // --- هذا هو الجزء الديناميكي الصحيح ---
-                BlocBuilder<MyCoursesCubit, MyCoursesState>(
+                BlocBuilder<ParentCubit, ParentState>(
                   builder: (context, state) {
-                    if (state.status == MyCoursesStatus.loading) {
+                    if (state.status == ParentStatus.loading && state.courses.isEmpty) {
                       return const Center(child: Padding(
                         padding: EdgeInsets.all(20.0),
                         child: CircularProgressIndicator(),
                       ));
-                    } else if (state.status == MyCoursesStatus.success) {
-                      final courses = state.courses ?? [];
-                      if (courses.isEmpty) {
-                        return const Center(child: Text("لا توجد دورات حالياً"));
-                      }
-                      return CustomContainer(
-                        borderAlpha: 0.5,
-                        borderWidth: 0.4,
-                        child: ListView.separated(
-                          physics: const NeverScrollableScrollPhysics(),
-                          shrinkWrap: true,
-                          itemCount: courses.length,
-                          itemBuilder: (context, index) {
-                            return RunningCourseItemView(courseItem: courses[index]);
-                          },
-                          separatorBuilder: (context, index) => Divider(
-                            color: AppColors.c737373.withOpacity(0.5),
-                          ),
-                        ),
-                      );
-                    } else if (state.status == MyCoursesStatus.error) {
-                      return Center(child: Text(state.errorMessage ?? "حدث خطأ ما"));
                     }
-                    return const SizedBox.shrink();
+                    final courses = state.courses;
+                    if (courses.isEmpty) {
+                      return const Center(child: Text("لا توجد دورات حالياً"));
+                    }
+                    return CustomContainer(
+                      borderAlpha: 0.5,
+                      borderWidth: 0.4,
+                      child: ListView.separated(
+                        physics: const NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        itemCount: courses.length,
+                        itemBuilder: (context, index) {
+                          return RunningCourseItemView(courseItem: courses[index]);
+                        },
+                        separatorBuilder: (context, index) => Divider(
+                          color: AppColors.c737373.withOpacity(0.5),
+                        ),
+                      ),
+                    );
                   },
                 ),
                 // ---------------------------------------
@@ -99,13 +199,33 @@ class HomePage extends StatelessWidget {
                 _buildActionTile(
                   context,
                   title: 'تعديل بيانات الابن',
-                  onTap: () => context.pushNamed(AppRoutes.sonProfileDetailsParent),
+                  onTap: () {
+                    final state = context.read<ParentCubit>().state;
+                    if (state.children.isNotEmpty) {
+                      final child = state.children.first;
+                      context.pushNamed(AppRoutes.editProfileDetailsParent, extra: child.id);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('لا توجد بيانات للأبناء')),
+                      );
+                    }
+                  },
                 ),
                 const SizedBox(height: 10),
                 _buildActionTile(
                   context,
                   title: 'عرض نتائج الابن',
-                  onTap: () => context.pushNamed(AppRoutes.sonExamResults),
+                  onTap: () {
+                    final state = context.read<ParentCubit>().state;
+                    if (state.children.isNotEmpty) {
+                      final child = state.children.first;
+                      context.pushNamed(AppRoutes.sonExamResults, extra: child.id);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('لا توجد بيانات للأبناء')),
+                      );
+                    }
+                  },
                 ),
                 const SizedBox(height: 10),
                 _buildActionTile(
@@ -119,6 +239,16 @@ class HomePage extends StatelessWidget {
                   title: 'طلبات الدفع',
                   onTap: () => context.pushNamed(AppRoutes.paymentRequests),
                 ),
+                const SizedBox(height: 10),
+                _buildActionTile(
+                  context,
+                  title: 'تسجيل الخروج',
+                  onTap: () {
+                    context.read<ParentCubit>().logout();
+                    context.goNamed(AppRoutes.login);
+                  },
+                  isLogout: true,
+                ),
               ],
             ),
           ),
@@ -130,14 +260,18 @@ class HomePage extends StatelessWidget {
   Widget _buildNotificationTile(BuildContext context) {
     return InkWell(
       onTap: () {
+        final parentCubit = context.read<ParentCubit>();
         showModalBottomSheet(
           context: context,
           backgroundColor: Colors.white,
           showDragHandle: true,
           isScrollControlled: true,
-          builder: (context) => SizedBox(
-            height: MediaQuery.sizeOf(context).height * 0.7,
-            child: const NotificationsBottomSheet(),
+          builder: (context) => BlocProvider.value(
+            value: parentCubit,
+            child: SizedBox(
+              height: MediaQuery.sizeOf(context).height * 0.7,
+              child: const NotificationsBottomSheet(),
+            ),
           ),
         );
       },
@@ -159,7 +293,7 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildActionTile(BuildContext context, {required String title, required VoidCallback onTap}) {
+  Widget _buildActionTile(BuildContext context, {required String title, required VoidCallback onTap, bool isLogout = false}) {
     return InkWell(
       onTap: onTap,
       child: CustomContainer(
@@ -172,12 +306,24 @@ class HomePage extends StatelessWidget {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
-                child: AppImages.parentSectionItem.image(width: 60, height: 60),
+                child: AppImages.parentSectionItem.image(
+                  width: 60,
+                  height: 60,
+                  color: isLogout ? Colors.red.withOpacity(0.1) : null,
+                  colorBlendMode: isLogout ? BlendMode.srcIn : null,
+                ),
               ),
               const SizedBox(width: 10),
-              Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+              Text(
+                title,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                  color: isLogout ? Colors.red : Colors.black,
+                ),
+              ),
               const Spacer(),
-              const Icon(Icons.arrow_forward_ios, color: Colors.black),
+              Icon(Icons.arrow_forward_ios, color: isLogout ? Colors.red : Colors.black),
             ],
           ),
         ),

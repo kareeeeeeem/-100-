@@ -77,8 +77,13 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
                 return SliverList.separated(
                   itemCount: state.courses.length,
                   separatorBuilder: (context, index) => const SizedBox(height: 20),
-            itemBuilder: (context, index) {
+           itemBuilder: (context, index) {
   final course = state.courses[index]; 
+  
+  // تحويل آمن مهما كان نوع البيانات اللي جاي من الباك-إند
+  String pPercentage = course.progressPercentage?.toString() ?? '0';
+  String lCount = course.lessonsCount?.toString() ?? '0';
+
   return Padding(
     padding: const EdgeInsets.symmetric(horizontal: 16),
     child: CustomContainer(
@@ -87,10 +92,10 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
       borderAlpha: 0.4,
       child: RunningCourseItemView(
         courseName: course.title,
-        // بنجمع عدد الدروس والمدة في سطر واحد
-        lessonsAndHours: '${course.lessonsCount ?? "0"} دروس . ${course.duration}',
-        // بنحول الـ String (مثلاً "50") لـ double (0.5) عشان الـ Indicator
-        progress: (double.tryParse(course.progressPercentage ?? '0') ?? 0.0) / 100,
+        // استخدام القيم المحولة نصوص بأمان
+        lessonsAndHours: '$lCount دروس . ${course.duration}',
+        // التحويل لـ double للـ Progress Bar
+        progress: (double.tryParse(pPercentage) ?? 0.0) / 100,
         imageUrl: course.thumbnail,
       ),
     ),

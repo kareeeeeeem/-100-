@@ -9,7 +9,7 @@ class DioApiService implements ApiService {
   DioApiService(this.dio);
 
   @override
-  Future<Map<String, dynamic>> get(
+  Future<dynamic> get(
     String url, {
     Map<String, String>? headers,
     Map<String, dynamic>? queryParameters,
@@ -24,7 +24,7 @@ class DioApiService implements ApiService {
   }
 
   @override
-  Future<Map<String, dynamic>> post(
+  Future<dynamic> post(
     String url, {
     Map<String, dynamic>? body,
     Map<String, String>? headers,
@@ -41,7 +41,7 @@ class DioApiService implements ApiService {
   }
 
   @override
-  Future<Map<String, dynamic>> upload(
+  Future<dynamic> upload(
     String url, {
     required String filePath,
     required String context,
@@ -72,7 +72,7 @@ class DioApiService implements ApiService {
   }
 
   @override
-  Future<Map<String, dynamic>> put(
+  Future<dynamic> put(
     String url, {
     Map<String, dynamic>? body,
     Map<String, String>? headers,
@@ -89,7 +89,7 @@ class DioApiService implements ApiService {
   }
 
   @override
-  Future<Map<String, dynamic>> patch(
+  Future<dynamic> patch(
     String url, {
     Map<String, dynamic>? body,
     Map<String, String>? headers,
@@ -106,7 +106,7 @@ class DioApiService implements ApiService {
   }
 
   @override
-  Future<Map<String, dynamic>> delete(
+  Future<dynamic> delete(
     String url, {
     Map<String, dynamic>? body,
     Map<String, String>? headers,

@@ -47,7 +47,7 @@ class SharedPrefsCacheService implements CacheService {
   }
 
   @override
-  Future<void> clearAll() async {
+  Future<void> clear() async {
     await sharedPreferences.clear();
   }
 }

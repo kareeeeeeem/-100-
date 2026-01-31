@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lms/core/routing/app_routes.dart';
+import 'package:lms/features/on_boarding/presentation/manger/my_courses_cubit.dart';
 import 'package:lms/features/on_boarding/presentation/manger/on_boarding_cubit.dart';
 import 'package:lms/features/on_boarding/presentation/pages/on_boarding_page.dart';
 import 'package:lms/features/parent_flow/add_new_son/presentation/pages/add_new_son_page.dart';
@@ -21,6 +22,11 @@ import 'package:lms/features/son_flow/exams/presentation/pages/preface_exam_deta
 import 'package:lms/features/son_flow/exams/presentation/pages/preface_exam_page.dart';
 import 'package:lms/features/son_flow/home/data/model/course_details_cubit.dart';
 import 'package:lms/features/son_flow/home/di/home_di.dart';
+import 'package:lms/features/son_flow/home/presentation/manager/categories_cubit.dart';
+import 'package:lms/features/son_flow/home/presentation/manager/home_cubit.dart';
+import 'package:lms/features/son_flow/home/presentation/manager/search_cubit.dart';
+import 'package:lms/features/son_flow/home/presentation/page/categories_page.dart';
+import 'package:lms/features/son_flow/home/presentation/page/search_page.dart';
 import 'package:lms/features/son_flow/home/presentation/page/home_layout.dart';
 import 'package:lms/features/son_flow/instructor_profile/presentation/pages/instructor_profile_page.dart';
 import 'package:lms/features/son_flow/lives/presentation/pages/available_lives_page.dart';
@@ -32,6 +38,17 @@ import 'package:lms/features/son_flow/register/presentation/manager/register_cub
 import 'package:lms/features/son_flow/register/presentation/register_page.dart';
 import 'package:lms/features/splash/presentation/manager/splash_cubit.dart';
 import 'package:lms/features/splash/presentation/pages/splash_page.dart';
+import 'package:lms/features/son_flow/instructor_profile/presentation/manager/instructor_cubit.dart';
+import 'package:lms/features/son_flow/dashboard/presentation/manager/dashboard_cubit.dart';
+import 'package:lms/features/son_flow/dashboard/presentation/pages/dashboard_page.dart';
+import 'package:lms/features/parent_flow/presentation/manager/parent_cubit.dart';
+import 'package:lms/features/parent_flow/presentation/manager/parent_state.dart';
+import 'package:lms/features/son_flow/community/presentation/manager/comments_cubit.dart';
+import 'package:lms/features/son_flow/community/presentation/manager/favorite_cubit.dart';
+import 'package:lms/features/son_flow/home/presentation/manager/payment_cubit.dart';
+import 'package:lms/features/son_flow/exams/presentation/manager/exam_cubit.dart';
+import 'package:lms/features/son_flow/live_sessions/presentation/manager/live_session_cubit.dart';
+import 'package:lms/features/son_flow/home/presentation/manager/profile_cubit.dart';
 
 final class AppRouter {
   AppRouter._();
@@ -102,18 +119,67 @@ final class AppRouter {
           return const HomeLayout();
         },
         routes: [
-          GoRoute(
-            path: AppRoutes.courseDetails,
-            name: AppRoutes.courseDetails,
-            builder: (context, state) {
-              return const CourseDetailsPage();
-            },
-          ),
+         GoRoute(
+  path: AppRoutes.courseDetails,
+  name: AppRoutes.courseDetails,
+  builder: (context, state) {
+    // التعديل الآمن هنا 👇
+    final Object? extra = state.extra;
+    int courseId = 0;
+
+    if (extra is int) {
+      courseId = extra;
+    } else if (extra is String) {
+      courseId = int.tryParse(extra) ?? 0;
+    }
+
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) => GetIt.instance<CourseDetailsCubit>()..fetchCourseDetails(courseId),
+        ),
+        BlocProvider(
+          create: (context) => GetIt.instance<CommentsCubit>(),
+        ),
+        BlocProvider(
+          create: (context) => GetIt.instance<FavoriteCubit>(),
+        ),
+        BlocProvider(
+          create: (context) => GetIt.instance<PaymentCubit>(),
+        ),
+      ],
+      child: CourseDetailsPage(courseId: courseId),
+    );
+  },
+),
           GoRoute(
             path: AppRoutes.availableLives,
             name: AppRoutes.availableLives,
             builder: (context, state) {
-              return const AvailableLivesPage();
+              return BlocProvider(
+                create: (context) => GetIt.instance<LiveSessionCubit>()..loadLiveSessions(),
+                child: const AvailableLivesPage(),
+              );
+            },
+          ),
+          GoRoute(
+            path: AppRoutes.categories,
+            name: AppRoutes.categories,
+            builder: (context, state) {
+              return BlocProvider(
+                create: (context) => GetIt.instance<CategoriesCubit>(),
+                child: const CategoriesPage(),
+              );
+            },
+          ),
+          GoRoute(
+            path: AppRoutes.search,
+            name: AppRoutes.search,
+            builder: (context, state) {
+              return BlocProvider(
+                create: (context) => GetIt.instance<SearchCubit>(),
+                child: const SearchPage(),
+              );
             },
           ),
           GoRoute(
@@ -134,28 +200,55 @@ final class AppRouter {
             path: AppRoutes.instructorProfile,
             name: AppRoutes.instructorProfile,
             builder: (context, state) {
-              return const InstructorProfilePage();
+              final String instructorId = state.extra as String? ?? '1';
+              return BlocProvider(
+                create: (context) => GetIt.instance<InstructorCubit>()
+                  ..getInstructorProfile(instructorId),
+                child: InstructorProfilePage(instructorId: instructorId),
+              );
             },
           ),
-         GoRoute(
-  path: AppRoutes.subscribedCourseDetails,
-  name: AppRoutes.subscribedCourseDetails,
-  builder: (context, state) {
-    // 1. استلام الـ ID
-    final int courseId = state.extra as int? ?? 0; 
-
-    return BlocProvider(
-      // 2. بنادي على الـ fetch فوراً مع الـ create باستخدام Cascade Operator (..)
-      create: (context) => GetIt.instance<CourseDetailsCubit>()..fetchCourseDetails(courseId),
-      child: SubscribedCourseDetailsPage(courseId: courseId),
-    );
-  },
-),
+          GoRoute(
+            path: AppRoutes.dashboard,
+            name: AppRoutes.dashboard,
+            builder: (context, state) {
+              return BlocProvider(
+                create: (context) => GetIt.instance<DashboardCubit>()
+                  ..loadDashboardStats(),
+                child: const DashboardPage(),
+              );
+            },
+          ),
+          GoRoute(
+            path: AppRoutes.subscribedCourseDetails,
+            name: AppRoutes.subscribedCourseDetails,
+            builder: (context, state) {
+              final int courseId = state.extra as int? ?? 0;
+              return MultiBlocProvider(
+                providers: [
+                  BlocProvider(
+                    create: (context) => GetIt.instance<CourseDetailsCubit>()
+                      ..fetchCourseDetails(courseId),
+                  ),
+                  BlocProvider(
+                    create: (context) => GetIt.instance<CommentsCubit>(),
+                  ),
+                  BlocProvider(
+                    create: (context) => GetIt.instance<FavoriteCubit>(),
+                  ),
+                ],
+                child: SubscribedCourseDetailsPage(courseId: courseId),
+              );
+            },
+          ),
           GoRoute(
             path: AppRoutes.exams,
             name: AppRoutes.exams,
             builder: (context, state) {
-              return const ExamsPage();
+              return BlocProvider(
+                create: (context) => GetIt.instance<ExamCubit>()..loadExams(),
+                child: const ExamsPage(),
+              );
             },
           ),
           GoRoute(
@@ -169,7 +262,11 @@ final class AppRouter {
             path: AppRoutes.prefaceExam,
             name: AppRoutes.prefaceExam,
             builder: (context, state) {
-              return const PrefaceExamPage();
+              final String examId = state.extra as String? ?? '1';
+              return BlocProvider(
+                create: (context) => GetIt.instance<ExamCubit>()..loadExam(examId),
+                child: const PrefaceExamPage(),
+              );
             },
           ),
           GoRoute(
@@ -183,7 +280,11 @@ final class AppRouter {
             path: AppRoutes.comprehensiveExam,
             name: AppRoutes.comprehensiveExam,
             builder: (context, state) {
-              return const ComprehensiveExamPage();
+              final String examId = state.extra as String? ?? '1';
+              return BlocProvider(
+                create: (context) => GetIt.instance<ExamCubit>()..loadExam(examId),
+                child: const ComprehensiveExamPage(),
+              );
             },
           ),
         ],
@@ -194,62 +295,71 @@ final class AppRouter {
         path: AppRoutes.parentHome,
         name: AppRoutes.parentHome,
         builder: (context, state) {
-          return const HomePage();
+          return BlocProvider(
+            create: (context) => GetIt.instance<ParentCubit>()
+              ..getChildren()
+              ..getParentCourses(),
+            child: const HomePage(),
+          );
         },
         routes: [
           GoRoute(
             path: AppRoutes.sonProfileDetailsParent,
             name: AppRoutes.sonProfileDetailsParent,
             builder: (context, state) {
-              return const SonProfileDetailsPage();
+              final childId = state.extra as int? ?? 0;
+              return BlocProvider(
+                create: (context) => GetIt.instance<ParentCubit>()..getChildDetails(childId),
+                child: SonProfileDetailsPage(childId: childId),
+              );
             },
           ),
           GoRoute(
             path: AppRoutes.editProfileDetailsParent,
             name: AppRoutes.editProfileDetailsParent,
             builder: (context, state) {
-              return const EditSonProfileDetailsPage();
+              final childId = state.extra as int? ?? 0;
+              return BlocProvider(
+                create: (context) => GetIt.instance<ParentCubit>()..getChildDetails(childId),
+                child: const EditSonProfileDetailsPage(),
+              );
             },
           ),
           GoRoute(
             path: AppRoutes.sonExamResults,
             name: AppRoutes.sonExamResults,
             builder: (context, state) {
-              return const SonExamResultsPage();
+              final childId = state.extra as int? ?? 0;
+              return BlocProvider(
+                create: (context) => GetIt.instance<ParentCubit>()..getChildExamResults(childId),
+                child: const SonExamResultsPage(),
+              );
             },
           ),
           GoRoute(
             path: AppRoutes.addNewSon,
             name: AppRoutes.addNewSon,
             builder: (context, state) {
-              return const AddNewSonPage();
+              return BlocProvider(
+                create: (context) => GetIt.instance<ParentCubit>(),
+                child: const AddNewSonPage(),
+              );
             },
           ),
           GoRoute(
             path: AppRoutes.paymentRequests,
             name: AppRoutes.paymentRequests,
             builder: (context, state) {
-              return const PaymentRequestsPage();
+              return BlocProvider(
+                create: (context) => GetIt.instance<ParentCubit>(),
+                child: const PaymentRequestsPage(),
+              );
             },
           ),
         ],
       ),
     ],
     redirect: (context, state) {
-      // const bool loggedIn = true;
-      // const String role = 'parent';
-      //
-      // if (!loggedIn && state.matchedLocation != AppRoutes.login) {
-      //   return AppRoutes.login;
-      // }
-      //
-      // if (role == 'son' && state.matchedLocation.startsWith('/parent')) {
-      //   return AppRoutes.sonHome;
-      // }
-      //
-      // if (role == 'parent' && state.matchedLocation.startsWith('/son')) {
-      //   return AppRoutes.parentHome;
-      // }
       return null;
     },
   );

@@ -26,12 +26,13 @@ Map<String, dynamic> _$MyCoursesResponseModelToJson(
 
 MyCourseItemModel _$MyCourseItemModelFromJson(Map<String, dynamic> json) =>
     MyCourseItemModel(
-      id: json['id'] as String,
+      id: json['id'],
       title: json['title'] as String,
       duration: json['duration'] as String,
       category: json['category'] as String,
-      progressPercentage: json['progress_percentage'] as String?,
+      progressPercentage: json['progress_percentage'],
       thumbnail: json['thumbnail'] as String?,
+      lessonsCount: json['lessons_count'],
       instructor: InstructorModel.fromJson(
         json['instructor'] as Map<String, dynamic>,
       ),
@@ -45,6 +46,7 @@ Map<String, dynamic> _$MyCourseItemModelToJson(MyCourseItemModel instance) =>
       'category': instance.category,
       'progress_percentage': instance.progressPercentage,
       'thumbnail': instance.thumbnail,
+      'lessons_count': instance.lessonsCount,
       'instructor': instance.instructor,
     };
 

@@ -33,7 +33,7 @@ class SecureCacheService implements CacheService {
   }
 
   @override
-  Future<void> clearAll() async {
+  Future<void> clear() async {
     await secureStorage.deleteAll();
   }
 }

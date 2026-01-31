@@ -1,4 +1,6 @@
 import 'package:lms/features/son_flow/home/data/model/my_courses_response_model.dart';
+import 'package:lms/features/son_flow/dashboard/data/models/dashboard_stats_model.dart';
+
 
 class ProfileResponseModel {
   final bool? status;
@@ -24,6 +26,7 @@ class ProfileData {
   final double? overallProgress;
   // أضفنا الحقل ده عشان الـ UI ميدي ش أيرور
   final List<MyCourseItemModel>? recentCourses; 
+  final DashboardStatsModel? dashboardStats;
 
   ProfileData({
     this.name,
@@ -34,12 +37,13 @@ class ProfileData {
     this.certificatesCount,
     this.overallProgress,
     this.recentCourses,
+    this.dashboardStats,
   });
 
   factory ProfileData.fromJson(Map<String, dynamic> json) => ProfileData(
-        name: json['name'] ?? json['user']?['name'],
-        email: json['email'] ?? json['user']?['email'],
-        image: json['image'] ?? json['user']?['image'],
+        name: (json['name']?.toString() ?? json['user']?['name']?.toString() ?? '').trim(),
+        email: (json['email']?.toString() ?? json['user']?['email']?.toString() ?? '').trim(),
+        image: (json['image']?.toString() ?? json['user']?['image']?.toString() ?? '').trim(),
         enrolledCoursesCount: json['enrolled_courses_count'],
         completedCoursesCount: json['completed_courses_count'],
         certificatesCount: json['certificates_count'],

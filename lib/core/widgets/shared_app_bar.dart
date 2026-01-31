@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:lms/core/routing/app_routes.dart';
 import 'package:get_it/get_it.dart';
 import 'package:lms/core/service/jwt_service.dart';
 import 'package:lms/core/utils/app_colors.dart';
@@ -71,6 +73,11 @@ class _SharedAppBarState extends State<SharedAppBar> {
         ],
       ),
       actions: [
+        InkWell(
+          onTap: () => context.pushNamed(AppRoutes.search),
+          child: const Icon(Icons.search, color: AppColors.primary),
+        ),
+        const SizedBox(width: 12),
         _buildNotificationIcon(context),
       ],
     );

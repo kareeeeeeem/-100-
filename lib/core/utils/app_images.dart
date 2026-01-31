@@ -20,13 +20,15 @@ enum AppImages {
 
   const AppImages(this._path);
 
-  Image image({Key? key, double? width, double? height, BoxFit? fit}) {
+  Image image({Key? key, double? width, double? height, BoxFit? fit, Color? color, BlendMode? colorBlendMode}) {
     return Image.asset(
       key: key,
       fullPath,
       width: width,
       height: height,
       fit: fit,
+      color: color,
+      colorBlendMode: colorBlendMode,
     );
   }
 }

@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 
 import 'package:lms/core/utils/app_colors.dart';
+import 'package:lms/core/widgets/custom_image.dart';
 
 class ProfileImageAndEdit extends StatelessWidget {
   const ProfileImageAndEdit({
     super.key,
     required this.imageSize,
     this.showEditIcon = true,
-    this.onEditTap, String? imageUrl,
+    this.onEditTap,
+    this.imagePath,
   });
 
   final double imageSize;
   final bool showEditIcon;
   final VoidCallback? onEditTap;
+  final String? imagePath;
 
   @override
   Widget build(BuildContext context) {
@@ -25,6 +28,13 @@ class ProfileImageAndEdit extends StatelessWidget {
           decoration: const BoxDecoration(
             color: Colors.black,
             shape: BoxShape.circle,
+          ),
+          clipBehavior: Clip.hardEdge,
+          child: CustomImage(
+            imagePath: imagePath,
+            width: imageSize,
+            height: imageSize,
+            fit: BoxFit.cover,
           ),
         ),
         if (showEditIcon)

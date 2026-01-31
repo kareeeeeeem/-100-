@@ -8,6 +8,7 @@ import 'package:lms/core/service/toast_service.dart';
 import 'package:lms/core/service/toast_service_impl.dart';
 import 'package:lms/features/localization/di/localization_di.dart';
 import 'package:lms/features/on_boarding/di/on_boarding_di.dart';
+import 'package:lms/features/son_flow/home/data/data_sources/api/live_sessions_api_service.dart';
 import 'package:lms/features/son_flow/home/domain/repository/login_repository.dart';
 import 'package:lms/features/son_flow/home/presentation/manager/notifications_cubit.dart';
 import 'package:lms/features/son_flow/login/di/login_di.dart';
@@ -15,6 +16,12 @@ import 'package:lms/features/son_flow/register/di/register_di.dart';
 import 'package:lms/features/splash/di/splash_di.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lms/features/son_flow/home/di/home_di.dart';
+import 'package:lms/features/parent_flow/di/parent_di.dart';
+import 'package:lms/features/son_flow/instructor_profile/di/instructor_di.dart';
+import 'package:lms/features/son_flow/dashboard/di/dashboard_di.dart';
+import 'package:lms/features/son_flow/exams/di/exam_di.dart';
+import 'package:lms/features/son_flow/live_sessions/di/live_session_di.dart';
+import 'package:lms/features/son_flow/community/di/community_di.dart';
 
 class AppDi {
   final GetIt sl = GetIt.instance;
@@ -50,8 +57,16 @@ class AppDi {
     await LoginDi().init();
     await RegisterDi().init();
     await HomeDi().init();
+    await ParentDi().init();
+    await InstructorDi().init();
+    await DashboardDi().init();
+    await ExamDi().init();
+    await LiveSessionDi().init();
+    await CommunityDi().init();
 
     // تسجيل الـ NotificationsCubit بعد التأكد من تسجيل الـ HomeRepository
     sl.registerFactory(() => NotificationsCubit(sl<HomeRepository>()));
+
+    sl.registerLazySingleton(() => LiveSessionsApiService(sl()));
   }
 }

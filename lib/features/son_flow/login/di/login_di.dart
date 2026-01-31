@@ -26,6 +26,6 @@ class LoginDi extends AppDi {
         sl<JwtService>(),
       ),
     );
-    sl.registerLazySingleton(() => LoginCubit(sl<LoginRepository>()));
+    sl.registerFactory(() => LoginCubit(sl<LoginRepository>()));
   }
 }

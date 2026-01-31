@@ -37,3 +37,7 @@ class UnknownFailure extends Failure {
   UnknownFailure({String? message})
     : super(message: message ?? AppConstants.somethingWentWrong);
 }
+
+class ServerFailure extends Failure {
+  ServerFailure(String message) : super(message: message);
+}

@@ -12,12 +12,15 @@ class AppRoutes {
   static const String sonProfileDetails = '/sonProfileDetails';
   static const String editProfileDetails = '/editProfileDetails';
   static const String instructorProfile = '/instructorProfile';
+  static const String dashboard = '/dashboard';
   static const String subscribedCourseDetails = '/subscribedCourseDetails';
   static const String exams = '/exams';
   static const String prefaceExamDetails = '/prefaceExamDetails';
   static const String prefaceExam = '/prefaceExam';
   static const String comprehensiveExamDetails = '/comprehensiveExamDetails';
   static const String comprehensiveExam = '/comprehensiveExam';
+  static const String categories = '/categories';
+  static const String search = '/search';
 
   // PAREN ROUTES
   static const String parentHome = '/parentHome';

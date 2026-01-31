@@ -38,4 +38,12 @@ Future<void> fetchNotifications() async {
       emit(NotificationsError(result.failure?.message ?? "حدث خطأ ما"));
   }
 }
+
+Future<void> markAsRead(int id) async {
+  final result = await homeRepository.markNotificationAsRead(id);
+  if (result.isSuccess) {
+    // تحديث القائمة بعد التحويل لمقروء
+    fetchNotifications();
+  }
+}
 }

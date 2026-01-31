@@ -12,6 +12,7 @@ class CustomTextFormField extends StatelessWidget {
     this.keyboardType,
     this.isPassword = false,
     this.prefix,
+    this.suffix,
     this.fillColor,
   });
 
@@ -22,6 +23,7 @@ class CustomTextFormField extends StatelessWidget {
   final TextInputType? keyboardType;
   final bool isPassword;
   final Widget? prefix;
+  final Widget? suffix;
   final Color? fillColor;
 
   @override
@@ -40,6 +42,7 @@ class CustomTextFormField extends StatelessWidget {
         filled: true,
         fillColor: fillColor ?? AppColors.cF6F7FA,
         prefixIcon: prefix,
+        suffixIcon: suffix,
         hint: hintText != null
             ? Text(
                 hintText!,

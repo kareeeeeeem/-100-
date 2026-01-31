@@ -9,6 +9,24 @@ abstract class HomeApiService {
   Future<MyCoursesResponseModel> getMyCourses();
   Future<ProfileResponseModel> getProfileData();
   Future<ProfileResponseModel> updateProfile({required String name, required String phone});
-  Future<CourseDetailsResponseModel> getCourseDetails({required int courseId});
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+    required String newPasswordConfirmation,
+  });
+  Future<CourseDetailsResponseModel> getCourseDetails({required int courseId}); 
   Future<NotificationsResponseModel> getNotifications();
+  Future<void> markAsRead(int id);
+  Future<List<CategoryModel>> getCategories();
+  Future<List<CourseModel>> searchCourses(String query);
+  Future<void> checkout({
+    required int courseId,
+    required String cardNumber,
+    required String expiryDate,
+    required String cvv,
+    required String paymentType,
+  });
+  Future<void> logout();
+  Future<void> deleteAccount();
+  Future<bool> toggleFavorite(int courseId);
 }

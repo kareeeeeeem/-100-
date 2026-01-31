@@ -1,14 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-
 import 'package:lms/core/routing/app_routes.dart';
 import 'package:lms/core/utils/app_colors.dart';
-import 'package:lms/core/utils/app_images.dart';
 import 'package:lms/core/widgets/custom_elevated_button.dart';
+import 'package:lms/features/son_flow/home/data/model/course_details_cubit.dart';
 import 'package:lms/features/son_flow/payment/presentation/widgets/payment_bottom_sheet.dart';
+import 'package:lms/features/son_flow/community/presentation/manager/favorite_cubit.dart';
+import 'package:lms/features/son_flow/home/presentation/manager/payment_cubit.dart';
+import 'package:lms/core/widgets/custom_image.dart';
 
-class CourseDetailsPage extends StatelessWidget {
-  const CourseDetailsPage({super.key});
+class CourseDetailsPage extends StatefulWidget {
+  final int courseId; // استلام الـ ID من الـ Router
+
+  const CourseDetailsPage({super.key, required this.courseId});
+
+  @override
+  State<CourseDetailsPage> createState() => _CourseDetailsPageState();
+}
+
+class _CourseDetailsPageState extends State<CourseDetailsPage> {
+  @override
+  void initState() {
+    super.initState();
+    // استدعاء البيانات عند فتح الصفحة
+    context.read<CourseDetailsCubit>().fetchCourseDetails(widget.courseId);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,292 +37,224 @@ class CourseDetailsPage extends StatelessWidget {
       ),
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('تفاصيل الدورة '),
+          title: const Text('تفاصيل الدورة'),
           actionsPadding: const EdgeInsetsDirectional.only(end: 16),
           actions: [
-            InkWell(
-              onTap: () {},
-              child: const Icon(
-                Icons.favorite_border,
-                color: AppColors.primary,
-              ),
+            BlocBuilder<CourseDetailsCubit, CourseDetailsState>(
+              builder: (context, detailsState) {
+                bool isFavorited = false;
+                if (detailsState is CourseDetailsSuccess) {
+                  isFavorited = detailsState.model.data?.isFavorited ?? false;
+                }
+                return BlocConsumer<FavoriteCubit, FavoriteState>(
+                  listener: (context, favoriteState) {
+                    if (favoriteState is FavoriteError) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(favoriteState.message)),
+                      );
+                    }
+                  },
+                  builder: (context, favoriteState) {
+                    bool currentStatus = isFavorited;
+                    if (favoriteState is FavoriteSuccess) {
+                      currentStatus = favoriteState.isFavorited;
+                    }
+                    if (favoriteState is FavoriteLoading) {
+                      return const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      );
+                    }
+                    return InkWell(
+                      onTap: () {
+                        context.read<FavoriteCubit>().toggleFavorite(widget.courseId);
+                      },
+                      child: Icon(
+                        currentStatus ? Icons.favorite : Icons.favorite_border,
+                        color: AppColors.primary,
+                      ),
+                    );
+                  },
+                );
+              },
             ),
           ],
         ),
-        body: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  height: MediaQuery.sizeOf(context).height / 3,
-                  clipBehavior: Clip.hardEdge,
-                  decoration: BoxDecoration(
-                    boxShadow: [
-                      BoxShadow(
-                        offset: const Offset(4.19, 8.38),
-                        blurRadius: 14.67,
-                        spreadRadius: 0.0,
-                        color: const Color(0xFF000000).withValues(alpha: 0.15),
-                      ),
-                    ],
-                    borderRadius: BorderRadius.circular(25.15),
-                  ),
-                  child: Stack(
+        body: BlocBuilder<CourseDetailsCubit, CourseDetailsState>(
+          builder: (context, state) {
+            if (state is CourseDetailsLoading) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (state is CourseDetailsError) {
+              return Center(child: Text(state.message));
+            } else if (state is CourseDetailsSuccess) {
+              final course = state.model.data;
+              if (course == null) return const Center(child: Text("لا توجد بيانات"));
+
+              return SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Positioned.fill(child: AppImages.live.image(fit: BoxFit.cover)),
-                      Positioned.fill(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.black.withValues(alpha: 0.0),
-                                Colors.black.withValues(alpha: 0.0),
-                                Colors.black.withValues(alpha: 0.8),
-                              ],
-                              stops: const [0.0, 0.0001, 1.0],
-                            ),
-                          ),
-                        ),
-                      ),
-                      Align(
-                        alignment: Alignment.center,
-                        child: Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.5),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(10),
-                            child: Container(
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.play_arrow,
-                                size: 40,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  'تصميم الخطوات السريعة للمبتدئين',
-                  style: TextStyle(
-                    fontSize: 18.86,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  spacing: 6,
-                  children: [
-                    Icon(
-                      Icons.timer_outlined,
-                      color: Colors.black.withValues(alpha: 0.7),
-                      size: 16,
-                    ),
-                    Text(
-                      '5h 21m',
-                      style: TextStyle(
-                        fontSize: 10.48,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black.withValues(alpha: 0.7),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  spacing: 10,
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: const Padding(
-                        padding: EdgeInsets.all(10),
-                        child: Text(
-                          '6 دروس',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: AppColors.c589B6E,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: const Padding(
-                        padding: EdgeInsets.all(10),
-                        child: Text(
-                          'مجانا',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: AppColors.c589B6E,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: const Padding(
-                        padding: EdgeInsets.all(10),
-                        child: Text(
-                          'تصميم واجهات',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  'في هذه الدورة سأوضح العملية خطوة بخطوة، يوماً بيوماً، لبناء منتجات أفضل، تماماً كما تفعل جوجل، وسلاك، وكي إل إم، والعديد من الشركات الأخرى.',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: Colors.black,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                InkWell(
-                  onTap: () {
-                    context.pushNamed(AppRoutes.instructorProfile);
-                  },
-                  child: Row(
-                    spacing: 10,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
+                      // --- صورة الدورة (Thumbnail) ---
                       Container(
-                        width: 41.92,
-                        height: 41.92,
-                        decoration: const BoxDecoration(shape: BoxShape.circle),
-                        child: const CircleAvatar(
-                          backgroundColor: Colors.black,
+                        height: MediaQuery.sizeOf(context).height / 3,
+                        clipBehavior: Clip.hardEdge,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(25.15),
                         ),
-                      ),
-                      const Column(
-                        children: [
-                          Text(
-                            'لوريل سيلها',
-                            style: TextStyle(
-                              fontSize: 16.77,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black,
-                            ),
-                          ),
-                          Text(
-                            'مصمم منتجات',
-                            style: TextStyle(
-                              fontSize: 10.48,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.c9D9FA0,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.cF6F7FA,
-                    borderRadius: BorderRadius.circular(8.39),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemBuilder: (context, index) {
-                        return Row(
-                          spacing: 10,
+                        child: Stack(
                           children: [
-                            SizedBox(
-                              width: 70.3,
-                              height: 70.3,
-                              child: Stack(
-                                children: [
-                                  AppImages.courseVideoThumbnail.image(
-                                    width: 70.3,
-                                    height: 70.3,
-                                  ),
-                                  const Align(
-                                    alignment: Alignment.center,
-                                    child: Icon(
-                                      Icons.play_arrow,
-                                      color: Colors.white,
-                                      size: 30,
-                                    ),
-                                  ),
-                                ],
+                            Positioned.fill(
+                              child: CustomImage(
+                                imagePath: course.thumbnail,
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                height: double.infinity,
                               ),
                             ),
-                            const Flexible(
-                              child: Column(
-                                spacing: 6,
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'كيفية الحصول على تعليقات حول منتجاتهم في غضون 5 أيام فقط',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.black,
-                                    ),
+                            Positioned.fill(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      Colors.black.withOpacity(0.0),
+                                      Colors.black.withOpacity(0.8),
+                                    ],
                                   ),
-                                  Text(
-                                    '04:10m',
-                                    style: TextStyle(
-                                      fontSize: 14.69,
-                                      fontWeight: FontWeight.w400,
-                                      color: AppColors.c8C8C8C,
-                                    ),
-                                  ),
-                                ],
+                                ),
                               ),
                             ),
                           ],
-                        );
-                      },
-                      separatorBuilder: (context, index) {
-                        return const SizedBox(height: 30);
-                      },
-                      itemCount: 3,
-                    ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+
+                      // --- العنوان ---
+                      Text(
+                        course.title ?? '',
+                        style: const TextStyle(fontSize: 18.86, fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 10),
+
+                      // --- مدة الدورة ---
+                      Row(
+                        children: [
+                          const Icon(Icons.timer_outlined, size: 16, color: Colors.grey),
+                          const SizedBox(width: 6),
+                          Text(course.duration ?? '', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+
+                      // --- Tags (دروس، سعر، قسم) ---
+                      Row(
+                        children: [
+                          _buildTag('${course.lessons?.length ?? 0} دروس', AppColors.primary),
+                          const SizedBox(width: 10),
+                          _buildTag(course.price?.label ?? 'مجاني', AppColors.c589B6E),
+                          const SizedBox(width: 10),
+                          _buildTag(course.category ?? 'عام', AppColors.c589B6E),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+
+                      // --- الوصف ---
+                      Text(
+                        course.description ?? '',
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // --- بيانات المدرس ---
+                      InkWell(
+                        onTap: () => context.pushNamed(AppRoutes.instructorProfile),
+                        child: Row(
+                          children: [
+                            Container(
+                                width: 42,
+                                height: 42,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.black12,
+                                ),
+                                child: ClipOval(
+                                  child: CustomImage(
+                                    imagePath: course.instructor?.image,
+                                    width: 42,
+                                    height: 42,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                            const SizedBox(width: 10),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  course.instructor?.name ?? 'مدرس الدورة',
+                                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                ),
+                                const Text(
+                                  'مدرب معتمد',
+                                  style: TextStyle(fontSize: 10, color: AppColors.c9D9FA0),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // --- قائمة الدروس ---
+                      Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.cF6F7FA,
+                          borderRadius: BorderRadius.circular(8.39),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: ListView.separated(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: course.lessons?.length ?? 0,
+                            separatorBuilder: (context, index) => const SizedBox(height: 20),
+                            itemBuilder: (context, index) {
+                              final lesson = course.lessons![index];
+                              return Row(
+                                children: [
+                                  const Icon(Icons.play_circle_fill, color: AppColors.primary, size: 40),
+                                  const SizedBox(width: 10),
+                                  Flexible(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          lesson.title ?? '',
+                                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                                        ),
+                                        Text(
+                                          lesson.duration ?? '',
+                                          style: const TextStyle(fontSize: 12, color: AppColors.c8C8C8C),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
-          ),
+                ),);
+              }
+            return const SizedBox();
+          },
         ),
         bottomSheet: Padding(
           padding: const EdgeInsets.all(16),
@@ -316,16 +265,33 @@ class CourseDetailsPage extends StatelessWidget {
                 context: context,
                 isScrollControlled: true,
                 backgroundColor: Colors.white,
-                builder: (context) {
-                  return SizedBox(
-                    height: MediaQuery.sizeOf(context).height * 0.9,
-                    child: const PaymentBottomSheet(),
+                builder: (modalContext) {
+                  return BlocProvider.value(
+                    value: context.read<PaymentCubit>(),
+                    child: SizedBox(
+                      height: MediaQuery.sizeOf(context).height * 0.9,
+                      child: PaymentBottomSheet(courseId: widget.courseId),
+                    ),
                   );
                 },
               );
             },
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildTag(String label, Color color) {
+    return Container(
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      child: Text(
+        label,
+        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: Colors.white),
       ),
     );
   }

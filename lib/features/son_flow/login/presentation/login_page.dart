@@ -40,22 +40,35 @@ class _LoginPageState extends State<LoginPage> {
       listenWhen: (previous, current) {
         return previous.loginStatus != current.loginStatus;
       },
-      listener: (context, state) {
-        if (state.loginStatus == RequestStatus.loading) {
-          context.showLoading();
-        } else if (state.loginStatus == RequestStatus.success) {
-          context.hidLoading();
+    listener: (context, state) {
+  if (state.loginStatus == RequestStatus.loading) {
+    context.showLoading();
+  } else if (state.loginStatus == RequestStatus.success) {
+    context.hidLoading();
 
+    final type = state.userType?.toLowerCase();
 
-          
-          context.go(AppRoutes.sonHome);
-        } else if (state.loginStatus == RequestStatus.error) {
-          context.hidLoading();
-          context.showErrorToast(
-            title: state.loginErrorMessage!,
-          );
-        }
-      },
+    // هنا استخدمت مسميات المسارات اللي في ملف الـ AppRouter بتاعك بالضبط
+    switch (type) {
+      case 'parent':
+        context.go(AppRoutes.parentHome); // يفتح الهوم بتاعة ولي الأمر
+        break;
+      case 'student':
+        context.go(AppRoutes.sonHome); // يفتح الهوم بتاعة الطالب (HomeLayout)
+        break;
+      default:
+        // أي دور تاني (محاسب/أدمن) حالياً يروح لهوم الطالب لغاية ما تكريه صفحاتهم
+        context.go(AppRoutes.sonHome); 
+    }
+
+    context.showSuccessToast(title: 'تم تسجيل الدخول بنجاح');
+  } else if (state.loginStatus == RequestStatus.error) {
+    context.hidLoading();
+    context.showErrorToast(
+      title: state.loginErrorMessage ?? 'خطأ في تسجيل الدخول',
+    );
+  }
+},
       child: Scaffold(
         body: SafeArea(
           child: Center(

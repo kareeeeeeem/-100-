@@ -8,17 +8,23 @@ class ComprehensiveTestAnswer extends StatelessWidget {
     super.key,
     required this.answer,
     this.isCorrect,
+    this.isSelected = false,
   });
 
   final String answer;
   final bool? isCorrect;
+  final bool isSelected;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(5),
-        border: Border.all(width: 1, color: AppColors.c252836),
+        border: Border.all(
+          width: 1, 
+          color: isSelected ? AppColors.c243C70 : AppColors.c252836,
+        ),
+        color: isSelected ? AppColors.c243C70.withOpacity(0.1) : null,
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),

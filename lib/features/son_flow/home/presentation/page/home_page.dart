@@ -11,6 +11,7 @@ import 'package:lms/features/son_flow/course/presentation/widgets/course_categor
 import 'package:lms/features/son_flow/home/presentation/manager/home_cubit.dart';
 import 'package:lms/features/son_flow/home/data/model/home_response_model.dart';
 import 'package:lms/features/son_flow/home/presentation/manager/home_cubit.dart'; // تأكد من المسار الصحيح للـ Cubit عندك
+import 'package:lms/core/widgets/custom_image.dart';
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -86,9 +87,18 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Text('الأقسام', style: TextStyle(fontSize: 18.86, fontWeight: FontWeight.w600, color: AppColors.c303030)),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('الأقسام', style: TextStyle(fontSize: 18.86, fontWeight: FontWeight.w600, color: AppColors.c303030)),
+                        InkWell(
+                          onTap: () => context.pushNamed(AppRoutes.categories),
+                          child: Text('عرض الكل', style: TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600)),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 10),
                   SizedBox(
@@ -106,16 +116,24 @@ class _HomePageState extends State<HomePage> {
                   // الكاروسيل بالداتا الحقيقية
                   SizedBox(
                     height: 350,
-                    child: CarouselView(
-                      controller: _carouselController,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemExtent: MediaQuery.sizeOf(context).width * 0.8,
-                      shrinkExtent: MediaQuery.sizeOf(context).width * 0.8,
-                      onTap: (index) => context.pushNamed(AppRoutes.courseDetails),
-                      children: data.featuredCourses.map((course) {
-                        return _buildCourseCard(course);
-                      }).toList(),
-                    ),
+                    child: // داخل الـ CarouselView في HomePage.dart
+CarouselView(
+  controller: _carouselController,
+  padding: const EdgeInsets.symmetric(horizontal: 16),
+  itemExtent: MediaQuery.sizeOf(context).width * 0.8,
+  shrinkExtent: MediaQuery.sizeOf(context).width * 0.8,
+  // التعديل هنا 👇
+  onTap: (index) {
+    final selectedCourse = data.featuredCourses[index];
+    context.pushNamed(
+      AppRoutes.courseDetails,
+      extra: selectedCourse.id, // إرسال الـ ID الحقيقي
+    );
+  },
+  children: data.featuredCourses.map((course) {
+    return _buildCourseCard(course);
+  }).toList(),
+),
                   ),
                   const SizedBox(height: 10),
                   Center(
@@ -140,9 +158,19 @@ class _HomePageState extends State<HomePage> {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       itemCount: data.upcomingCourses.length,
                       separatorBuilder: (context, index) => const SizedBox(height: 15),
-                      itemBuilder: (context, index) {
-                        return _buildCourseCard(data.upcomingCourses[index]);
-                      },
+                      // داخل ListView.separated الخاص بـ data.upcomingCourses
+itemBuilder: (context, index) {
+  final upcomingCourse = data.upcomingCourses[index]; // استخراج الكورس الحالي
+  return GestureDetector(
+    onTap: () {
+      context.pushNamed(
+        AppRoutes.courseDetails,
+        extra: upcomingCourse.id, // إرسال الـ ID هنا أيضاً
+      );
+    },
+    child: _buildCourseCard(upcomingCourse),
+  );
+},
                     ),
                   ],
                   const SizedBox(height: 30),
@@ -170,10 +198,11 @@ class _HomePageState extends State<HomePage> {
               decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(25.15)),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(25.15),
-                child: Image.network(
-                  slider.image, 
-                  fit: BoxFit.cover, 
-                  errorBuilder: (c, e, s) => AppImages.live.image(fit: BoxFit.cover)
+                child: CustomImage(
+                  imagePath: slider.image,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
                 ),
               ),
             ),
@@ -206,10 +235,11 @@ class _HomePageState extends State<HomePage> {
           Positioned.fill(
             child: ClipRRect(
               borderRadius: BorderRadius.circular(25.15),
-              child: Image.network(
-                course.thumbnail, 
-                fit: BoxFit.cover, 
-                errorBuilder: (c, e, s) => AppImages.live.image(fit: BoxFit.cover),
+              child: CustomImage(
+                imagePath: course.thumbnail,
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
               ),
             ),
           ),

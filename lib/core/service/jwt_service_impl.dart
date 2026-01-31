@@ -64,6 +64,11 @@ Future<void> saveUserName(String userName) async {
 Future<String?> getUserName() async {
   return await cacheService.get<String>('userName');
 }
+
+@override
+Future<void> clearAll() async {
+  await cacheService.clear();
+}
 }
 
 

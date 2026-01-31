@@ -12,17 +12,22 @@ class MyCoursesResponseModel {
 
   factory MyCoursesResponseModel.fromJson(Map<String, dynamic> json) => _$MyCoursesResponseModelFromJson(json);
 }
+
 @JsonSerializable()
 class MyCourseItemModel {
-  final dynamic id; // غيرها لـ dynamic عشان الـ API باعتها String بس أحياناً بتكون Int
+  final dynamic id; 
   final String title;
   final String duration;
   final String category;
+  
   @JsonKey(name: 'progress_percentage')
-  final String? progressPercentage;
+  final dynamic progressPercentage; // غيرها لـ dynamic
+  
   final String? thumbnail;
+  
   @JsonKey(name: 'lessons_count')
-  final String? lessonsCount; // أضف هذا الحقل لأنه مطلوب في الـ Schema
+  final dynamic lessonsCount; // غيرها لـ dynamic
+
   final InstructorModel instructor;
 
   MyCourseItemModel({
@@ -36,8 +41,26 @@ class MyCourseItemModel {
     required this.instructor,
   });
 
-  factory MyCourseItemModel.fromJson(Map<String, dynamic> json) => _$MyCourseItemModelFromJson(json);
+  // دوال مساعدة عشان تحول القيم لنصوص بأمان في الـ UI
+  String get progressText => progressPercentage?.toString() ?? "0";
+  String get lessonsCountText => lessonsCount?.toString() ?? "0";
+
+  factory MyCourseItemModel.fromJson(Map<String, dynamic> json) {
+    return MyCourseItemModel(
+      id: json['id'],
+      title: (json['title']?.toString() ?? '').trim(),
+      duration: (json['duration']?.toString() ?? '').trim(),
+      category: (json['category']?.toString() ?? '').trim(),
+      progressPercentage: json['progress_percentage'],
+      thumbnail: (json['thumbnail']?.toString() ?? '').trim(),
+      lessonsCount: json['lessons_count'],
+      instructor: InstructorModel.fromJson(json['instructor'] ?? {}),
+    );
+  }
+
+  Map<String, dynamic> toJson() => _$MyCourseItemModelToJson(this);
 }
+
 @JsonSerializable()
 class InstructorModel {
   final String name;
@@ -45,5 +68,10 @@ class InstructorModel {
 
   InstructorModel({required this.name, this.image});
 
-  factory InstructorModel.fromJson(Map<String, dynamic> json) => _$InstructorModelFromJson(json);
+  factory InstructorModel.fromJson(Map<String, dynamic> json) {
+    return InstructorModel(
+      name: (json['name']?.toString() ?? '').trim(),
+      image: (json['image']?.toString() ?? '').trim(),
+    );
+  }
 }

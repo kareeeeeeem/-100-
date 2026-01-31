@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:lms/features/son_flow/home/data/model/profile_response_model.dart';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lms/core/routing/app_routes.dart';
@@ -45,10 +47,12 @@ class _ProfilePageState extends State<ProfilePage> {
                   children: [
                     // 1. صورة البروفايل
                     ProfileImageAndEdit(
-                      imageSize: 150,
-                      imageUrl: data?.image, 
-                      onEditTap: () => context.pushNamed(AppRoutes.sonProfileDetails),
-                    ),
+  imageSize: 150,
+  // نقوم بتمرير رابط صورة التلميذ من البيانات القادمة
+  // إذا كان data.image فارغاً، يمكنك وضع رابط لصورة افتراضية (placeholder)
+  imagePath: data?.image ?? 'assets/images/default_student.png', 
+  onEditTap: () => context.pushNamed(AppRoutes.sonProfileDetails),
+),
                     const SizedBox(height: 10),
                     
                     // 2. الاسم (اللي هينطق eeee)
@@ -80,7 +84,55 @@ class _ProfilePageState extends State<ProfilePage> {
                     const SizedBox(height: 10),
                     _buildCoursesList(data?.recentCourses),
                     const SizedBox(height: 20),
-                    _buildActivitySummary(),
+                    const SizedBox(height: 20),
+                    _buildActivitySummary(data),
+                    const SizedBox(height: 30),
+                    
+                    // 5. أزرار تسجيل الخروج وحذف الحساب
+                    BlocConsumer<ProfileCubit, ProfileState>(
+                      listener: (context, state) {
+  if (state is LogoutSuccess || state is DeleteAccountSuccess) {
+    // استخدم go عشان تقفل كل الصفحات القديمة وتفتح اللوجين كأنك فاتح التطبيق لأول مرة
+    context.go(AppRoutes.login); 
+  } else if (state is LogoutError) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message)));
+  }else if (state is DeleteAccountError) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message)));
+                        }
+                      },
+                      builder: (context, state) {
+                        return Column(
+                          children: [
+                            _buildActionTile(
+                              icon: Icons.logout,
+                              label: 'تسجيل الخروج',
+                              color: Colors.orange,
+                              isLoading: state is LogoutLoading,
+                              onTap: () => _showConfirmDialog(
+                                context,
+                                title: 'تسجيل الخروج',
+                                message: 'هل أنت متأكد من رغبتك في تسجيل الخروج؟',
+                                onConfirm: () => context.read<ProfileCubit>().logout(),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            _buildActionTile(
+                              icon: Icons.delete_forever,
+                              label: 'حذف الحساب',
+                              color: Colors.red,
+                              isLoading: state is DeleteAccountLoading,
+                              onTap: () => _showConfirmDialog(
+                                context,
+                                title: 'حذف الحساب',
+                                message: 'هذا الإجراء نهائي ولا يمكن التراجع عنه. هل أنت متأكد؟',
+                                onConfirm: () => context.read<ProfileCubit>().deleteAccount(),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 20),
                   ],
                 ),
               ),
@@ -170,7 +222,7 @@ class _ProfilePageState extends State<ProfilePage> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         const Text('الدورات الخاصة بي', style: TextStyle(fontSize: 18.66, fontWeight: FontWeight.w700, color: AppColors.c303030)),
-        InkWell(onTap: () {}, child: const Text('عرض المزيد', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600))),
+       // InkWell(onTap: () {}, child: const Text('عرض المزيد', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600))),
       ],
     );
   }
@@ -204,7 +256,7 @@ Widget _buildCoursesList(List<dynamic>? courses) {
   );
 }
 
-  Widget _buildActivitySummary() {
+  Widget _buildActivitySummary(ProfileData? data) {
     return Column(
       children: [
         const Align(alignment: AlignmentDirectional.centerStart, child: Text('ملخص نشاط الطالب', style: TextStyle(fontSize: 18.66, fontWeight: FontWeight.w700))),
@@ -215,12 +267,79 @@ Widget _buildCoursesList(List<dynamic>? courses) {
           height: 200,
           child: Row(
             children: [
-              const Expanded(flex: 1, child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Text('14 ساعة'), Divider(), Text('32 درس')])),
-              const Expanded(flex: 3, child: ProfileChart()),
+              Expanded(
+                flex: 1,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('${data?.dashboardStats?.studyHoursWeek.fold<int>(0, (p, c) => p + (c as int)) ?? 0} ساعة'),
+                    const Divider(),
+                    Text('${data?.dashboardStats?.completedTasks ?? 0} درس'),
+                  ],
+                ),
+              ),
+              Expanded(flex: 3, child: ProfileChart(data: data?.dashboardStats?.studyHoursWeek)),
             ],
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildActionTile({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required bool isLoading,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: isLoading ? null : onTap,
+      child: CustomContainer(
+        borderRadius: 10,
+        borderAlpha: 0.4,
+        borderWidth: 0.3,
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+                child: Icon(icon, color: color),
+              ),
+              const SizedBox(width: 15),
+              Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+              const Spacer(),
+              if (isLoading)
+                const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+              else
+                const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showConfirmDialog(BuildContext context, {required String title, required String message, required VoidCallback onConfirm}) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('إلغاء')),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              onConfirm();
+            },
+            child: const Text('تأكيد', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
     );
   }
 }

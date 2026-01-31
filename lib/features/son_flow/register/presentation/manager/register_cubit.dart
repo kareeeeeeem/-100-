@@ -30,6 +30,9 @@ class RegisterCubit extends Cubit<RegisterState> {
     );
 
     result.fold(
+      (_) {
+        emit(state.copyWith(registerStatus: RequestStatus.success));
+      },
       (failure) {
         emit(
           state.copyWith(
@@ -37,9 +40,6 @@ class RegisterCubit extends Cubit<RegisterState> {
             registerErrorMessage: failure.message,
           ),
         );
-      },
-      (_) {
-        emit(state.copyWith(registerStatus: RequestStatus.success));
       },
     );
   }

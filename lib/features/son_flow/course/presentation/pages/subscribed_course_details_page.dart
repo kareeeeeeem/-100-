@@ -8,6 +8,8 @@ import 'package:lms/core/utils/app_images.dart';
 import 'package:lms/core/utils/app_svgs.dart';
 import 'package:lms/core/widgets/custom_container.dart';
 import 'package:lms/core/widgets/custom_elevated_button.dart';
+import 'package:lms/features/son_flow/community/presentation/manager/comments_cubit.dart';
+import 'package:lms/features/son_flow/community/presentation/manager/favorite_cubit.dart';
 import 'package:lms/features/son_flow/course/presentation/widgets/course_comments_bottom_sheet.dart';
 
 class SubscribedCourseDetailsPage extends StatefulWidget {
@@ -57,7 +59,51 @@ class _SubscribedCourseDetailsPageState extends State<SubscribedCourseDetailsPag
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('تفاصيل الدورة')),
+      appBar: AppBar(
+        title: const Text('تفاصيل الدورة'),
+        actionsPadding: const EdgeInsetsDirectional.only(end: 16),
+        actions: [
+          BlocBuilder<CourseDetailsCubit, CourseDetailsState>(
+            builder: (context, detailsState) {
+              bool isFavorited = false;
+              if (detailsState is CourseDetailsSuccess) {
+                isFavorited = detailsState.model.data?.isFavorited ?? false;
+              }
+              return BlocConsumer<FavoriteCubit, FavoriteState>(
+                listener: (context, favoriteState) {
+                  if (favoriteState is FavoriteError) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(favoriteState.message)),
+                    );
+                  }
+                },
+                builder: (context, favoriteState) {
+                  bool currentStatus = isFavorited;
+                  if (favoriteState is FavoriteSuccess) {
+                    currentStatus = favoriteState.isFavorited;
+                  }
+                  if (favoriteState is FavoriteLoading) {
+                    return const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    );
+                  }
+                  return InkWell(
+                    onTap: () {
+                      context.read<FavoriteCubit>().toggleFavorite(widget.courseId);
+                    },
+                    child: Icon(
+                      currentStatus ? Icons.favorite : Icons.favorite_border,
+                      color: AppColors.primary,
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ],
+      ),
       body: BlocConsumer<CourseDetailsCubit, CourseDetailsState>(
         listener: (context, state) {
           if (state is CourseDetailsSuccess) {
@@ -93,9 +139,36 @@ class _SubscribedCourseDetailsPageState extends State<SubscribedCourseDetailsPag
                     const SizedBox(height: 10),
                     
                     // --- عنوان الدورة ---
-                    Text(
-                      data?.title ?? '',
-                      style: const TextStyle(fontSize: 18.86, fontWeight: FontWeight.w600),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            data?.title ?? '',
+                            style: const TextStyle(fontSize: 18.86, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        InkWell(
+                          onTap: () {
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.white,
+                              builder: (sheetContext) => BlocProvider.value(
+                                value: context.read<CommentsCubit>()..loadComments(widget.courseId),
+                                child: CourseCommentsBottomSheet(courseId: widget.courseId),
+                              ),
+                            );
+                          },
+                          child: const Row(
+                            children: [
+                              Text('التعليقات', style: TextStyle(color: AppColors.primary, fontSize: 12)),
+                              SizedBox(width: 4),
+                              Icon(Icons.comment_outlined, color: AppColors.primary, size: 20),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 20),
 

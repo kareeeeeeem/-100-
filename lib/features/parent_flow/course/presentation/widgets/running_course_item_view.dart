@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lms/core/routing/app_routes.dart';
 import 'package:lms/core/utils/app_colors.dart';
 import 'package:lms/features/son_flow/home/data/model/my_courses_response_model.dart'; 
+import 'package:lms/core/widgets/custom_image.dart';
 
 class RunningCourseItemView extends StatelessWidget {
   // لازم نستقبل الـ Item عشان ناخد منه الـ ID والعنوان الحقيقي
@@ -16,13 +17,11 @@ class RunningCourseItemView extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       child: Row(
         children: [
-          Container(
+          CustomImage(
+            imagePath: courseItem.thumbnail,
             width: 52,
             height: 52,
-            decoration: BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.circular(10),
-            ),
+            borderRadius: 10,
           ),
           const SizedBox(width: 10),
           Expanded(

@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:lms/core/utils/app_colors.dart';
 
 class ProfileChart extends StatefulWidget {
-  const ProfileChart({super.key});
+  final List<int>? data;
+  const ProfileChart({super.key, this.data});
 
   @override
   State<ProfileChart> createState() => _ProfileChartState();
@@ -123,19 +124,17 @@ class _ProfileChartState extends State<ProfileChart> {
     );
   }
 
-  List<BarChartGroupData> showingGroups() => List.generate(
-    7,
-    (i) => switch (i) {
-      0 => makeGroupData(0, 3.5, isTouched: i == touchedIndex),
-      1 => makeGroupData(1, 3, isTouched: i == touchedIndex),
-      2 => makeGroupData(2, 3, isTouched: i == touchedIndex),
-      3 => makeGroupData(3, 4, isTouched: i == touchedIndex),
-      4 => makeGroupData(4, 3, isTouched: i == touchedIndex),
-      5 => makeGroupData(5, 3.5, isTouched: i == touchedIndex),
-      6 => makeGroupData(6, 4.5, isTouched: i == touchedIndex),
-      _ => throw Error(),
-    },
-  );
+  List<BarChartGroupData> showingGroups() {
+    final data = widget.data ?? [0, 0, 0, 0, 0, 0, 0];
+    return List.generate(
+      7,
+      (i) {
+        final val = (data.length > i ? data[i] : 0).toDouble();
+        // Scale it so that 100 becomes 5.0 (since maxY is 5.0 and each unit is 20)
+        return makeGroupData(i, val / 20.0, isTouched: i == touchedIndex);
+      },
+    );
+  }
 
   Widget bottomTitles(double value, TitleMeta meta) {
     const style = TextStyle(
