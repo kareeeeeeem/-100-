@@ -13,6 +13,8 @@ import 'package:lms/features/parent_flow/home/presentation/pages/home_page.dart'
 import 'package:lms/features/parent_flow/payment/presentation/pages/payment_requests_page.dart';
 import 'package:lms/features/parent_flow/son_profile/presentation/pages/edit_son_profile_details_page.dart';
 import 'package:lms/features/parent_flow/son_profile/presentation/pages/son_profile_details_page.dart';
+import 'package:lms/features/son_flow/course/presentation/pages/WishlistCubit.dart';
+import 'package:lms/features/son_flow/course/presentation/pages/WishlistPage.dart';
 import 'package:lms/features/son_flow/course/presentation/pages/course_details_page.dart';
 import 'package:lms/features/son_flow/course/presentation/pages/subscribed_course_details_page.dart';
 import 'package:lms/features/son_flow/exams/presentation/pages/comprehensive_exam_details_page.dart';
@@ -44,7 +46,6 @@ import 'package:lms/features/son_flow/dashboard/presentation/pages/dashboard_pag
 import 'package:lms/features/parent_flow/presentation/manager/parent_cubit.dart';
 import 'package:lms/features/parent_flow/presentation/manager/parent_state.dart';
 import 'package:lms/features/son_flow/community/presentation/manager/comments_cubit.dart';
-import 'package:lms/features/son_flow/community/presentation/manager/favorite_cubit.dart';
 import 'package:lms/features/son_flow/home/presentation/manager/payment_cubit.dart';
 import 'package:lms/features/son_flow/exams/presentation/manager/exam_cubit.dart';
 import 'package:lms/features/son_flow/live_sessions/presentation/manager/live_session_cubit.dart';
@@ -112,54 +113,52 @@ final class AppRouter {
 
       // SON FLOW
       GoRoute(
-        path: AppRoutes.sonHome,
-        name: AppRoutes.sonHome,
-        builder: (context, state) {
-          HomeDi().init();
-          return const HomeLayout();
-        },
-        routes: [
-         GoRoute(
-  path: AppRoutes.courseDetails,
-  name: AppRoutes.courseDetails,
+  path: AppRoutes.sonHome,
+  name: AppRoutes.sonHome,
   builder: (context, state) {
-    // التعديل الآمن هنا 👇
-    final Object? extra = state.extra;
-    int courseId = 0;
-
-    if (extra is int) {
-      courseId = extra;
-    } else if (extra is String) {
-      courseId = int.tryParse(extra) ?? 0;
-    }
-
+    HomeDi().init();
     return MultiBlocProvider(
       providers: [
-        BlocProvider(
-          create: (context) => GetIt.instance<CourseDetailsCubit>()..fetchCourseDetails(courseId),
-        ),
-        BlocProvider(
-          create: (context) => GetIt.instance<CommentsCubit>(),
-        ),
-        BlocProvider(
-          create: (context) => GetIt.instance<FavoriteCubit>(),
-        ),
-        BlocProvider(
-          create: (context) => GetIt.instance<PaymentCubit>(),
-        ),
+        BlocProvider(create: (context) => GetIt.instance<WishlistCubit>()),
+        BlocProvider(create: (context) => GetIt.instance<ProfileCubit>()..getProfileData()),
       ],
-      child: CourseDetailsPage(courseId: courseId),
+      child: const HomeLayout(),
     );
   },
-),
+  routes: [
+          // 1. صفحة تفاصيل الكورس
           GoRoute(
-            path: AppRoutes.availableLives,
-            name: AppRoutes.availableLives,
+        path: AppRoutes.courseDetails,
+        name: AppRoutes.courseDetails,
+        builder: (context, state) {
+          // السطرين دول هم اللي ناقصين عندك عشان يحلوا مشكلة الـ courseId
+          final Object? extra = state.extra;
+          int courseId = extra is int ? extra : (int.tryParse(extra.toString()) ?? 0);
+
+          return MultiBlocProvider(
+            providers: [
+              BlocProvider(
+                create: (context) => GetIt.instance<CourseDetailsCubit>()
+                  ..fetchCourseDetails(courseId),
+              ),
+              BlocProvider(create: (context) => GetIt.instance<CommentsCubit>()),
+              BlocProvider(create: (context) => GetIt.instance<PaymentCubit>()),
+              // السطر اللي بيحل مشكلة الـ Provider في زرار القلب
+              BlocProvider.value(value: GetIt.instance<WishlistCubit>()),
+            ],
+            child: CourseDetailsPage(courseId: courseId),
+          );
+        },
+      ),
+
+          // 2. صفحة المفضلة (تم تصحيحها لتستخدم نفس الـ Cubit)
+          GoRoute(
+            path: AppRoutes.wishlist,
+            name: AppRoutes.wishlist,
             builder: (context, state) {
-              return BlocProvider(
-                create: (context) => GetIt.instance<LiveSessionCubit>()..loadLiveSessions(),
-                child: const AvailableLivesPage(),
-              );
+              // لا ننشئ BlocProvider جديد هنا! 
+              // نكتفي بإرجاع الصفحة وهي ستجد الـ Cubit تلقائياً من الـ sonHome
+              return const WishlistPage();
             },
           ),
           GoRoute(
@@ -197,17 +196,17 @@ final class AppRouter {
             },
           ),
           GoRoute(
-            path: AppRoutes.instructorProfile,
-            name: AppRoutes.instructorProfile,
+            path: AppRoutes.availableLives,
+            name: AppRoutes.availableLives,
             builder: (context, state) {
-              final String instructorId = state.extra as String? ?? '1';
               return BlocProvider(
-                create: (context) => GetIt.instance<InstructorCubit>()
-                  ..getInstructorProfile(instructorId),
-                child: InstructorProfilePage(instructorId: instructorId),
+                create: (context) => GetIt.instance<LiveSessionCubit>()
+                  ..loadLiveSessions(),
+                child: const AvailableLivesPage(),
               );
             },
           ),
+
           GoRoute(
             path: AppRoutes.dashboard,
             name: AppRoutes.dashboard,
@@ -232,11 +231,8 @@ final class AppRouter {
                   ),
                   BlocProvider(
                     create: (context) => GetIt.instance<CommentsCubit>(),
-                  ),
-                  BlocProvider(
-                    create: (context) => GetIt.instance<FavoriteCubit>(),
-                  ),
-                ],
+                ),
+              ],
                 child: SubscribedCourseDetailsPage(courseId: courseId),
               );
             },
@@ -255,7 +251,11 @@ final class AppRouter {
             path: AppRoutes.prefaceExamDetails,
             name: AppRoutes.prefaceExamDetails,
             builder: (context, state) {
-              return const PrefaceExamDetailsPage();
+              final String examId = state.extra as String? ?? '1';
+              return BlocProvider(
+                create: (context) => GetIt.instance<ExamCubit>()..loadExam(examId),
+                child: PrefaceExamDetailsPage(examId: examId),
+              );
             },
           ),
           GoRoute(
@@ -273,7 +273,11 @@ final class AppRouter {
             path: AppRoutes.comprehensiveExamDetails,
             name: AppRoutes.comprehensiveExamDetails,
             builder: (context, state) {
-              return const ComprehensiveExamDetailsPage();
+              final String examId = state.extra as String? ?? '1';
+              return BlocProvider(
+                create: (context) => GetIt.instance<ExamCubit>()..loadExam(examId),
+                child: ComprehensiveExamDetailsPage(examId: examId),
+              );
             },
           ),
           GoRoute(
@@ -289,6 +293,18 @@ final class AppRouter {
           ),
         ],
       ),
+      GoRoute(
+  path: AppRoutes.instructorProfile, // تأكد أن القيمة تبدأ بـ / في ملف AppRoutes
+  name: AppRoutes.instructorProfile,
+  builder: (context, state) {
+    final String instructorId = state.extra as String? ?? '1';
+    return BlocProvider(
+      create: (context) => GetIt.instance<InstructorCubit>()..getInstructorProfile(instructorId),
+      child: InstructorProfilePage(instructorId: instructorId),
+    );
+  },
+),
+
 
       // PARENT FLOW
       GoRoute(

@@ -9,6 +9,7 @@ class CustomImage extends StatelessWidget {
   final double? height;
   final BoxFit? fit;
   final double borderRadius;
+  final bool isUserProfile;
 
   const CustomImage({
     super.key,
@@ -17,6 +18,7 @@ class CustomImage extends StatelessWidget {
     this.height,
     this.fit = BoxFit.cover,
     this.borderRadius = 0,
+    this.isUserProfile = false,
   });
 
   @override
@@ -27,24 +29,56 @@ class CustomImage extends StatelessWidget {
       return _buildPlaceholder();
     }
 
-    final bool isAsset = trimmedPath.startsWith('assets/');
-    final bool isFullUrl = trimmedPath.startsWith('http://') || trimmedPath.startsWith('https://');
+    // Clean the path for detection
+    String pathForDetection = trimmedPath;
+    if (pathForDetection.startsWith('/')) {
+      pathForDetection = pathForDetection.substring(1);
+    }
+
+    // Only treat as local asset if it's in our known local folders
+    final bool isLocalAsset = pathForDetection.startsWith('assets/images/') || 
+                             pathForDetection.startsWith('assets/svgs/');
     
+    final bool isFullUrl = trimmedPath.startsWith('http://') || trimmedPath.startsWith('https://');
+
     // Build the final URL for network images
     String finalUrl = trimmedPath;
-    if (!isAsset && !isFullUrl) {
-      // It's a relative path, prepend the base URL
-      // Ensure we don't have double slashes
-      if (trimmedPath.startsWith('/')) {
-        finalUrl = '${ApiConstants.imageBaseUrl}$trimmedPath';
+    if (!isLocalAsset) {
+      if (isFullUrl) {
+        // If it's a full URL from our domain but missing /storage/
+        // Only add /storage/ if it's NOT an /assets/ path and NOT an /api/ path
+        if (trimmedPath.contains('100-academy.com') && 
+            !trimmedPath.contains('/storage/') && 
+            !trimmedPath.contains('/api/') &&
+            !trimmedPath.contains('/assets/')) {
+          finalUrl = trimmedPath.replaceFirst('100-academy.com', '100-academy.com/storage');
+        }
       } else {
-        finalUrl = '${ApiConstants.imageBaseUrl}/$trimmedPath';
+        // It's a relative path
+        String path = trimmedPath;
+        if (path.startsWith('/')) {
+          path = path.substring(1);
+        }
+        
+        if (path.startsWith('storage/')) {
+          path = path.substring('storage/'.length);
+        }
+        
+        // Determine base URL: use /storage/ for most things, but not for /assets/
+        if (path.startsWith('assets/')) {
+          // Public assets (like slides) are at the domain root
+          final String domain = ApiConstants.baseUrl.split('/api/')[0];
+          finalUrl = '$domain/$path';
+        } else {
+          // Regular uploads are in /storage/
+          finalUrl = '${ApiConstants.imageBaseUrl}/$path';
+        }
       }
     }
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(borderRadius),
-      child: isAsset
+      child: isLocalAsset
           ? Image.asset(
               trimmedPath,
               width: width,
@@ -85,11 +119,17 @@ class CustomImage extends StatelessWidget {
         borderRadius: BorderRadius.circular(borderRadius),
       ),
       child: Center(
-        child: Icon(
-          Icons.image_not_supported_outlined,
-          color: Colors.grey[400],
-          size: (width != null && width!.isFinite) ? width! * 0.5 : 50,
-        ),
+        child: isUserProfile
+            ? AppImages.userAvatar.image(
+                width: width,
+                height: height,
+                fit: fit,
+              )
+            : Icon(
+                Icons.image_not_supported_outlined,
+                color: Colors.grey[400],
+                size: (width != null && width!.isFinite) ? width! * 0.5 : 50,
+              ),
       ),
     );
   }

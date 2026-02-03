@@ -8,13 +8,19 @@ class CommentsCubit extends Cubit<CommentsState> {
 
   CommentsCubit(this.repository) : super(CommentsInitial());
 
-  Future<void> loadComments(int courseId) async {
-    emit(CommentsLoading());
+  Future<void> loadComments(int courseId, {bool showLoading = true}) async {
+    if (showLoading) emit(CommentsLoading());
     final result = await repository.getComments(courseId);
     if (result.isSuccess) {
       emit(CommentsLoaded(result.data ?? []));
     } else {
-      emit(CommentsError(result.failure?.message ?? 'Unknown Error'));
+      if (showLoading) {
+        emit(CommentsError(result.failure?.message ?? 'Unknown Error'));
+      } else {
+        // If we didn't show loading, maybe just show a snackbar via listener in UI
+        // or just stay in loaded state. For now, let's just emit error.
+        emit(CommentsError(result.failure?.message ?? 'Unknown Error'));
+      }
     }
   }
 
@@ -30,12 +36,11 @@ class CommentsCubit extends Cubit<CommentsState> {
     final result = await repository.postComment(courseId, text, parentId: parentId);
     
     if (result.isSuccess) {
-      // If it's a top level comment, we might want to refresh the list or just append it
-      // For now, let's refresh to get the full resource with user details etc.
-      await loadComments(courseId);
+      // Refresh without showing the full-screen loading indicator
+      await loadComments(courseId, showLoading: false);
     } else {
       emit(CommentsError(result.failure?.message ?? 'Failed to add comment'));
-      // Restore previous state if needed
+      // Restore previous state
       emit(CommentsLoaded(currentComments));
     }
   }

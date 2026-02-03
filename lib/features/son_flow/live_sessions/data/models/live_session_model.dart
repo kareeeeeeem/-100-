@@ -84,8 +84,14 @@ class LiveSessionsResponseModel {
     this.errors,
   });
 
-  factory LiveSessionsResponseModel.fromJson(Map<String, dynamic> json) =>
-      _$LiveSessionsResponseModelFromJson(json);
+  factory LiveSessionsResponseModel.fromJson(Map<String, dynamic> json) {
+    return LiveSessionsResponseModel(
+      status: json['status'] ?? false,
+      message: json['message']?.toString() ?? '',
+      data: LiveSessionsDataModel.fromJson(json['data'] ?? {}),
+      errors: json['errors'],
+    );
+  }
 
   Map<String, dynamic> toJson() => _$LiveSessionsResponseModelToJson(this);
 }
@@ -102,8 +108,16 @@ class LiveSessionsDataModel {
     required this.archived,
   });
 
-  factory LiveSessionsDataModel.fromJson(Map<String, dynamic> json) =>
-      _$LiveSessionsDataModelFromJson(json);
+  factory LiveSessionsDataModel.fromJson(Map<String, dynamic> json) {
+    return LiveSessionsDataModel(
+      availableNow: (json['available_now'] as List? ?? [])
+          .map((e) => LiveSessionModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      archived: (json['archived'] as List? ?? [])
+          .map((e) => LiveSessionModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
 
   Map<String, dynamic> toJson() => _$LiveSessionsDataModelToJson(this);
 }
@@ -122,8 +136,14 @@ class JoinSessionResponseModel {
     this.errors,
   });
 
-  factory JoinSessionResponseModel.fromJson(Map<String, dynamic> json) =>
-      _$JoinSessionResponseModelFromJson(json);
+  factory JoinSessionResponseModel.fromJson(Map<String, dynamic> json) {
+    return JoinSessionResponseModel(
+      status: json['status'] ?? false,
+      message: json['message']?.toString() ?? '',
+      data: JoinSessionDataModel.fromJson(json['data'] ?? {}),
+      errors: json['errors'],
+    );
+  }
 
   Map<String, dynamic> toJson() => _$JoinSessionResponseModelToJson(this);
 }
@@ -141,8 +161,12 @@ class JoinSessionDataModel {
     required this.joinUrl,
   });
 
-  factory JoinSessionDataModel.fromJson(Map<String, dynamic> json) =>
-      _$JoinSessionDataModelFromJson(json);
+  factory JoinSessionDataModel.fromJson(Map<String, dynamic> json) {
+    return JoinSessionDataModel(
+      sessionId: (json['session_id']?.toString() ?? '').trim(),
+      joinUrl: json['join_url']?.toString() ?? '',
+    );
+  }
 
   Map<String, dynamic> toJson() => _$JoinSessionDataModelToJson(this);
 }

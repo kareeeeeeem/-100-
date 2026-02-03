@@ -18,5 +18,9 @@ abstract class JwtService {
   
   Future<void> saveUserName(String userName);
   Future<String?> getUserName();
+  
+  Future<void> saveUserAvatar(String avatar);
+  Future<String?> getUserAvatar();
+  
   Future<void> clearAll();
 }

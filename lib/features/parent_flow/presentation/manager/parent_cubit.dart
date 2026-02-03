@@ -55,6 +55,7 @@ class ParentCubit extends Cubit<ParentState> {
 
   Future<void> checkout({
     required int courseId,
+    required double amount,
     required String cardNumber,
     required String expiryDate,
     required String cvv,
@@ -63,6 +64,7 @@ class ParentCubit extends Cubit<ParentState> {
     emit(state.copyWith(status: ParentStatus.loading));
     final result = await _repository.checkout(
       courseId: courseId,
+      amount: amount,
       cardNumber: cardNumber,
       expiryDate: expiryDate,
       cvv: cvv,

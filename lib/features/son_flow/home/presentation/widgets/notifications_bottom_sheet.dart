@@ -42,8 +42,7 @@ class _NotificationsBottomSheetState extends State<NotificationsBottomSheet> {
               indicatorColor: AppColors.primary,
               tabs: [
                 Tab(text: 'الكل'),
-                Tab(text: 'غير مقروءة'),
-                Tab(text: 'مقروءة'),
+               
               ],
             ),
             Expanded(

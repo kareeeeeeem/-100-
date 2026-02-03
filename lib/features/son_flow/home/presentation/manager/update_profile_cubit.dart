@@ -18,9 +18,9 @@ class UpdateProfileCubit extends Cubit<UpdateProfileState> {
   final HomeRepository _repository;
   UpdateProfileCubit(this._repository) : super(UpdateProfileInitial());
 
-  Future<void> updateProfile({required String name, required String phone}) async {
+  Future<void> updateProfile({required String name, required String email}) async {
     emit(UpdateProfileLoading());
-    final result = await _repository.updateProfile(name: name, phone: phone);
+    final result = await _repository.updateProfile(name: name, email: email);
     if (result.isSuccess) {
       emit(UpdateProfileSuccess(result.data!));
     } else {

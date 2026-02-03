@@ -16,6 +16,7 @@ class PaymentCubit extends Cubit<PaymentState> {
 
   Future<void> checkout({
     required int courseId,
+    required double amount, // Added amount
     required String cardNumber,
     required String expiryDate,
     required String cvv,
@@ -24,6 +25,7 @@ class PaymentCubit extends Cubit<PaymentState> {
     emit(PaymentLoading());
     final result = await repository.checkout(
       courseId: courseId,
+      amount: amount, // Pass to repository
       cardNumber: cardNumber,
       expiryDate: expiryDate,
       cvv: cvv,

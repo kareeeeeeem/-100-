@@ -50,13 +50,13 @@ class HomeApiServiceImpl implements HomeApiService {
   }
 
   @override
-  Future<ProfileResponseModel> updateProfile({required String name, required String phone}) async {
+  Future<ProfileResponseModel> updateProfile({required String name, required String email}) async {
     final token = await jwtService.getAccessToken();
     final response = await apiService.post(
       ApiConstants.updateProfile,
       body: {
         'name': name,
-        'phone': phone,
+        'email': email,
       },
       headers: {'Authorization': 'Bearer $token'},
     );
@@ -92,49 +92,6 @@ class HomeApiServiceImpl implements HomeApiService {
     final token = await jwtService.getAccessToken();
     await apiService.post(
       ApiConstants.markAsRead(id),
-      headers: {'Authorization': 'Bearer $token'},
-    );
-  }
-
-  @override
-  Future<List<CategoryModel>> getCategories() async {
-    final token = await jwtService.getAccessToken();
-    final response = await apiService.get(
-      ApiConstants.categories,
-      headers: {'Authorization': 'Bearer $token'},
-    );
-    return (response['data'] as List).map((e) => CategoryModel.fromJson(e)).toList();
-  }
-
-  @override
-  Future<List<CourseModel>> searchCourses(String query) async {
-    final token = await jwtService.getAccessToken();
-    final response = await apiService.get(
-      ApiConstants.courses,
-      queryParameters: {'search': query},
-      headers: {'Authorization': 'Bearer $token'},
-    );
-    return (response['data'] as List).map((e) => CourseModel.fromJson(e)).toList();
-  }
-
-  @override
-  Future<void> checkout({
-    required int courseId,
-    required String cardNumber,
-    required String expiryDate,
-    required String cvv,
-    required String paymentType,
-  }) async {
-    final token = await jwtService.getAccessToken();
-    await apiService.post(
-      ApiConstants.checkout,
-      body: {
-        'course_id': courseId,
-        'card_number': cardNumber,
-        'expiry_date': expiryDate,
-        'cvv': cvv,
-        'payment_type': paymentType,
-      },
       headers: {'Authorization': 'Bearer $token'},
     );
   }
@@ -176,12 +133,50 @@ class HomeApiServiceImpl implements HomeApiService {
   }
 
   @override
-  Future<bool> toggleFavorite(int courseId) async {
+  Future<List<CategoryModel>> getCategories() async {
     final token = await jwtService.getAccessToken();
-    final response = await apiService.post(
-      ApiConstants.toggleFavorite(courseId),
+    final response = await apiService.get(
+      ApiConstants.categories,
       headers: {'Authorization': 'Bearer $token'},
     );
-    return response['is_favorite'] ?? false;
+    final List data = response['data'] is List ? response['data'] : [];
+    return data.map((e) => CategoryModel.fromJson(e)).toList();
+  }
+
+  @override
+  Future<List<CourseModel>> searchCourses(String query) async {
+    final token = await jwtService.getAccessToken();
+    final response = await apiService.get(
+      ApiConstants.courses,
+      queryParameters: {'search': query},
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    final List data = response['data'] is List ? response['data'] : [];
+    return data.map((e) => CourseModel.fromJson(e)).toList();
+  }
+
+  @override
+  Future<void> checkout({
+    required int courseId,
+    required double amount,
+    required String cardNumber,
+    required String expiryDate,
+    required String cvv,
+    required String paymentType,
+  }) async {
+    final token = await jwtService.getAccessToken();
+    await apiService.post(
+      ApiConstants.checkout,
+      body: {
+        'course_id': courseId,
+        'amount': amount,
+        'price': amount,
+        'card_number': cardNumber,
+        'expiry_date': expiryDate,
+        'cvv': cvv,
+        'payment_type': paymentType,
+      },
+      headers: {'Authorization': 'Bearer $token'},
+    );
   }
 }

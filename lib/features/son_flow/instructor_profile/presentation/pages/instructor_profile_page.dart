@@ -1,288 +1,260 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 import 'package:lms/core/utils/app_colors.dart';
 import 'package:lms/core/utils/app_svgs.dart';
-import 'package:lms/core/widgets/custom_container.dart';
 import 'package:lms/core/widgets/profile_image_and_edit.dart';
-import 'package:lms/features/son_flow/home/data/model/home_response_model.dart';
+import 'package:lms/features/son_flow/instructor_profile/data/models/instructor_profile_model.dart';
+import 'package:lms/features/son_flow/home/data/model/home_response_model.dart'; // للوصول لـ CourseModel
 import 'package:lms/features/son_flow/instructor_profile/presentation/manager/instructor_cubit.dart';
 import 'package:lms/features/son_flow/instructor_profile/presentation/manager/instructor_state.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lms/core/routing/app_routes.dart';
+import 'package:lms/core/widgets/custom_image.dart';
 
 class InstructorProfilePage extends StatelessWidget {
   final String instructorId;
-  
+
   const InstructorProfilePage({super.key, required this.instructorId});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: BlocBuilder<InstructorCubit, InstructorState>(
-          builder: (context, state) {
-            if (state is InstructorLoading) {
-              return const Center(child: CircularProgressIndicator());
-            } else if (state is InstructorError) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(state.message),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () {
-                        context.read<InstructorCubit>().getInstructorProfile(instructorId);
-                      },
-                      child: const Text('إعادة المحاولة'),
-                    ),
-                  ],
-                ),
-              );
-            } else if (state is InstructorProfileLoaded) {
-              final profile = state.profile;
-              return SingleChildScrollView(
-                child: Padding(
+    return BlocProvider(
+      create: (context) =>
+          GetIt.instance<InstructorCubit>()..getInstructorProfile(instructorId),
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Profile'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios),
+            onPressed: () => context.pop(),
+          ),
+        ),
+        body: SafeArea(
+          child: BlocBuilder<InstructorCubit, InstructorState>(
+            builder: (context, state) {
+              if (state is InstructorLoading) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (state is InstructorError) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline, size: 60, color: Colors.red),
+                      Text(state.message),
+                      const SizedBox(height: 10),
+                      ElevatedButton(
+                        onPressed: () => context
+                            .read<InstructorCubit>()
+                            .getInstructorProfile(instructorId),
+                        child: const Text('إعادة المحاولة'),
+                      ),
+                    ],
+                  ),
+                );
+              } else if (state is InstructorProfileLoaded) {
+                final profile = state.profile;
+                return SingleChildScrollView(
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // صورة البروفايل
                       Center(
                         child: ProfileImageAndEdit(
-                          imageSize: 150,
+                          imageSize: 120,
                           showEditIcon: false,
                           imagePath: profile.avatar,
                         ),
                       ),
                       const SizedBox(height: 10),
+                      // اسم المعلم
                       Center(
                         child: Text(
                           profile.name,
                           style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.black,
-                          ),
+                              fontSize: 20, fontWeight: FontWeight.w700),
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 25),
+                      // الإحصائيات (Stats)
                       Row(
-                        spacing: 10,
                         children: [
                           Expanded(
                             child: _buildStatCard(
-                              icon: AppSvgs.book.svg(fit: BoxFit.scaleDown),
+                              icon: AppSvgs.book.svg(color: AppColors.primary),
                               value: profile.stats.courses,
-                              label: 'الدورات',
+                              label: 'دورة',
                             ),
                           ),
+                          const SizedBox(width: 10),
                           Expanded(
                             child: _buildStatCard(
-                              icon: const Icon(
-                                Icons.people_outline,
-                                color: AppColors.primary,
-                              ),
+                              icon: const Icon(Icons.people_outline,
+                                  color: AppColors.primary),
                               value: profile.stats.students,
                               label: 'طالب',
                             ),
                           ),
+                          const SizedBox(width: 10),
                           Expanded(
                             child: _buildStatCard(
-                              icon: AppSvgs.coin.svg(fit: BoxFit.scaleDown),
+                              icon: const Icon(Icons.workspace_premium_outlined,
+                                  color: AppColors.primary),
                               value: profile.stats.experience,
-                              label: '',
+                              label: 'خبرة',
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 20),
-                      const Text(
-                        'نبذة عن المعلم',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.black,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        profile.bio,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400,
-                          color: Colors.black,
-                        ),
-                      ),
-                      if (profile.assistants.isNotEmpty) ...[
-                        const SizedBox(height: 20),
-                        const Text(
-                          'مساعدو التدريس',
+                      const SizedBox(height: 25),
+                      // السيرة الذاتية (Bio)
+                      const Text('نبذة عن المعلم',
                           style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.black,
+                              fontSize: 18, fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 10),
+Center( // تغليف النص بـ Center لضمان التوسط الأفقي
+  child: Text(
+    profile.bio.isEmpty ? 'لا توجد سيرة ذاتية.' : profile.bio,
+    textAlign: TextAlign.center, // لسنترة الأسطر إذا كانت النبذة طويلة
+    style: const TextStyle(
+      fontSize: 14,
+      color: Colors.black87,
+    ),
+  ),
+),                      
+                      // قسم المساعدين (البيانات الجديدة)
+                      if (profile.assistants.isNotEmpty) ...[
+                        const SizedBox(height: 25),
+                        const Text('مساعدو التدريس',
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.w700)),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          height: 110,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: profile.assistants.length,
+                            itemBuilder: (context, index) {
+                              final assistant = profile.assistants[index];
+                              return Padding(
+                                padding: const EdgeInsets.only(left: 16),
+                                child: Column(
+                                  children: [
+                                    CustomImage(
+                                      imagePath:  profile.avatar ,
+                                      width: 65,
+                                      height: 65,
+                                      borderRadius: 35,
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      assistant.name,
+                                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                                    ),
+                                    Text(
+                                      assistant.role ?? '', // إضافة الـ ?? لضمان عدم وجود قيمة null
+                                      style: const TextStyle(fontSize: 11, color: Colors.grey),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
                           ),
                         ),
-                        const SizedBox(height: 10),
-                        Row(
-                          spacing: 20,
-                          children: profile.assistants.map((assistant) {
-                            return Expanded(
-                              child: CustomContainer(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.center,
-                                    children: [
-                                      ProfileImageAndEdit(
-                                        imageSize: 66,
-                                        showEditIcon: false,
-                                        imagePath: assistant.image,
-                                      ),
-                                      Text(
-                                        assistant.name,
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w700,
-                                          color: Colors.black,
-                                        ),
-                                      ),
-                                      Text(
-                                        assistant.role ?? 'مساعد تدريس',
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w400,
-                                          color: AppColors.c737373,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
                       ],
-                      const SizedBox(height: 20),
-                      const Text(
-                        'دورات ذات صلة',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.black,
-                        ),
-                      ),
+                      
+                      const SizedBox(height: 25),
+                      // دورات المعلم (Related Courses)
+                      const Text('دورات المدرب',
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.w700)),
                       const SizedBox(height: 10),
                       ListView.separated(
                         physics: const NeverScrollableScrollPhysics(),
-                        primary: false,
                         shrinkWrap: true,
-                        itemBuilder: (context, index) {
-                          final course = profile.relatedCourses[index];
-                          return InkWell(
-                            onTap: () {
-                              context.pushNamed(
-                                AppRoutes.courseDetails,
-                                extra: course.id,
-                              );
-                            },
-                            child: _buildCourseCard(course),
-                          );
-                        },
-                        separatorBuilder: (context, index) {
-                          return const SizedBox(height: 10);
-                        },
                         itemCount: profile.relatedCourses.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) =>
+                            _buildCourseCard(context, profile.relatedCourses[index]),
                       ),
                     ],
                   ),
-                ),
-              );
-            }
-            return const Center(child: Text('لا توجد بيانات'));
-          },
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildStatCard({
-    required Widget icon,
-    required String value,
-    required String label,
-  }) {
-    return CustomContainer(
-      height: 110,
-      borderAlpha: 0.4,
-      borderWidth: 0.5,
+Widget _buildStatCard(
+      {required Widget icon, required String value, required String label}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: Colors.black12, width: 0.5),
+      ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        spacing: 4,
+        mainAxisAlignment: MainAxisAlignment.center, // توسيط عمودي
+        crossAxisAlignment: CrossAxisAlignment.center, // توسيط أفقي
         children: [
           icon,
+          const SizedBox(height: 5),
           Text(
             value,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: Colors.black,
-            ),
+            textAlign: TextAlign.center, // لضمان سنترة النص إذا زاد طوله
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
           ),
-          if (label.isNotEmpty)
-            Flexible(
-              child: Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black,
-                ),
-              ),
-            ),
+          Text(
+            label,
+            textAlign: TextAlign.center, // لضمان سنترة التسمية
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildCourseCard(CourseModel course) {
-    return CustomContainer(
-      borderRadius: 10,
-      borderAlpha: 0.4,
-      borderWidth: 0.3,
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
+  Widget _buildCourseCard(BuildContext context, CourseModel course) {
+    return InkWell(
+      onTap: () => context.pushNamed(AppRoutes.courseDetails, extra: course.id),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.black12, width: 0.5),
+        ),
         child: Row(
-          spacing: 10,
           children: [
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(10),
-                image: course.thumbnail != null
-                    ? DecorationImage(
-                        image: NetworkImage(course.thumbnail!),
-                        fit: BoxFit.cover,
-                      )
-                    : null,
-              ),
-            ),
+            CustomImage(
+                imagePath: course.thumbnail,
+                width: 75,
+                height: 75,
+                borderRadius: 8),
+            const SizedBox(width: 12),
             Expanded(
-              child: Text(
-                course.title,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16,
-                  color: Colors.black,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(course.title ?? '',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 14),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis),
+                  const SizedBox(height: 4),
+                  Text(course.category ?? '',
+                      style: const TextStyle(
+                          fontSize: 12, color: AppColors.primary)),
+                ],
               ),
             ),
-            const Icon(
-              Icons.arrow_forward_ios,
-              color: Colors.black,
-            ),
+            const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
           ],
         ),
       ),

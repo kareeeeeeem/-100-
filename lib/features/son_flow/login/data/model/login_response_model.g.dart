@@ -22,8 +22,8 @@ Data _$DataFromJson(Map<String, dynamic> json) => Data(
 User _$UserFromJson(Map<String, dynamic> json) => User(
   name: json['name'] as String,
   email: json['email'] as String,
-  phone: json['phone'] as String,
+  phone: json['phone'] as String?,
   userType: json['user_type'] as String,
-  userTypeText: json['user_type_text'] as String,
+  userTypeText: json['user_type_text'] as String?,
   identityNumber: json['identity_number'] as String?,
 );

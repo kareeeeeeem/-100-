@@ -31,7 +31,7 @@ class HomeDi extends AppDi {
     
     sl.registerFactory(() => MyCoursesCubit(sl<HomeRepository>()));
 
-    sl.registerFactory(() => ProfileCubit(sl<HomeRepository>(), sl<DashboardRepository>(), sl<JwtService>()));
+    sl.registerLazySingleton(() => ProfileCubit(sl<HomeRepository>(), sl<DashboardRepository>(), sl<JwtService>()));
 
     sl.registerFactory(() => UpdateProfileCubit(sl<HomeRepository>()));
 

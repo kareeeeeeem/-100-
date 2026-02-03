@@ -79,6 +79,15 @@ class _ProfilePageState extends State<ProfilePage> {
                           color: Colors.black,
                         ),
                       ),
+                      if (data?.email != null && data!.email!.isNotEmpty)
+                        Text(
+                          data.email!,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey[600],
+                          ),
+                        ),
                       const SizedBox(height: 20),
 
                       // 3. كارت التقدم
@@ -107,6 +116,43 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                         ],
                       ),
+
+                      const SizedBox(height: 20),
+
+                      // --- بيانات إضافية ---
+                      if ((data?.phone?.isNotEmpty ?? false) ||
+                          (data?.identityNumber?.isNotEmpty ?? false) ||
+                          (data?.userType?.isNotEmpty ?? false))
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'المعلومات الشخصية',
+                              style: TextStyle(
+                                fontSize: 18.66,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.c303030,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            CustomContainer(
+                              padding: const EdgeInsets.all(12),
+                              borderAlpha: 0.4,
+                              borderWidth: 0.3,
+                              child: Column(
+                                children: [
+                                  if (data?.phone?.isNotEmpty ?? false)
+                                    _buildInfoRow(Icons.phone, 'رقم الهاتف', data!.phone!),
+                                  if (data?.identityNumber?.isNotEmpty ?? false)
+                                    _buildInfoRow(Icons.badge, 'رقم الهوية', data!.identityNumber!),
+                                  if (data?.userType?.isNotEmpty ?? false)
+                                    _buildInfoRow(Icons.category, 'نوع الحساب', data!.userType!),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                          ],
+                        ),
 
                       const SizedBox(height: 20),
                       _buildLiveButton(context),
@@ -139,21 +185,21 @@ class _ProfilePageState extends State<ProfilePage> {
                                 ),
                               ),
                               const SizedBox(height: 10),
-                              _buildActionTile(
-                                icon: Icons.delete_forever,
-                                label: 'حذف الحساب',
-                                color: Colors.red,
-                                isLoading: state is DeleteAccountLoading,
-                                onTap: () => _showConfirmDialog(
-                                  context,
-                                  title: 'حذف الحساب',
-                                  message:
-                                      'هذا الإجراء نهائي ولا يمكن التراجع عنه. هل أنت متأكد؟',
-                                  onConfirm: () => context
-                                      .read<ProfileCubit>()
-                                      .deleteAccount(),
-                                ),
-                              ),
+                              // _buildActionTile(
+                              //   icon: Icons.delete_forever,
+                              //   label: 'حذف الحساب',
+                              //   color: Colors.red,
+                              //   isLoading: state is DeleteAccountLoading,
+                              //   onTap: () => _showConfirmDialog(
+                              //     context,
+                              //     title: 'حذف الحساب',
+                              //     message:
+                              //         'هذا الإجراء نهائي ولا يمكن التراجع عنه. هل أنت متأكد؟',
+                              //     onConfirm: () => context
+                              //         .read<ProfileCubit>()
+                              //         .deleteAccount(),
+                              //   ),
+                              // ),
                             ],
                           );
                         },
@@ -252,8 +298,13 @@ class _ProfilePageState extends State<ProfilePage> {
                 width: 60,
                 height: 60,
                 decoration: BoxDecoration(
-                  color: Colors.black,
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.live_tv,
+                  color: AppColors.primary,
+                  size: 30,
                 ),
               ),
               const Text(
@@ -311,6 +362,8 @@ class _ProfilePageState extends State<ProfilePage> {
           final course = courses[index];
           return RunningCourseItemView(
             courseName: course.title ?? 'بدون عنوان',
+            instructorName: course.instructor.name,
+            category: course.category,
             // حولنا الـ String لـ double وقسمنا على 100
             progress:
                 (double.tryParse(
@@ -318,6 +371,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ) ??
                     0.0) /
                 100,
+            courseId: course.id,
             imageUrl: course.thumbnail,
           );
         },
@@ -348,7 +402,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      '${data?.dashboardStats?.studyHoursWeek.fold<int>(0, (p, c) => p + (c as int)) ?? 0} ساعة',
+                      '${data?.dashboardStats?.studyHoursWeek?.fold<num>(0, (p, c) => p + (c as num? ?? 0)) ?? 0} ساعة',
                     ),
                     const Divider(),
                     Text('${data?.dashboardStats?.completedTasks ?? 0} درس'),
@@ -357,7 +411,7 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               Expanded(
                 flex: 3,
-                child: ProfileChart(data: data?.dashboardStats?.studyHoursWeek),
+                child: ProfileChart(data: data?.dashboardStats?.studyHoursWeek ?? []),
               ),
             ],
           ),
@@ -416,6 +470,29 @@ class _ProfilePageState extends State<ProfilePage> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: AppColors.primary),
+          const SizedBox(width: 10),
+          Text(
+            '$label: ',
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontSize: 14),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
     );
   }

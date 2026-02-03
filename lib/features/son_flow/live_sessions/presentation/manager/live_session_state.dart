@@ -12,12 +12,16 @@ class LiveSessionsLoaded extends LiveSessionState {
   LiveSessionsLoaded(this.sessions);
 }
 
-class LiveSessionJoining extends LiveSessionState {}
+class LiveSessionJoining extends LiveSessionState {
+  final LiveSessionsDataModel? currentSessions;
+  LiveSessionJoining({this.currentSessions});
+}
 
 class LiveSessionJoined extends LiveSessionState {
   final JoinSessionDataModel joinData;
+  final LiveSessionsDataModel? currentSessions;
 
-  LiveSessionJoined(this.joinData);
+  LiveSessionJoined(this.joinData, {this.currentSessions});
   
   String get joinUrl => joinData.joinUrl;
 }

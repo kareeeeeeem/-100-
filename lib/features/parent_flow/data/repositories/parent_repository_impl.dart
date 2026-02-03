@@ -107,6 +107,7 @@ class ParentRepositoryImpl implements ParentRepository {
   @override
   Future<Result<void>> checkout({
     required int courseId,
+    required double amount,
     required String cardNumber,
     required String expiryDate,
     required String cvv,
@@ -115,6 +116,7 @@ class ParentRepositoryImpl implements ParentRepository {
     try {
       await _apiService.checkout(
         courseId: courseId,
+        amount: amount,
         cardNumber: cardNumber,
         expiryDate: expiryDate,
         cvv: cvv,

@@ -36,11 +36,8 @@ void initState() {
       create: (context) => GetIt.instance<MyCoursesCubit>(),
       child: const MyCoursesPage(),
     ),
-    // البروفايل (التعديل هنا)
-    BlocProvider(
-      create: (context) => GetIt.instance<ProfileCubit>(),
-      child: const ProfilePage(),
-    ),
+    // البروفايل
+    const ProfilePage(),
   ];
 }
 

@@ -10,12 +10,14 @@ class ProfileImageAndEdit extends StatelessWidget {
     this.showEditIcon = true,
     this.onEditTap,
     this.imagePath,
+    this.isUserProfile = true,
   });
 
   final double imageSize;
   final bool showEditIcon;
   final VoidCallback? onEditTap;
   final String? imagePath;
+  final bool isUserProfile;
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +37,7 @@ class ProfileImageAndEdit extends StatelessWidget {
             width: imageSize,
             height: imageSize,
             fit: BoxFit.cover,
+            isUserProfile: isUserProfile,
           ),
         ),
         if (showEditIcon)

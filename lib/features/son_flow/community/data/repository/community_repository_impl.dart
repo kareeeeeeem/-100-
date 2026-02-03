@@ -30,14 +30,4 @@ class CommunityRepositoryImpl implements CommunityRepository {
       return Result.error(ServerFailure(e.toString()));
     }
   }
-
-  @override
-  Future<Result<bool>> toggleFavorite(int courseId) async {
-    try {
-      final response = await apiService.toggleFavorite(courseId);
-      return Result.success(response);
-    } catch (e) {
-      return Result.error(ServerFailure(e.toString()));
-    }
-  }
 }

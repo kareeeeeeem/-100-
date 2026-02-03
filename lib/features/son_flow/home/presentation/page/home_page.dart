@@ -5,13 +5,12 @@ import 'package:go_router/go_router.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:lms/core/routing/app_routes.dart';
 import 'package:lms/core/utils/app_colors.dart';
-import 'package:lms/core/utils/app_images.dart';
 import 'package:lms/core/widgets/shared_app_bar.dart';
 import 'package:lms/features/son_flow/course/presentation/widgets/course_categories_list_view.dart';
 import 'package:lms/features/son_flow/home/presentation/manager/home_cubit.dart';
 import 'package:lms/features/son_flow/home/data/model/home_response_model.dart';
-import 'package:lms/features/son_flow/home/presentation/manager/home_cubit.dart'; // تأكد من المسار الصحيح للـ Cubit عندك
 import 'package:lms/core/widgets/custom_image.dart';
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -26,6 +25,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    // جلب البيانات عند فتح الصفحة
     GetIt.instance<HomeCubit>().fetchHomeData();
     _carouselController.addListener(_onScroll);
   }
@@ -61,7 +61,18 @@ class _HomePageState extends State<HomePage> {
           if (state.status == HomeStatus.loading) {
             return const Center(child: CircularProgressIndicator());
           } else if (state.status == HomeStatus.error) {
-            return Center(child: Text(state.errorMessage ?? 'حدث خطأ ما'));
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(state.errorMessage ?? 'حدث خطأ ما'),
+                  ElevatedButton(
+                    onPressed: () => GetIt.instance<HomeCubit>().fetchHomeData(),
+                    child: const Text("إعادة المحاولة"),
+                  )
+                ],
+              ),
+            );
           } else if (state.status == HomeStatus.success && state.homeData != null) {
             final data = state.homeData!.data;
 
@@ -72,30 +83,37 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: 10),
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Text('البث المباشر', style: TextStyle(fontSize: 18.86, fontWeight: FontWeight.w600, color: AppColors.c303030)),
+                    child: Text('البث المباشر', 
+                      style: TextStyle(fontSize: 18.86, fontWeight: FontWeight.w600, color: AppColors.c303030)),
                   ),
                   const SizedBox(height: 10),
-                  // السلايدر بالصور الحقيقية
+                  
+                  // قسم السلايدر (البث المباشر)
                   SizedBox(
-                    height: 80,
+                    height: 85,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       itemCount: data.slider.length,
-                      separatorBuilder: (context, index) => const SizedBox(width: 10),
+                      separatorBuilder: (context, index) => const SizedBox(width: 12),
                       itemBuilder: (context, index) => _buildLiveCircle(data.slider[index]),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  
+                  const SizedBox(height: 25),
+                  
+                  // قسم الأقسام
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('الأقسام', style: TextStyle(fontSize: 18.86, fontWeight: FontWeight.w600, color: AppColors.c303030)),
+                        const Text('الأقسام', 
+                          style: TextStyle(fontSize: 18.86, fontWeight: FontWeight.w600, color: AppColors.c303030)),
                         InkWell(
                           onTap: () => context.pushNamed(AppRoutes.categories),
-                          child: Text('عرض الكل', style: TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600)),
+                          child: const Text('عرض الكل', 
+                            style: TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600)),
                         ),
                       ],
                     ),
@@ -104,52 +122,64 @@ class _HomePageState extends State<HomePage> {
                   SizedBox(
                     height: 40,
                     child: CourseCategoriesListView(
-                      courses: data.categories.map((e) => e.name).toList(),
+                      categories: data.categories
+                          .map((e) => CategoryUIModel(
+                                name: e.name,
+                                icon: e.icon,
+                                id: e.id,
+                              ))
+                          .toList(),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  
+                  const SizedBox(height: 25),
+                  
+                  // قسم الدورات المميزة (Carousel)
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Text('الدورات المميزة', style: TextStyle(fontSize: 18.86, fontWeight: FontWeight.w600, color: AppColors.c303030)),
+                    child: Text('الدورات المميزة', 
+                      style: TextStyle(fontSize: 18.86, fontWeight: FontWeight.w600, color: AppColors.c303030)),
                   ),
                   const SizedBox(height: 10),
-                  // الكاروسيل بالداتا الحقيقية
                   SizedBox(
-                    height: 350,
-                    child: // داخل الـ CarouselView في HomePage.dart
-CarouselView(
-  controller: _carouselController,
-  padding: const EdgeInsets.symmetric(horizontal: 16),
-  itemExtent: MediaQuery.sizeOf(context).width * 0.8,
-  shrinkExtent: MediaQuery.sizeOf(context).width * 0.8,
-  // التعديل هنا 👇
-  onTap: (index) {
-    final selectedCourse = data.featuredCourses[index];
-    context.pushNamed(
-      AppRoutes.courseDetails,
-      extra: selectedCourse.id, // إرسال الـ ID الحقيقي
-    );
-  },
-  children: data.featuredCourses.map((course) {
-    return _buildCourseCard(course);
-  }).toList(),
-),
+                    height: 220, // تعديل الارتفاع ليناسب التصميم
+                    child: CarouselView(
+                      controller: _carouselController,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemExtent: MediaQuery.sizeOf(context).width * 0.8,
+                      shrinkExtent: MediaQuery.sizeOf(context).width * 0.7,
+                      onTap: (index) {
+                        final course = data.featuredCourses[index];
+                        print("🎯 [HomePage] Navigating to Featured Course Details: ID=${course.id}, Title=${course.title}");
+                        context.pushNamed(
+                          AppRoutes.courseDetails,
+                          extra: course.id,
+                        );
+                      },
+                      children: data.featuredCourses.map((course) {
+                        return _buildCourseCard(course);
+                      }).toList(),
+                    ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 15),
                   Center(
                     child: AnimatedSmoothIndicator(
                       activeIndex: _activeCourseIndex,
                       count: data.featuredCourses.length,
-                      effect: const WormEffect(spacing: 8.0, radius: 4.0, dotWidth: 16, dotHeight: 8, dotColor: AppColors.cEEEEEE, activeDotColor: AppColors.primary),
+                      effect: const WormEffect(
+                        spacing: 8.0, radius: 4.0, dotWidth: 16, dotHeight: 8, 
+                        dotColor: AppColors.cEEEEEE, activeDotColor: AppColors.primary
+                      ),
                     ),
                   ),
                   
-                  // قسم الدورات القادمة لهذا الأسبوع (Upcoming)
+                  // قسم الدورات القادمة (Upcoming)
                   if (data.upcomingCourses.isNotEmpty) ...[
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 25),
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Text('الدورات القادمة لهذا الأسبوع', style: TextStyle(fontSize: 18.86, fontWeight: FontWeight.w600, color: AppColors.c303030)),
+                      child: Text('الدورات القادمة لهذا الأسبوع', 
+                        style: TextStyle(fontSize: 18.86, fontWeight: FontWeight.w600, color: AppColors.c303030)),
                     ),
                     const SizedBox(height: 10),
                     ListView.separated(
@@ -158,19 +188,22 @@ CarouselView(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       itemCount: data.upcomingCourses.length,
                       separatorBuilder: (context, index) => const SizedBox(height: 15),
-                      // داخل ListView.separated الخاص بـ data.upcomingCourses
-itemBuilder: (context, index) {
-  final upcomingCourse = data.upcomingCourses[index]; // استخراج الكورس الحالي
-  return GestureDetector(
-    onTap: () {
-      context.pushNamed(
-        AppRoutes.courseDetails,
-        extra: upcomingCourse.id, // إرسال الـ ID هنا أيضاً
-      );
-    },
-    child: _buildCourseCard(upcomingCourse),
-  );
-},
+                      itemBuilder: (context, index) {
+                        final upcomingCourse = data.upcomingCourses[index];
+                        return GestureDetector(
+                          onTap: () {
+                            print("🎯 [HomePage] Navigating to Upcoming Course Details: ID=${upcomingCourse.id}, Title=${upcomingCourse.title}");
+                            context.pushNamed(
+                              AppRoutes.courseDetails,
+                              extra: upcomingCourse.id,
+                            );
+                          },
+                          child: SizedBox(
+                            height: 200, 
+                            child: _buildCourseCard(upcomingCourse)
+                          ),
+                        );
+                      },
                     ),
                   ],
                   const SizedBox(height: 30),
@@ -184,39 +217,40 @@ itemBuilder: (context, index) {
     );
   }
 
-  // ميثود البث المباشر (مرة واحدة فقط)
+  // ميثود دائرة البث المباشر
   Widget _buildLiveCircle(SliderModel slider) {
     return Stack(
       clipBehavior: Clip.none,
       children: [
         Container(
-          width: 80, height: 80,
-          decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(25.15)),
+          width: 75, height: 75,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(colors: [AppColors.primary, Color(0xFF4DC9D1)]),
+            borderRadius: BorderRadius.circular(25)
+          ),
           child: Padding(
-            padding: const EdgeInsets.all(4.0),
+            padding: const EdgeInsets.all(3.0),
             child: Container(
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(25.15)),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(25.15),
+                borderRadius: BorderRadius.circular(22),
                 child: CustomImage(
-                  imagePath: slider.image,
+                  imagePath: slider.image, // سيتم معالجته داخل CustomImage الجديد
                   fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
                 ),
               ),
             ),
           ),
         ),
         Positioned(
-          bottom: 0, left: -5,
+          bottom: -2, right: -2,
           child: Container(
             decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-            padding: const EdgeInsets.all(4),
+            padding: const EdgeInsets.all(3),
             child: Container(
-              width: 25, height: 25,
-              decoration: const BoxDecoration(color: AppColors.c4DC9D1, shape: BoxShape.circle),
-              child: const Icon(Icons.video_camera_back, color: Colors.white, size: 16),
+              width: 22, height: 22,
+              decoration: const BoxDecoration(color: Color(0xFF4DC9D1), shape: BoxShape.circle),
+              child: const Icon(Icons.videocam, color: Colors.white, size: 14),
             ),
           ),
         ),
@@ -227,69 +261,87 @@ itemBuilder: (context, index) {
   // كارت الكورس الموحد
   Widget _buildCourseCard(CourseModel course) {
     return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(25.15),
-      ),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(25)),
       child: Stack(
         children: [
           Positioned.fill(
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(25.15),
+              borderRadius: BorderRadius.circular(25),
               child: CustomImage(
                 imagePath: course.thumbnail,
                 fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
               ),
             ),
           ),
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(25.15),
+                borderRadius: BorderRadius.circular(25),
                 gradient: LinearGradient(
                   begin: Alignment.topCenter, 
                   end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, Colors.black.withOpacity(0.8)],
+                  colors: [Colors.transparent, Colors.black.withOpacity(0.85)],
                 ),
               ),
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(12.0),
+            padding: const EdgeInsets.all(15.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.end,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   course.title, 
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 5),
                 Text(
-                  "بواسطة: ${course.instructorName}", 
-                  style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w400),
+                  "د. ${course.instructorName}", 
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
                 ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    const Icon(Icons.timer_outlined, color: Colors.white70, size: 14),
-                    const SizedBox(width: 5),
-                    Text(course.duration, style: const TextStyle(color: Colors.white70, fontSize: 12)),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    _buildBadge(
-                      course.isFree ? "مجاني" : course.priceLabel, 
-                      AppColors.c589B6E,
-                    ),
-                    const SizedBox(width: 5),
-                    _buildBadge("كورس", AppColors.primary),
-                  ],
+                const SizedBox(height: 8),
+                SingleChildScrollView( // To avoid overflow on small screens
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildBadge(course.isFree ? "مجاني" : course.priceLabel, AppColors.c589B6E),
+                      const SizedBox(width: 8),
+                      // Duration badge with icon
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.6),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.access_time, color: Colors.white70, size: 10),
+                            const SizedBox(width: 4),
+                            Text(course.duration, style: const TextStyle(color: Colors.white70, fontSize: 10)),
+                          ],
+                        ),
+                      ),
+                      
+                      // Category badge if available
+                      if (course.category != null && course.category!.isNotEmpty) ...[
+                        const SizedBox(width: 8),
+                         Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withOpacity(0.8),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            course.category!, 
+                            style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600)
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 )
               ],
             ),
@@ -301,9 +353,9 @@ itemBuilder: (context, index) {
 
   Widget _buildBadge(String text, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(4)),
-      child: Text(text, style: const TextStyle(color: Colors.white, fontSize: 10)),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(6)),
+      child: Text(text, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
     );
   }
 }

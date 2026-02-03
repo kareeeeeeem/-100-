@@ -68,7 +68,12 @@ class _PaymentRequestsPageState extends State<PaymentRequestsPage> {
                         value: context.read<ParentCubit>(),
                         child: SizedBox(
                           height: MediaQuery.sizeOf(context).height * 0.9,
-                          child: PaymentBottomSheet(courseId: payment.courseId!),
+                          child: PaymentBottomSheet(
+                            courseId: payment.courseId!,
+                            amount: double.tryParse(
+                                    payment.amount.replaceAll(RegExp(r'[^0-9.]'), '')) ??
+                                0.0,
+                          ),
                         ),
                       );
                     },

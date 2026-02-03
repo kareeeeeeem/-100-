@@ -35,21 +35,23 @@ class User {
   User({
     required this.name,
     required this.email,
-    required this.phone,
+    this.phone,
     required this.userType,
-    required this.userTypeText,
-    required this.identityNumber,
+    this.userTypeText,
+    this.identityNumber,
+    this.image,
   });
 
   final String name;
   final String email;
-  final String phone;
+  final String? phone;
+  final String? image;
 
   @JsonKey(name: 'user_type')
   final String userType;
 
   @JsonKey(name: 'user_type_text')
-  final String userTypeText;
+  final String? userTypeText;
 
   @JsonKey(name: 'identity_number')
   final String? identityNumber;

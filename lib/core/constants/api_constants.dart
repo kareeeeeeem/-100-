@@ -1,7 +1,7 @@
 class ApiConstants {
   static const String baseUrl = 'https://100-academy.com/api/$_apiVersion/';
   static const String _apiVersion = 'v1';
-  static const String imageBaseUrl = 'https://100-academy.com';
+  static const String imageBaseUrl = 'https://100-academy.com/storage';
   
   static const Duration connectTimeout = Duration(seconds: 45);
   static const Duration receiveTimeout = Duration(seconds: 45);
@@ -12,6 +12,7 @@ class ApiConstants {
   
   // Auth & General
   static const String login = 'login';
+  static const String socialLogin = 'login/social';
   static const String register = 'register';
   static const String logout = 'logout';
   static const String deleteAccount = 'delete-account';
@@ -26,8 +27,8 @@ class ApiConstants {
   
   // Profile
   static const String profile = 'profile';
-  static const String updateProfile = 'update-profile'; // POST
-  static const String changePassword = 'change-password';
+  static const String updateProfile = 'profile/update'; // POST
+  static const String changePassword = 'profile/change-password';
   
   // Notifications
   static const String notifications = 'notifications';
@@ -43,18 +44,17 @@ class ApiConstants {
   // Community & Favorites
   static String courseComments(int id) => 'courses/$id/comments';
   static const String postComment = 'comments';
-  static String toggleFavorite(int id) => 'courses/$id/toggle-favorite';
 
   // Dashboard
   static const String dashboardStats = 'dashboard/stats';
 
   // Parent Flow Endpoints
-  static const String parentProfile = 'v1/mobile-parent/profile';
-  static const String parentChildren = 'v1/mobile-parent/children';
-  static const String parentPayments = 'v1/mobile-parent/payments';
-  static const String parentCourses = 'v1/mobile-parent/courses';
-  static String childDetails(int id) => 'v1/mobile-parent/children/$id';
-  static String childExamResults(int id) => 'v1/mobile-parent/children/$id/exam-results';
+  static const String parentProfile = 'mobile-parent/profile';
+  static const String parentChildren = 'mobile-parent/children';
+  static const String parentPayments = 'mobile-parent/payments';
+  static const String parentCourses = 'mobile-parent/courses';
+  static String childDetails(int id) => 'mobile-parent/children/$id';
+  static String childExamResults(int id) => 'mobile-parent/children/$id/exam-results';
 
   // Exams
   static const String exams = 'exams';

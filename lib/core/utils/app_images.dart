@@ -11,7 +11,8 @@ enum AppImages {
   cashBack('cash_back.png'),
   blackWhite('black_white.png'),
   parentSectionItem('parent_section_item.png'),
-  paymob('paymob.png');
+  paymob('paymob.png'),
+  userAvatar('user_avatar.png');
 
   static const String _imagesPath = 'assets/images';
   final String _path;

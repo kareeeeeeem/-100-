@@ -9,7 +9,7 @@ abstract class HomeRepository {
   Future<Result<HomeResponseModel>> getHomeData();
   Future<Result<MyCoursesResponseModel>> getMyCourses();
   Future<Result<ProfileResponseModel>> getProfileData();
-  Future<Result<ProfileResponseModel>> updateProfile({required String name, required String phone});
+  Future<Result<ProfileResponseModel>> updateProfile({required String name, required String email});
   Future<Result<void>> changePassword({
     required String currentPassword,
     required String newPassword,
@@ -23,6 +23,7 @@ abstract class HomeRepository {
   Future<Result<List<CourseModel>>> searchCourses(String query);
   Future<Result<void>> checkout({
     required int courseId,
+    required double amount,
     required String cardNumber,
     required String expiryDate,
     required String cvv,
@@ -30,5 +31,4 @@ abstract class HomeRepository {
   });
   Future<Result<NoOutput>> logout();
   Future<Result<void>> deleteAccount();
-  Future<Result<bool>> toggleFavorite(int courseId);
 }

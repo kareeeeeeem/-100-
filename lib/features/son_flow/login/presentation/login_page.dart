@@ -137,7 +137,9 @@ class _LoginPageState extends State<LoginPage> {
                         ],
                       ),
                       CustomElevatedButton.child(
-                        onPressed: () {},
+                        onPressed: () {
+                          context.read<LoginCubit>().signInWithFacebook();
+                        },
                         buttonStyle: customElevatedButtonStyle.copyWith(
                           backgroundColor: const WidgetStatePropertyAll(
                             AppColors.c0082CD,
@@ -162,7 +164,9 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                       CustomElevatedButton.child(
-                        onPressed: () {},
+                        onPressed: () {
+                          context.read<LoginCubit>().signInWithGoogle();
+                        },
                         buttonStyle: customElevatedButtonStyle.copyWith(
                           backgroundColor: const WidgetStatePropertyAll(
                             AppColors.cF6F7FA,

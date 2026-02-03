@@ -35,15 +35,4 @@ class CommunityApiServiceImpl implements CommunityApiService {
     );
     return CommentModel.fromJson(response['data'] ?? response);
   }
-
-  @override
-  Future<bool> toggleFavorite(int courseId) async {
-    final token = await jwtService.getAccessToken();
-    final response = await apiService.post(
-      ApiConstants.toggleFavorite(courseId),
-      body: {'course_id': courseId},
-      headers: {'Authorization': 'Bearer $token'},
-    );
-    return response['is_favorited'] ?? false;
-  }
 }

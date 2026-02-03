@@ -66,6 +66,16 @@ Future<String?> getUserName() async {
 }
 
 @override
+Future<void> saveUserAvatar(String avatar) async {
+  await cacheService.set<String>('userAvatar', avatar);
+}
+
+@override
+Future<String?> getUserAvatar() async {
+  return await cacheService.get<String>('userAvatar');
+}
+
+@override
 Future<void> clearAll() async {
   await cacheService.clear();
 }

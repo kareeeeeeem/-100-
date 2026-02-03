@@ -1,22 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
 import 'package:lms/core/routing/app_routes.dart';
 import 'package:lms/core/utils/app_colors.dart';
+import 'package:lms/core/widgets/custom_image.dart';
+
 class RunningCourseItemView extends StatelessWidget {
-  // إضافة المتغيرات لاستقبال الداتا
   final String courseName;
   final String? instructorName;
+  final String? category;
   final String? lessonsAndHours;
   final double progress;
+  final dynamic courseId;
   final String? imageUrl;
 
   const RunningCourseItemView({
     super.key,
     required this.courseName,
     this.instructorName,
+    this.category,
     this.lessonsAndHours,
     required this.progress,
+    required this.courseId,
     this.imageUrl,
   });
 
@@ -25,52 +29,83 @@ class RunningCourseItemView extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(12),
       child: Row(
-        spacing: 10,
+        spacing: 12,
         children: [
-          // عرض الصورة من الـ Network أو لون أسود كـ Placeholder
           Container(
-            width: 52,
-            height: 52,
+            width: 60,
+            height: 60,
             decoration: BoxDecoration(
-              color: Colors.black,
               borderRadius: BorderRadius.circular(10),
-              image: imageUrl != null
-                  ? DecorationImage(image: NetworkImage(imageUrl!), fit: BoxFit.cover)
-                  : null,
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: CustomImage(
+              imagePath: imageUrl ?? '',
+              fit: BoxFit.cover,
             ),
           ),
           Expanded(
             child: Column(
-              spacing: 10,
+              spacing: 8,
               children: [
                 Row(
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start, // عشان الكلام يبدأ من اليمين صح
-                      spacing: 4,
-                      children: [
-                        Text(
-                          courseName, // اسم الكورس الحقيقي
-                          style: const TextStyle(
-                            fontSize: 13.32,
-                            color: Colors.black,
-                            fontWeight: FontWeight.w500,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        spacing: 2,
+                        children: [
+                          Text(
+                            courseName,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.black,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                        Text(
-                          lessonsAndHours ?? '', // عدد الدروس والساعات
-                          style: const TextStyle(
-                            fontSize: 9.52,
-                            color: AppColors.c737373,
-                            fontWeight: FontWeight.w500,
+                          if (instructorName != null && instructorName!.isNotEmpty)
+                            Text(
+                              'المحاضر: $instructorName',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          Row(
+                            children: [
+                              Text(
+                                lessonsAndHours ?? '',
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  color: AppColors.c737373,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              if (category != null && category!.isNotEmpty) ...[
+                                const Text(' | ', style: TextStyle(fontSize: 10, color: AppColors.cD9D9D9)),
+                                Text(
+                                  category!,
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                    const Spacer(),
+                    const SizedBox(width: 8),
                     InkWell(
                       onTap: () {
-                        context.pushNamed(AppRoutes.subscribedCourseDetails);
+                        context.pushNamed(
+                          AppRoutes.subscribedCourseDetails,
+                          extra: int.tryParse(courseId.toString()) ?? courseId,
+                        );
                       },
                       child: Container(
                         decoration: BoxDecoration(
@@ -78,12 +113,12 @@ class RunningCourseItemView extends StatelessWidget {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Padding(
-                          padding: EdgeInsets.all(8.0),
+                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           child: Text(
                             'استكمال',
                             style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w500,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
                               color: Colors.white,
                             ),
                           ),
@@ -93,11 +128,11 @@ class RunningCourseItemView extends StatelessWidget {
                   ],
                 ),
                 LinearProgressIndicator(
-                  value: progress, // نسبة التقدم الحقيقية (من 0.0 لـ 1.0)
+                  value: progress,
                   color: AppColors.c589B6E,
-                  minHeight: 9,
+                  minHeight: 8,
                   backgroundColor: AppColors.cD9D9D9,
-                  borderRadius: BorderRadius.circular(6.47),
+                  borderRadius: BorderRadius.circular(8),
                 ),
               ],
             ),

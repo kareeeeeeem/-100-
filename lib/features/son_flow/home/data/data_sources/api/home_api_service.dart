@@ -8,7 +8,7 @@ abstract class HomeApiService {
   Future<HomeResponseModel> getHomeData();
   Future<MyCoursesResponseModel> getMyCourses();
   Future<ProfileResponseModel> getProfileData();
-  Future<ProfileResponseModel> updateProfile({required String name, required String phone});
+  Future<ProfileResponseModel> updateProfile({required String name, required String email});
   Future<void> changePassword({
     required String currentPassword,
     required String newPassword,
@@ -21,6 +21,7 @@ abstract class HomeApiService {
   Future<List<CourseModel>> searchCourses(String query);
   Future<void> checkout({
     required int courseId,
+    required double amount,
     required String cardNumber,
     required String expiryDate,
     required String cvv,
@@ -28,5 +29,4 @@ abstract class HomeApiService {
   });
   Future<void> logout();
   Future<void> deleteAccount();
-  Future<bool> toggleFavorite(int courseId);
 }

@@ -5,6 +5,7 @@ import 'package:lms/core/service/jwt_service.dart';
 import 'package:lms/features/son_flow/login/data/data_sources/api/login_api_service.dart';
 import 'package:lms/features/son_flow/login/data/model/login_request_model.dart';
 import 'package:lms/features/son_flow/login/data/model/login_response_model.dart';
+import 'package:lms/features/son_flow/login/data/model/social_login_request_model.dart';
 import 'package:lms/features/son_flow/login/domain/repository/login_repository.dart';
 
 class LoginRepositoryImpl implements LoginRepository {
@@ -17,26 +18,54 @@ class LoginRepositoryImpl implements LoginRepository {
     this.deviceInfoService,
     this.jwtService,
   );
-@override
-Future<Result<LoginResponseModel>> login(LoginRequestModel request) async {
-  try {
-    final deviceId = await deviceInfoService.getDeviceId();
-    final response = await loginApiService.login(
-      request.copyWith(deviceId: deviceId),
-    );
-    
+  @override
+  Future<Result<LoginResponseModel>> login(LoginRequestModel request) async {
+    try {
+      final deviceId = await deviceInfoService.getDeviceId();
+      final response = await loginApiService.login(
+        request.copyWith(deviceId: deviceId),
+      );
+      
+      await _saveUserData(response);
+
+      return Result.success(response);
+    } catch (e) {
+      return Result.error(ErrorHandler.getFailure(e));
+    }
+  }
+
+  @override
+  Future<Result<LoginResponseModel>> socialLogin(SocialLoginRequestModel request) async {
+    try {
+      final deviceId = await deviceInfoService.getDeviceId();
+      final response = await loginApiService.socialLogin(
+        SocialLoginRequestModel(
+          name: request.name,
+          email: request.email,
+          provider: request.provider,
+          providerId: request.providerId,
+          deviceId: deviceId,
+        ),
+      );
+      
+      await _saveUserData(response);
+
+      return Result.success(response);
+    } catch (e) {
+      return Result.error(ErrorHandler.getFailure(e));
+    }
+  }
+
+  Future<void> _saveUserData(LoginResponseModel response) async {
     // حفظ التوكن
     await jwtService.saveAccessToken(response.data.token);
     
-    // حفظ نوع المستخدم (تأكد من إضافة ميثود saveUserType جوه JwtService)
+    // حفظ نوع المستخدم
     await jwtService.saveUserType(response.data.user.userType); 
+    await jwtService.saveUserName(response.data.user.name); 
     
-    await jwtService.saveUserName(response.data.user.name); // <--- ضيف ده هنا
-
-
-    return Result.success(response);
-  } catch (e) {
-    return Result.error(ErrorHandler.getFailure(e));
+    if (response.data.user.image != null) {
+      await jwtService.saveUserAvatar(response.data.user.image!);
+    }
   }
-}
 }

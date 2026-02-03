@@ -7,7 +7,10 @@ import 'package:lms/core/utils/app_colors.dart';
 import 'package:lms/features/son_flow/home/presentation/widgets/notifications_bottom_sheet.dart';
 import 'package:flutter_bloc/flutter_bloc.dart'; // تأكد من إضافة هذا
 import 'package:lms/features/son_flow/home/domain/repository/login_repository.dart'; // مسار الـ Repository
-import 'package:lms/features/son_flow/home/presentation/manager/notifications_cubit.dart'; // مسار الـ Cubit
+import 'package:lms/features/son_flow/home/presentation/manager/notifications_cubit.dart';
+import 'package:lms/features/son_flow/home/presentation/manager/profile_cubit.dart';
+import 'package:lms/features/son_flow/home/presentation/manager/profile_state.dart';
+import 'package:lms/core/widgets/custom_image.dart';
 
 
 class SharedAppBar extends StatefulWidget implements PreferredSizeWidget {
@@ -22,6 +25,7 @@ class SharedAppBar extends StatefulWidget implements PreferredSizeWidget {
 
 class _SharedAppBarState extends State<SharedAppBar> {
   String userName = "زائر";
+  String? userAvatar;
 
   @override
   void initState() {
@@ -32,9 +36,11 @@ class _SharedAppBarState extends State<SharedAppBar> {
   Future<void> _loadUserData() async {
     final jwtService = GetIt.instance<JwtService>();
     final name = await jwtService.getUserName();
-    if (name != null && mounted) {
+    final avatar = await jwtService.getUserAvatar();
+    if (mounted) {
       setState(() {
-        userName = name; // بنحدث الواجهة بالاسم الجديد
+        if (name != null) userName = name; // بنحدث الواجهة بالاسم الجديد
+        userAvatar = avatar;
       });
     }
   }
@@ -44,42 +50,59 @@ class _SharedAppBarState extends State<SharedAppBar> {
     return AppBar(
       centerTitle: false,
       titleSpacing: 10,
-      title: Row(
-        children: [
-          _buildUserAvatar(),
-          const SizedBox(width: 10),
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+      title: BlocBuilder<ProfileCubit, ProfileState>(
+        builder: (context, state) {
+          if (state is ProfileSuccess) {
+            userName = state.profileModel.data?.name ?? userName;
+            userAvatar = state.profileModel.data?.image ?? userAvatar;
+          }
+          return Row(
             children: [
-              Text(
-                'أهلاً بك $userName', 
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.c303030,
-                ),
-              ),
-              Text(
-                'استعد لتعلم مهارة جديدة اليوم',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black.withOpacity(0.5),
-                ),
+              _buildUserAvatar(),
+              const SizedBox(width: 10),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'أهلاً بك $userName',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.c303030,
+                    ),
+                  ),
+                  Text(
+                    'استعد لتعلم مهارة جديدة اليوم',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black.withOpacity(0.5),
+                    ),
+                  ),
+                ],
               ),
             ],
-          ),
-        ],
+          );
+        },
       ),
       actions: [
-        InkWell(
-          onTap: () => context.pushNamed(AppRoutes.search),
-          child: const Icon(Icons.search, color: AppColors.primary),
-        ),
-        const SizedBox(width: 12),
-        _buildNotificationIcon(context),
-      ],
+  // أيقونة المفضلة الجديدة
+  InkWell(
+    onTap: () => context.pushNamed(AppRoutes.wishlist),
+    child: const Icon(Icons.favorite_border, color: AppColors.primary),
+  ),
+  const SizedBox(width: 12),
+  
+  // أيقونة البحث الأصلية
+  InkWell(
+    onTap: () => context.pushNamed(AppRoutes.search),
+    child: const Icon(Icons.search, color: AppColors.primary),
+  ),
+  const SizedBox(width: 12),
+  
+  _buildNotificationIcon(context),
+],
     );
   }
 
@@ -87,22 +110,43 @@ class _SharedAppBarState extends State<SharedAppBar> {
 
   Widget _buildUserAvatar() {
     return SizedBox(
-      height: 40, width: 40,
+      height: 40,
+      width: 40,
       child: Stack(
         alignment: Alignment.center,
         children: [
           Container(
-            width: 40, height: 40,
-            decoration: const BoxDecoration(color: Colors.black, shape: BoxShape.circle),
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              shape: BoxShape.circle,
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: userAvatar != null
+                ? CustomImage(
+                    imagePath: userAvatar!,
+                    fit: BoxFit.cover,
+                    isUserProfile: true,
+                  )
+                : const Icon(Icons.person, color: Colors.grey),
           ),
           Positioned(
-            bottom: 0, right: 0,
+            bottom: 0,
+            right: 0,
             child: Container(
-              decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
               padding: const EdgeInsets.all(2),
               child: Container(
-                width: 10, height: 10,
-                decoration: const BoxDecoration(color: AppColors.c4ED442, shape: BoxShape.circle),
+                width: 10,
+                height: 10,
+                decoration: const BoxDecoration(
+                  color: AppColors.c4ED442,
+                  shape: BoxShape.circle,
+                ),
               ),
             ),
           ),

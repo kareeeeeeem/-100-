@@ -9,7 +9,8 @@ import 'package:lms/features/son_flow/payment/presentation/widgets/payment_text_
 
 class PaymentBottomSheet extends StatefulWidget {
   final int courseId;
-  const PaymentBottomSheet({super.key, required this.courseId});
+  final double amount;
+  const PaymentBottomSheet({super.key, required this.courseId, required this.amount});
 
   @override
   State<PaymentBottomSheet> createState() => _PaymentBottomSheetState();
@@ -169,6 +170,7 @@ class _PaymentBottomSheetState extends State<PaymentBottomSheet> {
                         onPressed: () {
                           context.read<ParentCubit>().checkout(
                                 courseId: widget.courseId,
+                                amount: widget.amount,
                                 cardNumber: _cardNumberController.text,
                                 expiryDate: _expiryDateController.text,
                                 cvv: _cvvController.text,

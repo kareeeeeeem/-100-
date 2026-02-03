@@ -18,6 +18,7 @@ abstract class ParentRepository {
   Future<Result<List<ParentPaymentModel>>> getPayments();
   Future<Result<void>> checkout({
     required int courseId,
+    required double amount,
     required String cardNumber,
     required String expiryDate,
     required String cvv,

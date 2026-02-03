@@ -61,9 +61,17 @@ class _AvailableLivesPageState extends State<AvailableLivesPage> {
       return const Center(child: CircularProgressIndicator());
     }
 
+    LiveSessionsDataModel? sessions;
     if (state is LiveSessionsLoaded) {
-      final data = state.sessions;
+      sessions = state.sessions;
+    } else if (state is LiveSessionJoining) {
+      sessions = state.currentSessions;
+    } else if (state is LiveSessionJoined) {
+      sessions = state.currentSessions;
+    }
 
+    if (sessions != null) {
+      final data = sessions;
       return Column(
         children: [
           const SizedBox(height: 20),

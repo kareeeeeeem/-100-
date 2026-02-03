@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lms/core/service/jwt_service.dart';
 import 'package:lms/features/son_flow/home/domain/repository/login_repository.dart';
@@ -15,23 +16,40 @@ class ProfileCubit extends Cubit<ProfileState> {
 
   ProfileCubit(this._homeRepository, this._dashboardRepository, this._jwtService) : super(ProfileInitial());
 
-  Future<void> getProfileData() async {
-    emit(ProfileLoading());
+  Future<void> getProfileData({bool isSilent = false}) async {
+    if (!isSilent) emit(ProfileLoading());
     
-    final results = await Future.wait([
-      _homeRepository.getProfileData(),
-      _homeRepository.getMyCourses(),
-      _dashboardRepository.getDashboardStats(),
-    ]);
-
-    final profileResult = results[0] as Result<ProfileResponseModel>;
-    final coursesResult = results[1] as Result<MyCoursesResponseModel>;
-    final statsResult = results[2] as Result<DashboardStatsModel>;
+    // Use individual awaits to handle errors specifically for each call
+    // This prevents a 500 error in one API (like dashboard stats) from breaking the whole profile
+    
+    final profileResult = await _homeRepository.getProfileData();
+    final coursesResult = await _homeRepository.getMyCourses();
+    
+    // Gracefully handle dashboard stats failure
+    DashboardStatsModel? stats;
+    try {
+      final statsResult = await _dashboardRepository.getDashboardStats();
+      if (statsResult.isSuccess) {
+        stats = statsResult.data;
+      } else {
+        debugPrint("⚠️ Dashboard Stats failed: ${statsResult.failure?.message}");
+      }
+    } catch (e) {
+      debugPrint("❌ Dashboard Stats exception: $e");
+    }
 
     if (profileResult.isSuccess) {
       final profileData = profileResult.data!.data;
+      
+      // حفظ البيانات المحدثة في الـ Cache لضمان تحديث الـ Header في أي مكان
+      if (profileData?.name != null) {
+        await _jwtService.saveUserName(profileData!.name!);
+      }
+      if (profileData?.image != null) {
+        await _jwtService.saveUserAvatar(profileData!.image!);
+      }
+
       final courses = coursesResult.isSuccess ? coursesResult.data!.data : <MyCourseItemModel>[];
-      final stats = statsResult.isSuccess ? statsResult.data : null;
 
       final mergedProfile = ProfileResponseModel(
         status: profileResult.data!.status,
@@ -51,7 +69,7 @@ class ProfileCubit extends Cubit<ProfileState> {
 
       emit(ProfileSuccess(mergedProfile));
     } else {
-      emit(ProfileError(profileResult.failure?.message ?? "حدث خطأ غير متوقع"));
+      if (!isSilent) emit(ProfileError(profileResult.failure?.message ?? "حدث خطأ غير متوقع"));
     }
   }
 
@@ -74,6 +92,39 @@ Future<void> deleteAccount() async {
     emit(DeleteAccountSuccess());
   } else {
     emit(DeleteAccountError(result.failure?.message ?? "فشل حذف الحساب"));
+  }
+}
+
+Future<void> updateProfileData({required String name, required String email}) async {
+  emit(ProfileUpdateLoading());
+  final result = await _homeRepository.updateProfile(name: name, email: email);
+  if (result.isSuccess) {
+    // Update JWT cache
+    await _jwtService.saveUserName(name);
+    // We don't have email in JWT service usually but we update name/avatar
+    emit(ProfileUpdateSuccess(result.data?.message ?? "تم تحديث البيانات بنجاح"));
+    // Refresh profile data silently to get updated info in the UI (like emails etc)
+    await getProfileData(isSilent: true);
+  } else {
+    emit(ProfileUpdateError(result.failure?.message ?? "فشل تحديث البيانات"));
+  }
+}
+
+Future<void> changeProfilePassword({
+  required String currentPassword,
+  required String newPassword,
+  required String confirmPassword,
+}) async {
+  emit(ChangePasswordLoading());
+  final result = await _homeRepository.changePassword(
+    currentPassword: currentPassword,
+    newPassword: newPassword,
+    newPasswordConfirmation: confirmPassword,
+  );
+  if (result.isSuccess) {
+    emit(ChangePasswordSuccess("تم تغيير كلمة السر بنجاح"));
+  } else {
+    emit(ChangePasswordError(result.failure?.message ?? "فشل تغيير كلمة السر"));
   }
 }
 }

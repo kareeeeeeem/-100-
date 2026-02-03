@@ -1,0 +1,82 @@
+{
+  "project_info": {
+    "project_number": "5155552973",
+    "project_id": "lmss-5a470",
+    "storage_bucket": "lmss-5a470.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:5155552973:android:6bd343d7a2e9d021fd7384",
+        "android_client_info": {
+          "package_name": "com.example.dev"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "5155552973-051phe26pke8h2l6ocjet4dsn1ob1cg7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD8dTNTEtWVf-S2eZm10RWPbfznLOsZZe8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "5155552973-051phe26pke8h2l6ocjet4dsn1ob1cg7.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "5155552973-08r0tsciob53k5dm04mm98nrcp4bjois.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.lms"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:5155552973:android:caefc8d59b11cc0afd7384",
+        "android_client_info": {
+          "package_name": "com.example.lms"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "5155552973-051phe26pke8h2l6ocjet4dsn1ob1cg7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD8dTNTEtWVf-S2eZm10RWPbfznLOsZZe8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "5155552973-051phe26pke8h2l6ocjet4dsn1ob1cg7.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "5155552973-08r0tsciob53k5dm04mm98nrcp4bjois.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.lms"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

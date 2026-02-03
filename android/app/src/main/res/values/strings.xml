@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+    <string name="app_name">LMS</string>
+    
+    <string name="facebook_app_id">924491090030994</string>
+    
+    <string name="facebook_client_token">e71296fe5e2b80109c3d938ad78bd88d</string>
+    
+    <string name="fb_login_protocol_scheme">fb924491090030994</string>
+</resources>

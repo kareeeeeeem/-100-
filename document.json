@@ -1,0 +1,3363 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "100_academy",
+    "version": "0.0.1"
+  },
+  "servers": [
+    {
+      "url": "https://100-academy.com/api"
+    }
+  ],
+  "paths": {
+    "/v1/login": {
+      "post": {
+        "operationId": "authApi.login",
+        "tags": [
+          "AuthApi"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "تم تسجيل الدخول بنجاح"
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "token": {
+                          "type": "string"
+                        },
+                        "user": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string"
+                            },
+                            "email": {
+                              "type": "string"
+                            },
+                            "phone": {
+                              "type": "string"
+                            },
+                            "user_type": {
+                              "type": "string"
+                            },
+                            "user_type_text": {
+                              "type": "string",
+                              "description": "سيرجع student أو parent أو teacher",
+                              "enum": [
+                                "طالب",
+                                "ولي أمر",
+                                "مستخدم"
+                              ]
+                            },
+                            "identity_number": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "email",
+                            "phone",
+                            "user_type",
+                            "user_type_text",
+                            "identity_number"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "token",
+                        "user"
+                      ]
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "بيانات الاعتماد غير صحيحة"
+                      ]
+                    },
+                    "data": {
+                      "type": "null"
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "هذا الحساب مرتبط بجهاز آخر بالفعل، يرجى التواصل مع الدعم الفني."
+                      ]
+                    },
+                    "data": {
+                      "type": "null"
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationException"
+          }
+        }
+      }
+    },
+    "/v1/login/social": {
+      "post": {
+        "operationId": "authApi.socialLogin",
+        "tags": [
+          "AuthApi"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "provider": {
+                    "type": "string",
+                    "enum": [
+                      "google",
+                      "facebook"
+                    ]
+                  },
+                  "provider_id": {
+                    "type": "string"
+                  },
+                  "device_id": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "email",
+                  "provider",
+                  "provider_id",
+                  "device_id"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "token": {
+                          "type": "string"
+                        },
+                        "user": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string"
+                            },
+                            "email": {
+                              "type": "string"
+                            },
+                            "phone": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    ""
+                                  ]
+                                }
+                              ]
+                            },
+                            "user_type": {
+                              "type": "string",
+                              "description": "قد يكون فارغاً في البداية"
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "email",
+                            "phone",
+                            "user_type"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "token",
+                        "user"
+                      ]
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "هذا الحساب مرتبط بجهاز آخر بالفعل."
+                      ]
+                    },
+                    "data": {
+                      "type": "null"
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationException"
+          }
+        }
+      }
+    },
+    "/v1/register": {
+      "post": {
+        "operationId": "authApi.register",
+        "tags": [
+          "AuthApi"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 255
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "maxLength": 255
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 8
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "device_id": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "email",
+                  "password",
+                  "phone",
+                  "device_id"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "تم إنشاء الحساب بنجاح"
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "token": {
+                          "type": "string"
+                        },
+                        "user": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string"
+                            },
+                            "email": {
+                              "type": "string"
+                            },
+                            "phone": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "user_type": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "email",
+                            "phone",
+                            "user_type"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "token",
+                        "user"
+                      ]
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationException"
+          }
+        }
+      }
+    },
+    "/v1/logout": {
+      "post": {
+        "operationId": "authApi.logout",
+        "tags": [
+          "AuthApi"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "تم تسجيل الخروج بنجاح"
+                      ]
+                    },
+                    "data": {
+                      "type": "null"
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthenticationException"
+          }
+        }
+      }
+    },
+    "/v1/delete-account": {
+      "post": {
+        "operationId": "authApi.deleteAccount",
+        "tags": [
+          "AuthApi"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "تم حذف الحساب بنجاح، نأمل رؤيتك مرة أخرى."
+                      ]
+                    },
+                    "data": {
+                      "type": "null"
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthenticationException"
+          }
+        }
+      }
+    },
+    "/v1/courses/{course_id}/comments": {
+      "get": {
+        "operationId": "communityApi.getCourseComments",
+        "tags": [
+          "CommunityApi"
+        ],
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "تم جلب التعليقات"
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CommentResource"
+                      }
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthenticationException"
+          }
+        }
+      }
+    },
+    "/v1/comments": {
+      "post": {
+        "operationId": "communityApi.storeComment",
+        "tags": [
+          "CommunityApi"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "course_id": {
+                    "type": "integer"
+                  },
+                  "comment": {
+                    "type": "string",
+                    "maxLength": 1000
+                  },
+                  "parent_id": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "course_id",
+                  "comment"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "تمت إضافة تعليقك بنجاح"
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/CommentResource"
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthenticationException"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationException"
+          }
+        }
+      }
+    },
+    "/v1/favorites/toggle": {
+      "post": {
+        "operationId": "communityApi.toggleFavorite",
+        "tags": [
+          "CommunityApi"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "course_id": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "course_id"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "تمت الإضافة إلى المفضلة"
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "is_favorited": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "is_favorited"
+                      ]
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthenticationException"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationException"
+          }
+        }
+      }
+    },
+    "/v1/home": {
+      "get": {
+        "operationId": "courseApi.home",
+        "tags": [
+          "CourseApi"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "تم جلب بيانات الهوم بنجاح"
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "slider": {
+                          "type": "array",
+                          "prefixItems": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "image": {
+                                  "type": "string"
+                                },
+                                "link": {
+                                  "type": "string",
+                                  "enum": [
+                                    "#"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "image",
+                                "link"
+                              ]
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "image": {
+                                  "type": "string"
+                                },
+                                "link": {
+                                  "type": "string",
+                                  "enum": [
+                                    "#"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "image",
+                                "link"
+                              ]
+                            }
+                          ],
+                          "minItems": 2,
+                          "maxItems": 2,
+                          "additionalItems": false
+                        },
+                        "categories": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/CategoryResource"
+                          }
+                        },
+                        "featured_courses": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/CourseResource"
+                          }
+                        },
+                        "upcoming_courses": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/CourseResource"
+                          }
+                        }
+                      },
+                      "required": [
+                        "slider",
+                        "categories",
+                        "featured_courses",
+                        "upcoming_courses"
+                      ]
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/categories": {
+      "get": {
+        "operationId": "courseApi.categories",
+        "tags": [
+          "CourseApi"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "جميع الأقسام"
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CategoryResource"
+                      }
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/courses": {
+      "get": {
+        "operationId": "courseApi.index",
+        "tags": [
+          "CourseApi"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "نتائج البحث"
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CourseResource"
+                      }
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/courses/{id}": {
+      "get": {
+        "operationId": "courseApi.show",
+        "tags": [
+          "CourseApi"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "تفاصيل الدورة كاملة"
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/CourseResource"
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/ModelNotFoundException"
+          }
+        }
+      }
+    },
+    "/v1/instructors/{id}": {
+      "get": {
+        "operationId": "courseApi.instructorProfile",
+        "tags": [
+          "CourseApi"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "بروفايل المدرب"
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/InstructorResource"
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/my-courses": {
+      "get": {
+        "operationId": "courseApi.myCourses",
+        "tags": [
+          "CourseApi"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "كورساتي الملتحق بها"
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CourseResource"
+                      }
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthenticationException"
+          }
+        }
+      }
+    },
+    "/v1/dashboard/stats": {
+      "get": {
+        "operationId": "dashboard.stats",
+        "tags": [
+          "Dashboard"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "تم جلب الإحصائيات"
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "general_progress": {
+                          "anyOf": [
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "integer",
+                              "enum": [
+                                0
+                              ]
+                            }
+                          ]
+                        },
+                        "enrolled_courses": {
+                          "type": "string",
+                          "description": "مثل الـ 65% في الصورة"
+                        },
+                        "completed_tasks": {
+                          "type": "string"
+                        },
+                        "certificates": {
+                          "type": "string"
+                        },
+                        "study_hours_week": {
+                          "type": "array",
+                          "prefixItems": [
+                            {
+                              "type": "integer",
+                              "enum": [
+                                10
+                              ]
+                            },
+                            {
+                              "type": "integer",
+                              "enum": [
+                                15
+                              ]
+                            },
+                            {
+                              "type": "integer",
+                              "enum": [
+                                8
+                              ]
+                            },
+                            {
+                              "type": "integer",
+                              "enum": [
+                                20
+                              ]
+                            },
+                            {
+                              "type": "integer",
+                              "enum": [
+                                12
+                              ]
+                            },
+                            {
+                              "type": "integer",
+                              "enum": [
+                                5
+                              ]
+                            },
+                            {
+                              "type": "integer",
+                              "enum": [
+                                30
+                              ]
+                            }
+                          ],
+                          "minItems": 7,
+                          "maxItems": 7,
+                          "additionalItems": false
+                        }
+                      },
+                      "required": [
+                        "general_progress",
+                        "enrolled_courses",
+                        "completed_tasks",
+                        "certificates",
+                        "study_hours_week"
+                      ]
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthenticationException"
+          }
+        }
+      }
+    },
+    "/v1/exams/{exam_id}": {
+      "get": {
+        "operationId": "examApi.show",
+        "tags": [
+          "ExamApi"
+        ],
+        "parameters": [
+          {
+            "name": "exam_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "جاهز لبدء الاختبار"
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "exam_title": {
+                          "type": "string"
+                        },
+                        "duration": {
+                          "type": "string"
+                        },
+                        "questions": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/QuestionResource"
+                          }
+                        }
+                      },
+                      "required": [
+                        "exam_title",
+                        "duration",
+                        "questions"
+                      ]
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthenticationException"
+          },
+          "404": {
+            "$ref": "#/components/responses/ModelNotFoundException"
+          }
+        }
+      }
+    },
+    "/v1/exams/{exam_id}/submit": {
+      "post": {
+        "operationId": "examApi.submit",
+        "tags": [
+          "ExamApi"
+        ],
+        "parameters": [
+          {
+            "name": "exam_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "answers": {
+                    "type": "string",
+                    "description": "الـ Request يجب أن يكون JSON: {\"answers\": {\"1\": \"Figma\", \"2\": \"Photoshop\"}}"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "تم إرسال الإجابات وتصحيحها"
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "attempt_id": {
+                          "type": "integer"
+                        },
+                        "score": {
+                          "type": "string"
+                        },
+                        "passed": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "attempt_id",
+                        "score",
+                        "passed"
+                      ]
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthenticationException"
+          },
+          "404": {
+            "$ref": "#/components/responses/ModelNotFoundException"
+          }
+        }
+      }
+    },
+    "/v1/exams/results/{attempt_id}": {
+      "get": {
+        "operationId": "examApi.results",
+        "tags": [
+          "ExamApi"
+        ],
+        "parameters": [
+          {
+            "name": "attempt_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "نتيجة الاختبار"
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ResultResource"
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthenticationException"
+          }
+        }
+      }
+    },
+    "/v1/live-sessions": {
+      "get": {
+        "operationId": "liveSessionApi.index",
+        "tags": [
+          "LiveSessionApi"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "تم جلب البثوث المتاحة"
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "available_now": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/LiveSessionResource"
+                          }
+                        },
+                        "archived": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/LiveSessionResource"
+                          }
+                        }
+                      },
+                      "required": [
+                        "available_now",
+                        "archived"
+                      ]
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthenticationException"
+          }
+        }
+      }
+    },
+    "/v1/live-sessions/{id}/join": {
+      "get": {
+        "operationId": "liveSessionApi.join",
+        "tags": [
+          "LiveSessionApi"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "إرجاع الرابط الذكي (Deep Link لبث Zoom/Jitsi/Website)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "رابط الانضمام جاهز"
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "session_id": {
+                          "type": "string"
+                        },
+                        "join_url": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "session_id",
+                        "join_url"
+                      ]
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "هذا البث انتهى وتمت أرشفته، يمكنك مشاهدة التسجيل."
+                      ]
+                    },
+                    "data": {
+                      "type": "null"
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthenticationException"
+          }
+        }
+      }
+    },
+    "/v1/v1/mobile-parent/profile": {
+      "get": {
+        "operationId": "mobileParent.getProfileData",
+        "tags": [
+          "MobileParent"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "phone": {
+                      "type": "string"
+                    },
+                    "image": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "email",
+                    "phone",
+                    "image"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthenticationException"
+          }
+        }
+      }
+    },
+    "/v1/v1/mobile-parent/children": {
+      "get": {
+        "operationId": "mobileParent.getChildren",
+        "tags": [
+          "MobileParent"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "email": {
+                        "type": "string"
+                      },
+                      "phone": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "avatar": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "name",
+                      "email",
+                      "phone",
+                      "avatar"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthenticationException"
+          }
+        }
+      },
+      "post": {
+        "operationId": "mobileParent.addChild",
+        "tags": [
+          "MobileParent"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 8
+                  },
+                  "identity_number": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "email",
+                  "name",
+                  "phone",
+                  "password",
+                  "identity_number"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "تم ربط الابن بنجاح"
+                      ]
+                    },
+                    "child": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "email"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "message",
+                    "child"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthenticationException"
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "لم يتم العثور على الطالب أو ليس طالبًا."
+                      ]
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "$ref": "#/components/schemas/MessageBag"
+                    }
+                  },
+                  "required": [
+                    "errors"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/v1/mobile-parent/children/{child_id}": {
+      "put": {
+        "operationId": "mobileParent.updateChildData",
+        "tags": [
+          "MobileParent"
+        ],
+        "parameters": [
+          {
+            "name": "child_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "email": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "email"
+                  },
+                  "phone": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "password": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "minLength": 8
+                  },
+                  "password_confirmation": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "minLength": 8
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "تم تعديل بيانات الطالب بنجاح"
+                      ]
+                    },
+                    "child": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "phone": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "email",
+                        "phone"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "message",
+                    "child"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthenticationException"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationException"
+          }
+        }
+      },
+      "get": {
+        "operationId": "mobileParent.getChildDetails",
+        "tags": [
+          "MobileParent"
+        ],
+        "parameters": [
+          {
+            "name": "child_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "prefixItems": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "childData"
+                      ]
+                    }
+                  ],
+                  "minItems": 1,
+                  "maxItems": 1,
+                  "additionalItems": false
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthenticationException"
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "ليس لديك صلاحية الوصول."
+                      ]
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/ModelNotFoundException"
+          }
+        }
+      }
+    },
+    "/v1/v1/mobile-parent/payments": {
+      "get": {
+        "operationId": "mobileParent.getParentPayments",
+        "tags": [
+          "MobileParent"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "order_id": {
+                        "type": "integer"
+                      },
+                      "amount": {
+                        "type": "string"
+                      },
+                      "payment_gateway": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "order_id",
+                      "amount",
+                      "payment_gateway",
+                      "status"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthenticationException"
+          }
+        }
+      }
+    },
+    "/v1/v1/mobile-parent/courses": {
+      "get": {
+        "operationId": "mobileParent.getCourses",
+        "tags": [
+          "MobileParent"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer"
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "thumbnail": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "price": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "title",
+                      "description",
+                      "thumbnail",
+                      "price"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthenticationException"
+          }
+        }
+      }
+    },
+    "/v1/v1/mobile-parent/children/{child_id}/exam-results": {
+      "get": {
+        "operationId": "mobileParent.getChildExamResults",
+        "tags": [
+          "MobileParent"
+        ],
+        "parameters": [
+          {
+            "name": "child_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "exam_id": {
+                        "type": "integer"
+                      },
+                      "exam_title": {
+                        "type": "string"
+                      },
+                      "course_title": {
+                        "type": "string"
+                      },
+                      "score": {
+                        "type": "integer"
+                      },
+                      "created_at": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "exam_id",
+                      "exam_title",
+                      "course_title",
+                      "score",
+                      "created_at"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthenticationException"
+          }
+        }
+      }
+    },
+    "/v1/notifications": {
+      "get": {
+        "operationId": "notificationApi.index",
+        "tags": [
+          "NotificationApi"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "قائمة الإشعارات المحدثة"
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/NotificationResource"
+                      }
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthenticationException"
+          }
+        }
+      }
+    },
+    "/v1/notifications/mark-as-read": {
+      "post": {
+        "operationId": "notificationApi.markAsRead",
+        "tags": [
+          "NotificationApi"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "notification_id": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "all": {
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "تم تحديث حالة الإشعار"
+                      ]
+                    },
+                    "data": {
+                      "type": "null"
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthenticationException"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationException"
+          }
+        }
+      }
+    },
+    "/v1/checkout": {
+      "post": {
+        "operationId": "paymentApi.checkout",
+        "summary": "معالجة الدفع (شاشة حجز الدورة)",
+        "tags": [
+          "PaymentApi"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "course_id": {
+                    "type": "integer"
+                  },
+                  "amount": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "course_id",
+                  "amount"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "عذراً، فشلت عملية الدفع، يرجى المحاولة لاحقاً"
+                      ]
+                    },
+                    "data": {
+                      "type": "null"
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthenticationException"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationException"
+          }
+        }
+      }
+    },
+    "/v1/transactions": {
+      "get": {
+        "operationId": "paymentApi.transactions",
+        "summary": "سجل العمليات المالية للطالب",
+        "tags": [
+          "PaymentApi"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "سجل المعاملات المالية"
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/TransactionResource"
+                      }
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthenticationException"
+          }
+        }
+      }
+    },
+    "/v1/profile": {
+      "get": {
+        "operationId": "profileApi.show",
+        "tags": [
+          "ProfileApi"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "بيانات المستخدم"
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "phone": {
+                          "type": "string"
+                        },
+                        "image": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "email",
+                        "phone",
+                        "image"
+                      ]
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthenticationException"
+          }
+        }
+      }
+    },
+    "/v1/profile/update": {
+      "post": {
+        "operationId": "profileApi.update",
+        "tags": [
+          "ProfileApi"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 255
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "تم تحديث البيانات بنجاح"
+                      ]
+                    },
+                    "data": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthenticationException"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationException"
+          }
+        }
+      }
+    },
+    "/v1/profile/change-password": {
+      "post": {
+        "operationId": "profileApi.changePassword",
+        "tags": [
+          "ProfileApi"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "current_password": {
+                    "type": "string"
+                  },
+                  "new_password": {
+                    "type": "string",
+                    "minLength": 8
+                  },
+                  "new_password_confirmation": {
+                    "type": "string",
+                    "minLength": 8
+                  }
+                },
+                "required": [
+                  "current_password",
+                  "new_password",
+                  "new_password_confirmation"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "تم تغيير كلمة المرور بنجاح"
+                      ]
+                    },
+                    "data": {
+                      "type": "null"
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthenticationException"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationException"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CategoryResource": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "icon": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "icon"
+        ],
+        "title": "CategoryResource"
+      },
+      "CommentResource": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "user_name": {
+            "type": "string"
+          },
+          "user_avatar": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "comment_text": {
+            "type": "string"
+          },
+          "created_at_human": {
+            "type": "string"
+          },
+          "likes_count": {
+            "type": "integer",
+            "description": "\"منذ 7 دقائق\"",
+            "enum": [
+              1700
+            ]
+          },
+          "dislikes_count": {
+            "type": "integer",
+            "description": "يمكن ربطه بجدول الإعجابات لاحقاً",
+            "enum": [
+              632
+            ]
+          },
+          "replies_count": {
+            "type": "string"
+          },
+          "replies": {
+            "type": "array",
+            "description": "يظهر في الزر \"470 من الردود\"\nنرسل الردود فقط إذا طلبنا تفاصيل التعليق (recursive)",
+            "items": {
+              "$ref": "#/components/schemas/CommentResource"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "user_name",
+          "user_avatar",
+          "comment_text",
+          "created_at_human",
+          "likes_count",
+          "dislikes_count",
+          "replies_count"
+        ],
+        "title": "CommentResource"
+      },
+      "CourseResource": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "duration": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "5h 21m"
+                ]
+              }
+            ]
+          },
+          "category": {
+            "type": "string",
+            "description": "ديناميكي من جدول الكورس"
+          },
+          "price": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "string"
+              },
+              "is_free": {
+                "type": "boolean"
+              },
+              "label": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "string",
+                    "enum": [
+                      "مجاناً"
+                    ]
+                  }
+                ]
+              }
+            },
+            "required": [
+              "value",
+              "is_free",
+              "label"
+            ]
+          },
+          "thumbnail": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "instructor": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "image": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "image"
+            ]
+          },
+          "lessons_count": {
+            "type": "string"
+          },
+          "is_subscribed": {
+            "type": "boolean"
+          },
+          "progress_percentage": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "duration",
+          "category",
+          "price",
+          "thumbnail",
+          "instructor",
+          "lessons_count",
+          "is_subscribed",
+          "progress_percentage"
+        ],
+        "title": "CourseResource"
+      },
+      "InstructorResource": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "avatar": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "bio": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "خبرة تزيد عن 15 عاماً في مجال التدريس..."
+                ]
+              }
+            ]
+          },
+          "stats": {
+            "type": "object",
+            "properties": {
+              "experience": {
+                "type": "string",
+                "enum": [
+                  "+15 عام من الخبرة"
+                ]
+              },
+              "students": {
+                "type": "string",
+                "enum": [
+                  "8000 طالب"
+                ]
+              },
+              "courses": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "experience",
+              "students",
+              "courses"
+            ]
+          },
+          "assistants": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "enum": [
+                      1
+                    ]
+                  },
+                  "name": {
+                    "type": "string",
+                    "enum": [
+                      "محمد خالد"
+                    ]
+                  },
+                  "image": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "مساعد تدريس"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "name",
+                  "image",
+                  "role"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "enum": [
+                      2
+                    ]
+                  },
+                  "name": {
+                    "type": "string",
+                    "enum": [
+                      "أحمد خالد"
+                    ]
+                  },
+                  "image": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "مساعد تدريس"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "name",
+                  "image",
+                  "role"
+                ]
+              }
+            ],
+            "minItems": 2,
+            "maxItems": 2,
+            "additionalItems": false
+          },
+          "related_courses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CourseResource"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "avatar",
+          "bio",
+          "stats",
+          "assistants"
+        ],
+        "title": "InstructorResource"
+      },
+      "LiveSessionResource": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "course_name": {
+            "type": "string"
+          },
+          "thumbnail": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "scheduled_at": {
+            "type": "string"
+          },
+          "is_archived": {
+            "type": "boolean"
+          },
+          "is_live": {
+            "type": "string"
+          },
+          "recorded_url": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "دالة سنضيفها في الـ Model"
+          },
+          "stats": {
+            "type": "object",
+            "description": "متاح فقط للمؤرشف",
+            "properties": {
+              "date_human": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "date_human"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "course_name",
+          "thumbnail",
+          "scheduled_at",
+          "is_archived",
+          "is_live",
+          "recorded_url",
+          "stats"
+        ],
+        "title": "LiveSessionResource"
+      },
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "login": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "login_type": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8
+          },
+          "device_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "device_id"
+        ],
+        "title": "LoginRequest"
+      },
+      "MessageBag": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "title": "MessageBag"
+      },
+      "NotificationResource": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "تنبيه جديد"
+                ]
+              }
+            ]
+          },
+          "message": {
+            "type": "string",
+            "description": "مثل: الدكتور محمد الصعيدي"
+          },
+          "type": {
+            "type": "string",
+            "description": "مثل: قام الدكتور بإنشاء بث جديد..."
+          },
+          "sender_image": {
+            "type": "string",
+            "description": "live_session, exam_result, etc"
+          },
+          "is_read": {
+            "type": "boolean",
+            "description": "يمكن ربطها بديناميكية مع المعلم"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "target_id": {
+            "type": "string",
+            "description": "\"الآن\"، \"منذ ساعة\""
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "message",
+          "type",
+          "sender_image",
+          "is_read",
+          "created_at",
+          "target_id"
+        ],
+        "title": "NotificationResource"
+      },
+      "QuestionResource": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "question_text": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "options": {
+            "type": "string",
+            "description": "mcq, whiteboard"
+          }
+        },
+        "required": [
+          "id",
+          "question_text",
+          "type",
+          "options"
+        ],
+        "title": "QuestionResource"
+      },
+      "ResultResource": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "score": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "total_questions": {
+            "type": "string",
+            "description": "ناجح / راسب"
+          },
+          "answers": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "score",
+          "status",
+          "total_questions",
+          "answers"
+        ],
+        "title": "ResultResource"
+      },
+      "TransactionResource": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "type": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "description": "income, expense, refund"
+          },
+          "payment_method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "Visa"
+                ]
+              }
+            ]
+          },
+          "date": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "مكتملة"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "amount",
+          "type",
+          "description",
+          "payment_method",
+          "date",
+          "status"
+        ],
+        "title": "TransactionResource"
+      }
+    },
+    "responses": {
+      "ValidationException": {
+        "description": "Validation error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "description": "Errors overview."
+                },
+                "errors": {
+                  "type": "object",
+                  "description": "A detailed description of each field that failed validation.",
+                  "additionalProperties": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "required": [
+                "message",
+                "errors"
+              ]
+            }
+          }
+        }
+      },
+      "ModelNotFoundException": {
+        "description": "Not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "description": "Error overview."
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "AuthenticationException": {
+        "description": "Unauthenticated",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "description": "Error overview."
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}

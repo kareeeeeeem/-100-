@@ -62,8 +62,7 @@ class _NotificationsBottomSheetState extends State<NotificationsBottomSheet> {
                       },
                       tabs: [
                         _buildTab('الكل', 0),
-                        _buildTab('غير مقروءه', 1),
-                        _buildTab('مقروءه', 2),
+                        
                       ],
                     ),
                     Expanded(

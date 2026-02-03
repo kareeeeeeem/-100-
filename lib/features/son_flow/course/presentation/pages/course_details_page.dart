@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lms/core/routing/app_router.dart';
 import 'package:lms/core/routing/app_routes.dart';
 import 'package:lms/core/utils/app_colors.dart';
 import 'package:lms/core/widgets/custom_elevated_button.dart';
+import 'package:lms/features/son_flow/course/presentation/pages/WishlistCubit.dart';
 import 'package:lms/features/son_flow/home/data/model/course_details_cubit.dart';
 import 'package:lms/features/son_flow/payment/presentation/widgets/payment_bottom_sheet.dart';
-import 'package:lms/features/son_flow/community/presentation/manager/favorite_cubit.dart';
 import 'package:lms/features/son_flow/home/presentation/manager/payment_cubit.dart';
 import 'package:lms/core/widgets/custom_image.dart';
+import 'package:lms/features/son_flow/community/presentation/manager/comments_cubit.dart';
+import 'package:lms/features/son_flow/course/presentation/widgets/course_comments_bottom_sheet.dart';
 
 class CourseDetailsPage extends StatefulWidget {
   final int courseId; // استلام الـ ID من الـ Router
@@ -38,48 +42,6 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('تفاصيل الدورة'),
-          actionsPadding: const EdgeInsetsDirectional.only(end: 16),
-          actions: [
-            BlocBuilder<CourseDetailsCubit, CourseDetailsState>(
-              builder: (context, detailsState) {
-                bool isFavorited = false;
-                if (detailsState is CourseDetailsSuccess) {
-                  isFavorited = detailsState.model.data?.isFavorited ?? false;
-                }
-                return BlocConsumer<FavoriteCubit, FavoriteState>(
-                  listener: (context, favoriteState) {
-                    if (favoriteState is FavoriteError) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(favoriteState.message)),
-                      );
-                    }
-                  },
-                  builder: (context, favoriteState) {
-                    bool currentStatus = isFavorited;
-                    if (favoriteState is FavoriteSuccess) {
-                      currentStatus = favoriteState.isFavorited;
-                    }
-                    if (favoriteState is FavoriteLoading) {
-                      return const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      );
-                    }
-                    return InkWell(
-                      onTap: () {
-                        context.read<FavoriteCubit>().toggleFavorite(widget.courseId);
-                      },
-                      child: Icon(
-                        currentStatus ? Icons.favorite : Icons.favorite_border,
-                        color: AppColors.primary,
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ],
         ),
         body: BlocBuilder<CourseDetailsCubit, CourseDetailsState>(
           builder: (context, state) {
@@ -104,48 +66,115 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(25.15),
                         ),
-                        child: Stack(
-                          children: [
-                            Positioned.fill(
-                              child: CustomImage(
-                                imagePath: course.thumbnail,
-                                fit: BoxFit.cover,
-                                width: double.infinity,
-                                height: double.infinity,
-                              ),
+                        child: // داخل Column في الـ SingleChildScrollView
+Stack(
+  children: [
+    // 1. الصورة (أول طبقة تحت)
+    Positioned.fill(
+      child: CustomImage(
+        imagePath: course.thumbnail,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+      ),
+    ),
+    
+    // 2. التدرج الأسود (لازم يكون فوق الصورة وتحت الزرار)
+    Positioned.fill(
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.black.withOpacity(0.0), Colors.black.withOpacity(0.8)],
+          ),
+        ),
+      ),
+    ),
+
+    // 3. زر القلب (آخر طبقة فوق عشان يلمس)
+    Positioned(
+      top: 15,
+      left: 15,
+      child: BlocConsumer<WishlistCubit, WishlistState>(
+        listener: (context, state) {
+          if (state is WishlistToggleSuccess) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message), backgroundColor: AppColors.primary),
+            );
+          } else if (state is WishlistError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+            );
+          }
+        },
+        builder: (context, state) {
+          final cubit = context.read<WishlistCubit>();
+          final bool isFav = cubit.isCourseFavorited(widget.courseId, course.isFavorited);
+
+          return Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                print("🖱️ [UI] Toggle Favorite Clicked for ID: ${widget.courseId}");
+                cubit.toggleFavorite(widget.courseId);
+              },
+              child: CircleAvatar(
+                backgroundColor: Colors.white.withOpacity(0.9),
+                child: (state is WishlistLoading)
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+                      )
+                    : Icon(
+                        isFav ? Icons.favorite : Icons.favorite_border,
+                        color: isFav ? Colors.red : Colors.grey,
+                      ),
+              ),
+            ),
+          );
+        },
+      ),
+    ),
+  ],
+),
+                      ),
+                      const SizedBox(height: 10),
+
+                      // --- العنوان والتعليقات ---
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              course.title ?? '',
+                              style: const TextStyle(fontSize: 18.86, fontWeight: FontWeight.w600),
                             ),
-                            Positioned.fill(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topCenter,
-                                    end: Alignment.bottomCenter,
-                                    colors: [
-                                      Colors.black.withOpacity(0.0),
-                                      Colors.black.withOpacity(0.8),
-                                    ],
+                          ),
+                          InkWell(
+                            onTap: () {
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                backgroundColor: Colors.white,
+                                builder: (sheetContext) => BlocProvider.value(
+                                  value: context.read<CommentsCubit>()..loadComments(widget.courseId),
+                                  child: CourseCommentsBottomSheet(
+                                    courseId: widget.courseId,
+                                    isSubscribed: course.isSubscribed,
                                   ),
                                 ),
-                              ),
+                              );
+                            },
+                            child: const Row(
+                              children: [
+                                Text('التعليقات', style: TextStyle(color: AppColors.primary, fontSize: 12)),
+                                SizedBox(width: 4),
+                                Icon(Icons.comment_outlined, color: AppColors.primary, size: 20),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-
-                      // --- العنوان ---
-                      Text(
-                        course.title ?? '',
-                        style: const TextStyle(fontSize: 18.86, fontWeight: FontWeight.w600),
-                      ),
-                      const SizedBox(height: 10),
-
-                      // --- مدة الدورة ---
-                      Row(
-                        children: [
-                          const Icon(Icons.timer_outlined, size: 16, color: Colors.grey),
-                          const SizedBox(width: 6),
-                          Text(course.duration ?? '', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 20),
@@ -153,7 +182,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                       // --- Tags (دروس، سعر، قسم) ---
                       Row(
                         children: [
-                          _buildTag('${course.lessons?.length ?? 0} دروس', AppColors.primary),
+                          _buildTag('${course.lessonsCount ?? course.lessons?.length ?? 0} دروس', AppColors.primary),
                           const SizedBox(width: 10),
                           _buildTag(course.price?.label ?? 'مجاني', AppColors.c589B6E),
                           const SizedBox(width: 10),
@@ -170,8 +199,18 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                       const SizedBox(height: 20),
 
                       // --- بيانات المدرس ---
-                      InkWell(
-                        onTap: () => context.pushNamed(AppRoutes.instructorProfile),
+                    InkWell(
+  onTap: () {
+    if (course.instructor?.id != null) {
+      // بنستخدم navigatorKey عشان نتخطى أي مشاكل في الـ context
+      AppRouter.navigatorKey.currentContext?.pushNamed(
+        AppRoutes.instructorProfile,
+        extra: course.instructor!.id.toString(),
+      );
+    } else {
+      print("Instructor ID is null!"); // عشان تتأكد في الـ Terminal لو الداتا ناقصة
+    }
+  },
                         child: Row(
                           children: [
                             Container(
@@ -181,16 +220,19 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                                   shape: BoxShape.circle,
                                   color: Colors.black12,
                                 ),
-                                child: ClipOval(
+                               child: ClipOval(
                                   child: CustomImage(
                                     imagePath: course.instructor?.image,
                                     width: 42,
                                     height: 42,
                                     fit: BoxFit.cover,
+                                    isUserProfile: true, // Use avatar placeholder
                                   ),
                                 ),
                               ),
                             const SizedBox(width: 10),
+
+                            
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -198,10 +240,16 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                                   course.instructor?.name ?? 'مدرس الدورة',
                                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                                 ),
-                                const Text(
-                                  'مدرب معتمد',
-                                  style: TextStyle(fontSize: 10, color: AppColors.c9D9FA0),
-                                ),
+                                if (course.instructor?.stats != null)
+                                  Text(
+                                    '${course.instructor?.stats?.students ?? 0} طالب | ${course.instructor?.stats?.courses ?? 0} دورة',
+                                    style: const TextStyle(fontSize: 10, color: AppColors.c9D9FA0),
+                                  )
+                                // else
+                                //   const Text(
+                                //     'مدرب معتمد',
+                                //     style: TextStyle(fontSize: 10, color: AppColors.c9D9FA0),
+                                //   ),
                               ],
                             ),
                           ],
@@ -256,27 +304,46 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
             return const SizedBox();
           },
         ),
-        bottomSheet: Padding(
-          padding: const EdgeInsets.all(16),
-          child: CustomElevatedButton(
-            title: 'احجز الان',
-            onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                backgroundColor: Colors.white,
-                builder: (modalContext) {
-                  return BlocProvider.value(
-                    value: context.read<PaymentCubit>(),
-                    child: SizedBox(
-                      height: MediaQuery.sizeOf(context).height * 0.9,
-                      child: PaymentBottomSheet(courseId: widget.courseId),
-                    ),
-                  );
-                },
+        bottomSheet: BlocBuilder<CourseDetailsCubit, CourseDetailsState>(
+          builder: (context, state) {
+            if (state is CourseDetailsSuccess) {
+              final course = state.model.data;
+              return Padding(
+                padding: const EdgeInsets.all(16),
+                child: CustomElevatedButton(
+                  title: (course?.isSubscribed ?? false) ? 'الذهاب الى الكورس' : 'احجز الان',
+                  onPressed: () {
+                    if (course?.isSubscribed ?? false) {
+                      context.pushNamed(AppRoutes.subscribedCourseDetails, extra: widget.courseId);
+                    } else {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.white,
+                        builder: (modalContext) {
+                          return BlocProvider.value(
+                            value: context.read<PaymentCubit>(),
+                            child: SizedBox(
+                              height: MediaQuery.sizeOf(context).height * 0.9,
+                              child: PaymentBottomSheet(
+                                courseId: widget.courseId,
+                                amount: double.tryParse((course?.price?.value ?? '0')
+                                        .replaceAll(RegExp(r'[^0-9.]'), '')) ??
+                                    0.0,
+                                courseTitle: course?.title ?? '',
+                                priceLabel: course?.price?.label ?? '',
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    }
+                  },
+                ),
               );
-            },
-          ),
+            }
+            return const SizedBox.shrink();
+          },
         ),
       ),
     );

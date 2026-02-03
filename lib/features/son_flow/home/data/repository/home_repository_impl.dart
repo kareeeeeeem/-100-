@@ -45,9 +45,9 @@ class HomeRepositoryImpl implements HomeRepository {
 
   @override
   Future<Result<ProfileResponseModel>> updateProfile(
-      {required String name, required String phone}) async {
+      {required String name, required String email}) async {
     try {
-      final result = await homeApiService.updateProfile(name: name, phone: phone);
+      final result = await homeApiService.updateProfile(name: name, email: email);
       return Result.success(result);
     } catch (e) {
       return Result.error(ErrorHandler.getFailure(e));
@@ -126,6 +126,7 @@ class HomeRepositoryImpl implements HomeRepository {
   @override
   Future<Result<void>> checkout({
     required int courseId,
+    required double amount,
     required String cardNumber,
     required String expiryDate,
     required String cvv,
@@ -134,6 +135,7 @@ class HomeRepositoryImpl implements HomeRepository {
     try {
       await homeApiService.checkout(
         courseId: courseId,
+        amount: amount,
         cardNumber: cardNumber,
         expiryDate: expiryDate,
         cvv: cvv,
@@ -160,16 +162,6 @@ class HomeRepositoryImpl implements HomeRepository {
     try {
       await homeApiService.deleteAccount();
       return Result.success(null);
-    } catch (e) {
-      return Result.error(ErrorHandler.getFailure(e));
-    }
-  }
-
-  @override
-  Future<Result<bool>> toggleFavorite(int courseId) async {
-    try {
-      final result = await homeApiService.toggleFavorite(courseId);
-      return Result.success(result);
     } catch (e) {
       return Result.error(ErrorHandler.getFailure(e));
     }

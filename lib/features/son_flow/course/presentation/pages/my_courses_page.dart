@@ -30,12 +30,12 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
       appBar: const SharedAppBar(), //
       body: CustomScrollView(
         slivers: [
-          SliverToBoxAdapter(
+          const SliverToBoxAdapter(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 10),
-                const Padding(
+                SizedBox(height: 10),
+                Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
                     'الدورات الدراسية الخاصة بي',
@@ -46,12 +46,14 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 10),
-                SizedBox(
-                  height: 40,
-                  child: CourseCategoriesListView(courses: _categories), //
-                ),
-                const SizedBox(height: 20),
+                SizedBox(height: 10),
+                // SizedBox(
+                //   height: 40,
+                //   child: CourseCategoriesListView(
+                //     categories: _categories.map((e) => CategoryUIModel(name: e)).toList(),
+                //   ), 
+                // ),
+                SizedBox(height: 20),
               ],
             ),
           ),
@@ -92,10 +94,13 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
       borderAlpha: 0.4,
       child: RunningCourseItemView(
         courseName: course.title,
+        instructorName: course.instructor.name,
+        category: course.category,
         // استخدام القيم المحولة نصوص بأمان
         lessonsAndHours: '$lCount دروس . ${course.duration}',
         // التحويل لـ double للـ Progress Bar
         progress: (double.tryParse(pPercentage) ?? 0.0) / 100,
+        courseId: course.id,
         imageUrl: course.thumbnail,
       ),
     ),

@@ -8,6 +8,7 @@ import 'package:lms/core/service/toast_service.dart';
 import 'package:lms/core/service/toast_service_impl.dart';
 import 'package:lms/features/localization/di/localization_di.dart';
 import 'package:lms/features/on_boarding/di/on_boarding_di.dart';
+import 'package:lms/features/son_flow/course/presentation/pages/WishlistCubit.dart';
 import 'package:lms/features/son_flow/home/data/data_sources/api/live_sessions_api_service.dart';
 import 'package:lms/features/son_flow/home/domain/repository/login_repository.dart';
 import 'package:lms/features/son_flow/home/presentation/manager/notifications_cubit.dart';
@@ -68,5 +69,7 @@ class AppDi {
     sl.registerFactory(() => NotificationsCubit(sl<HomeRepository>()));
 
     sl.registerLazySingleton(() => LiveSessionsApiService(sl()));
+
+    sl.registerLazySingleton(() => WishlistCubit());
   }
 }

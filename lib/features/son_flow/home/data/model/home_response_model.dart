@@ -53,39 +53,50 @@ class CategoryModel {
 }
 
 class CourseModel {
-  final int id;
+  final dynamic id;
   final String title;
   final String? thumbnail;
   final String duration;
+  final String? category; // Added category
   final InstructorModel? instructor;
   final PriceModel? price;
   final String? lessonsCount;
   final String? progressPercentage;
   final bool isFavorited;
+  final bool isSubscribed; // Added isSubscribed
 
   CourseModel({
     required this.id,
     required this.title,
     this.thumbnail,
     required this.duration,
+    this.category,
     this.instructor,
     this.price,
     this.lessonsCount,
     this.progressPercentage,
     this.isFavorited = false,
+    this.isSubscribed = false,
   });
 
-  factory CourseModel.fromJson(Map<String, dynamic> json) => CourseModel(
-        id: json['id'] ?? 0,
+  factory CourseModel.fromJson(Map<String, dynamic> json) {
+    // Robust ID parsing: Handles int, String, and alternate key 'course_id'
+    final dynamic rawId = json['id'] ?? json['course_id'];
+    
+    return CourseModel(
+        id: rawId,
         title: (json['title'] ?? '').trim(),
         thumbnail: (json['thumbnail']?.toString())?.trim(),
         duration: json['duration'] is Map ? (json['duration']['value'] ?? '').toString().trim() : (json['duration'] ?? '').toString().trim(),
+        category: (json['category']?.toString())?.trim(),
         instructor: json['instructor'] != null ? InstructorModel.fromJson(json['instructor']) : null,
         price: json['price'] != null ? PriceModel.fromJson(json['price']) : null,
         lessonsCount: json['lessons_count']?.toString().trim(),
         progressPercentage: json['progress_percentage']?.toString().trim(),
         isFavorited: json['is_favorited'] ?? false,
+        isSubscribed: json['is_subscribed'] ?? false,
       );
+  }
 
   // Helper getters for compatibility with existing UI
   String get instructorName => instructor?.name ?? 'مدرب أكاديمية 100';
@@ -97,26 +108,31 @@ class CourseModel {
     'title': title,
     'thumbnail': thumbnail,
     'duration': duration,
+    'category': category,
     'instructor': instructor?.toJson(),
     'price': price?.toJson(),
     'lessons_count': lessonsCount,
     'progress_percentage': progressPercentage,
     'is_favorited': isFavorited,
+    'is_subscribed': isSubscribed,
   };
 }
 
 class InstructorModel {
+  final String? id;
   final String name;
   final String? image;
 
-  InstructorModel({required this.name, this.image});
+  InstructorModel({this.id, required this.name, this.image});
 
   factory InstructorModel.fromJson(Map<String, dynamic> json) => InstructorModel(
+    id: json['id']?.toString(),
     name: (json['name'] ?? '').trim(),
     image: (json['image']?.toString())?.trim(),
   );
 
   Map<String, dynamic> toJson() => {
+    'id': id,
     'name': name,
     'image': image,
   };

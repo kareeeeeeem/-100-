@@ -8,9 +8,19 @@ import 'package:lms/core/widgets/custom_text_form_field.dart';
 import 'package:lms/features/son_flow/community/presentation/manager/comments_cubit.dart';
 import 'package:lms/features/son_flow/community/presentation/manager/comments_state.dart';
 
+import 'package:get_it/get_it.dart';
+import 'package:lms/core/service/jwt_service.dart';
+import 'package:lms/core/widgets/custom_image.dart';
+import 'package:lms/features/son_flow/community/data/model/comment_model.dart';
+
 class CourseCommentsBottomSheet extends StatefulWidget {
   final int courseId;
-  const CourseCommentsBottomSheet({super.key, required this.courseId});
+  final bool isSubscribed;
+  const CourseCommentsBottomSheet({
+    super.key, 
+    required this.courseId,
+    this.isSubscribed = false,
+  });
 
   @override
   State<CourseCommentsBottomSheet> createState() => _CourseCommentsBottomSheetState();
@@ -18,11 +28,36 @@ class CourseCommentsBottomSheet extends StatefulWidget {
 
 class _CourseCommentsBottomSheetState extends State<CourseCommentsBottomSheet> {
   final TextEditingController _commentController = TextEditingController();
+  String? _currentUserAvatar;
+  int? _replyingToCommentId;
+  String? _replyingToUserName;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserAvatar();
+  }
+
+  Future<void> _loadUserAvatar() async {
+    final avatar = await GetIt.instance<JwtService>().getUserAvatar();
+    if (mounted) {
+      setState(() {
+        _currentUserAvatar = avatar;
+      });
+    }
+  }
 
   @override
   void dispose() {
     _commentController.dispose();
     super.dispose();
+  }
+
+  void _cancelReply() {
+    setState(() {
+      _replyingToCommentId = null;
+      _replyingToUserName = null;
+    });
   }
 
   @override
@@ -32,42 +67,39 @@ class _CourseCommentsBottomSheetState extends State<CourseCommentsBottomSheet> {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
           child: Row(
-            spacing: 10,
+            spacing: 12,
             children: [
               const Text(
                 'التعليقات',
                 style: TextStyle(
-                  fontSize: 20.96,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
                   color: Colors.black,
                 ),
               ),
               BlocBuilder<CommentsCubit, CommentsState>(
                 builder: (context, state) {
-                   if (state is CommentsLoaded) {
-                     return Text(
-                      '${state.comments.length}',
+                  if (state is CommentsLoaded) {
+                    return Text(
+                      '(${state.comments.length})',
                       style: const TextStyle(
-                        fontSize: 14.67,
-                        fontWeight: FontWeight.w400,
-                        color: AppColors.cAAAAAA,
+                        fontSize: 14,
+                        color: AppColors.c737373,
                       ),
                     );
-                   }
-                   return const SizedBox();
+                  }
+                  return const SizedBox();
                 },
               ),
               const Spacer(),
               InkWell(
-                onTap: () {
-                  context.pop();
-                },
+                onTap: () => Navigator.pop(context),
                 child: const Icon(Icons.close, color: Colors.black),
               ),
             ],
           ),
         ),
-        Divider(color: AppColors.c737373.withValues(alpha: 0.4)),
+        const Divider(height: 24),
         Expanded(
           child: BlocBuilder<CommentsCubit, CommentsState>(
             builder: (context, state) {
@@ -75,162 +107,253 @@ class _CourseCommentsBottomSheetState extends State<CourseCommentsBottomSheet> {
                 return const Center(child: CircularProgressIndicator());
               }
               if (state is CommentsError) {
-                return Center(child: Text(state.message));
-              }
-              if (state is CommentsLoaded || state is CommentsAdding) {
-                final comments = state is CommentsLoaded ? state.comments : (state as CommentsAdding).currentComments;
-                if (comments.isEmpty) {
-                  return const Center(child: Text('لا يوجد تعليقات بعد. كن أول من يعلق!'));
-                }
-                return ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  itemBuilder: (context, index) {
-                    final comment = comments[index];
-                    return Row(
-                      spacing: 10,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        comment.userAvatar != null 
-                          ? CircleAvatar(backgroundImage: NetworkImage(comment.userAvatar!), radius: 12)
-                          : AppImages.blackWhite.image(width: 24, height: 24),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            spacing: 10,
-                            children: [
-                              Row(
-                                spacing: 10,
-                                children: [
-                                  Text(
-                                    '${comment.userName} .',
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w400,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                  Text(
-                                    comment.createdAt,
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w400,
-                                      color: AppColors.c737373.withValues(alpha: 0.7),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Text(
-                                comment.commentText,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w400,
-                                  color: Colors.black,
-                                ),
-                              ),
-                              DefaultTextStyle(
-                                style: const TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.c111111,
-                                ),
-                                child: Row(
-                                  spacing: 10,
-                                  children: [
-                                    Row(
-                                      spacing: 4,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text('${comment.dislikesCount}'),
-                                        const Icon(
-                                          Icons.thumb_down_alt_outlined,
-                                          color: AppColors.c111111,
-                                          size: 14,
-                                        ),
-                                      ],
-                                    ),
-                                    Row(
-                                      spacing: 4,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text('${comment.likesCount}'),
-                                        const Icon(
-                                          Icons.thumb_up_alt_outlined,
-                                          color: AppColors.c111111,
-                                          size: 14,
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              if (comment.repliesCount > 0)
-                                InkWell(
-                                  onTap: () {},
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    spacing: 10,
-                                    children: [
-                                      Text(
-                                        '${comment.repliesCount} من الردود',
-                                        style: const TextStyle(
-                                          fontSize: 14.67,
-                                          fontWeight: FontWeight.w500,
-                                          color: AppColors.primary,
-                                        ),
-                                      ),
-                                      const Icon(
-                                        Icons.arrow_forward_ios,
-                                        color: AppColors.primary,
-                                        size: 14,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                  separatorBuilder: (context, index) {
-                    return const SizedBox(height: 14);
-                  },
-                  itemCount: comments.length,
+                return Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(state.message, style: const TextStyle(color: Colors.red)),
+                      TextButton(
+                        onPressed: () => context.read<CommentsCubit>().loadComments(widget.courseId),
+                        child: const Text('إعادة المحاولة'),
+                      ),
+                    ],
+                  ),
                 );
               }
-              return const SizedBox();
+              final comments = state is CommentsLoaded 
+                  ? state.comments 
+                  : (state is CommentsAdding ? state.currentComments : []);
+
+              if (comments.isEmpty) {
+                return const Center(
+                  child: Text(
+                    'لا يوجد تعليقات بعد. كن أول من يعلق!',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                );
+              }
+
+              return ListView.separated(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                itemCount: comments.length,
+                separatorBuilder: (context, index) => const SizedBox(height: 20),
+                itemBuilder: (context, index) {
+                  final comment = comments[index];
+                  return _buildCommentItem(comment);
+                },
+              );
             },
           ),
         ),
-        Container(
-          color: AppColors.primary,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
+        // Reply Preview Bar
+        if (_replyingToCommentId != null)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: Colors.grey[100],
             child: Row(
-              spacing: 10,
               children: [
-                AppImages.blackWhite.image(width: 24, height: 24),
+                const Icon(Icons.reply, size: 16, color: AppColors.primary),
+                const SizedBox(width: 8),
                 Expanded(
-                  child: CustomTextFormField(
-                    controller: _commentController,
-                    fillColor: Colors.white,
-                    hintText: 'اضف تعليق',
-                    onTapOutside: (_) {},
-                    suffix: IconButton(
-                      icon: const Icon(Icons.send, color: AppColors.primary),
-                      onPressed: () {
-                        if (_commentController.text.isNotEmpty) {
-                          context.read<CommentsCubit>().addComment(widget.courseId, _commentController.text);
-                          _commentController.clear();
-                        }
-                      },
-                    ),
+                  child: Text(
+                    'الرد على ${_replyingToUserName}',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
                   ),
+                ),
+                InkWell(
+                  onTap: _cancelReply,
+                  child: const Icon(Icons.cancel, size: 18, color: Colors.grey),
                 ),
               ],
             ),
           ),
+        // Comment Input Area
+        Container(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+            top: 16,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, -5),
+              ),
+            ],
+          ),
+          child: widget.isSubscribed
+              ? Row(
+                  spacing: 12,
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.cF6F7FA,
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: CustomImage(
+                        imagePath: _currentUserAvatar,
+                        isUserProfile: true,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    Expanded(
+                      child: CustomTextFormField(
+                        controller: _commentController,
+                        hintText: _replyingToCommentId != null ? 'اكتب ردك هنا...' : 'اضف تعليق...',
+                        fillColor: AppColors.cF6F7FA,
+                        suffix: IconButton(
+                          icon: const Icon(Icons.send_rounded, color: AppColors.primary),
+                          onPressed: () {
+                            final text = _commentController.text.trim();
+                            if (text.isNotEmpty) {
+                              context.read<CommentsCubit>().addComment(
+                                widget.courseId, 
+                                text,
+                                parentId: _replyingToCommentId,
+                              );
+                              _commentController.clear();
+                              _cancelReply();
+                              FocusScope.of(context).unfocus();
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              : Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.lock_outline, size: 18, color: Colors.grey),
+                        const SizedBox(width: 8),
+                        Text(
+                          'يجب الاشتراك في الدورة لتتمكن من إضافة تعليق',
+                          style: TextStyle(color: Colors.grey[600], fontSize: 13, fontWeight: FontWeight.w500),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCommentItem(CommentModel comment, {bool isReply = false}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: 12,
+          children: [
+            Container(
+              width: isReply ? 28 : 36,
+              height: isReply ? 28 : 36,
+              decoration: const BoxDecoration(shape: BoxShape.circle),
+              clipBehavior: Clip.antiAlias,
+              child: CustomImage(
+                imagePath: comment.userAvatar,
+                isUserProfile: true,
+                fit: BoxFit.cover,
+              ),
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        comment.userName,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        comment.createdAt,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    comment.commentText,
+                    style: const TextStyle(fontSize: 13, height: 1.4),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      _buildActionIcon(Icons.thumb_up_alt_outlined, comment.likesCount.toString()),
+                      const SizedBox(width: 16),
+                      _buildActionIcon(Icons.thumb_down_alt_outlined, comment.dislikesCount.toString()),
+                      const Spacer(),
+                      if (!isReply)
+                        TextButton(
+                          onPressed: () {
+                            setState(() {
+                              _replyingToCommentId = comment.id;
+                              _replyingToUserName = comment.userName;
+                            });
+                          },
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: const Text(
+                            'رد',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        if (comment.replies.isNotEmpty)
+          Padding(
+            padding: const EdgeInsetsDirectional.only(start: 48, top: 12),
+            child: Column(
+              children: comment.replies.map((reply) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _buildCommentItem(reply, isReply: true),
+              )).toList(),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildActionIcon(IconData icon, String count) {
+    return Row(
+      children: [
+        Icon(icon, size: 14, color: Colors.grey[600]),
+        const SizedBox(width: 4),
+        Text(
+          count,
+          style: TextStyle(fontSize: 11, color: Colors.grey[600]),
         ),
       ],
     );

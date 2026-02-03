@@ -7,13 +7,13 @@ class InstructorInitial extends InstructorState {}
 class InstructorLoading extends InstructorState {}
 
 class InstructorProfileLoaded extends InstructorState {
-  final InstructorProfileModel profile;
+  // غيرنا النوع هنا للموديل الجديد
+  final InstructorProfileModel profile; 
 
   InstructorProfileLoaded(this.profile);
 }
 
 class InstructorError extends InstructorState {
   final String message;
-
   InstructorError(this.message);
 }

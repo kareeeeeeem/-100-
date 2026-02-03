@@ -26,8 +26,21 @@ class InstructorProfileModel {
     required this.relatedCourses,
   });
 
+  // تم تعديل الـ factory هنا لحل مشكلة الـ Casting (int to String)
   factory InstructorProfileModel.fromJson(Map<String, dynamic> json) =>
-      _$InstructorProfileModelFromJson(json);
+      InstructorProfileModel(
+        id: json['id'].toString(), // تحويل أي نوع (int أو String) إلى String
+        name: json['name'] as String? ?? '',
+        avatar: json['avatar'] as String?,
+        bio: json['bio'] as String? ?? '',
+        stats: InstructorStatsModel.fromJson(json['stats'] as Map<String, dynamic>),
+        assistants: (json['assistants'] as List<dynamic>?)
+                ?.map((e) => AssistantModel.fromJson(e as Map<String, dynamic>))
+                .toList() ?? [],
+        relatedCourses: (json['related_courses'] as List<dynamic>?)
+                ?.map((e) => CourseModel.fromJson(e as Map<String, dynamic>))
+                .toList() ?? [],
+      );
 
   Map<String, dynamic> toJson() => _$InstructorProfileModelToJson(this);
 }

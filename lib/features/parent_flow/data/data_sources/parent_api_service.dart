@@ -105,6 +105,7 @@ class ParentApiService {
 
   Future<void> checkout({
     required int courseId,
+    required double amount,
     required String cardNumber,
     required String expiryDate,
     required String cvv,
@@ -115,6 +116,8 @@ class ParentApiService {
       ApiConstants.checkout,
       body: {
         'course_id': courseId,
+        'amount': amount,
+        'price': amount,
         'card_number': cardNumber,
         'expiry_date': expiryDate,
         'cvv': cvv,

@@ -25,6 +25,7 @@ class CustomElevatedButton extends StatelessWidget {
     this.height,
     this.width,
     this.isExpanded = true,
+    this.isLoading = false,
   }) : child = null;
 
   const CustomElevatedButton.child({
@@ -34,6 +35,7 @@ class CustomElevatedButton extends StatelessWidget {
     this.height,
     this.width,
     this.isExpanded = true,
+    this.isLoading = false,
     this.child,
   }) : title = null,
        titleStyle = null;
@@ -43,6 +45,7 @@ class CustomElevatedButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final ButtonStyle? buttonStyle;
   final bool isExpanded;
+  final bool isLoading;
   final double? height;
   final double? width;
   final Widget? child;
@@ -55,19 +58,28 @@ class CustomElevatedButton extends StatelessWidget {
         minHeight: height ?? 58.76,
       ),
       child: ElevatedButton(
-        onPressed: onPressed,
+        onPressed: isLoading ? null : onPressed,
         style: buttonStyle ?? customElevatedButtonStyle,
-        child: Builder(
-          builder: (context) {
-            if (title != null) {
-              return Text(
-                title!,
-                style: titleStyle ?? customElevatedButtonTitleStyle,
-              );
-            }
-            return child!;
-          },
-        ),
+        child: isLoading
+            ? const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              )
+            : Builder(
+                builder: (context) {
+                  if (title != null) {
+                    return Text(
+                      title!,
+                      style: titleStyle ?? customElevatedButtonTitleStyle,
+                    );
+                  }
+                  return child!;
+                },
+              ),
       ),
     );
   }

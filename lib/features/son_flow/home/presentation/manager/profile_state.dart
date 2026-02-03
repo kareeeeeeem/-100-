@@ -26,3 +26,25 @@ class DeleteAccountError extends ProfileState {
   final String message;
   DeleteAccountError(this.message);
 }
+
+// Profile Updates
+class ProfileUpdateLoading extends ProfileState {}
+class ProfileUpdateSuccess extends ProfileState {
+  final String message;
+  ProfileUpdateSuccess(this.message);
+}
+class ProfileUpdateError extends ProfileState {
+  final String message;
+  ProfileUpdateError(this.message);
+}
+
+// Change Password
+class ChangePasswordLoading extends ProfileState {}
+class ChangePasswordSuccess extends ProfileState {
+  final String message;
+  ChangePasswordSuccess(this.message);
+}
+class ChangePasswordError extends ProfileState {
+  final String message;
+  ChangePasswordError(this.message);
+}

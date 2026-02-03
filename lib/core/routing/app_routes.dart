@@ -21,6 +21,8 @@ class AppRoutes {
   static const String comprehensiveExam = '/comprehensiveExam';
   static const String categories = '/categories';
   static const String search = '/search';
+  static const String wishlist = '/wishlist';
+
 
   // PAREN ROUTES
   static const String parentHome = '/parentHome';
@@ -29,4 +31,8 @@ class AppRoutes {
   static const String sonExamResults = '/sonExamResults';
   static const String addNewSon = '/addNewSon';
   static const String paymentRequests = '/paymentRequests';
+
+
+
+
 }

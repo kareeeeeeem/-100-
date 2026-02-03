@@ -9,10 +9,13 @@ import 'package:lms/features/son_flow/login/data/data_sources/api/login_api_serv
 import 'package:lms/features/son_flow/login/data/repository/login_repository_impl.dart';
 import 'package:lms/features/son_flow/login/domain/repository/login_repository.dart';
 import 'package:lms/features/son_flow/login/presentation/manager/login_cubit.dart';
+import 'package:lms/core/service/firebase_auth_service.dart';
 
 class LoginDi extends AppDi {
   @override
   Future<void> init() async {
+    sl.registerLazySingleton<FirebaseAuthService>(() => FirebaseAuthService());
+    
     sl.registerLazySingleton<DeviceInfoService>(
       () => DeviceInfoServiceImpl(DeviceInfoPlugin()),
     );
@@ -26,6 +29,6 @@ class LoginDi extends AppDi {
         sl<JwtService>(),
       ),
     );
-    sl.registerFactory(() => LoginCubit(sl<LoginRepository>()));
+    sl.registerFactory(() => LoginCubit(sl<LoginRepository>(), sl<FirebaseAuthService>()));
   }
 }
