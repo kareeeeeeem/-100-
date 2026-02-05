@@ -72,12 +72,12 @@ class _PaymentBottomSheetState extends State<PaymentBottomSheet> {
     debugPrint('🔍 WhatsApp Debug: widget.priceLabel = "${widget.priceLabel}"');
     debugPrint('🔍 WhatsApp Debug: widget.amount = ${widget.amount}');
 
-    final String pricePart = widget.priceLabel.isNotEmpty ? widget.priceLabel : '${widget.amount} EGP';
+    final String pricePart = widget.priceLabel.isNotEmpty ? widget.priceLabel : '${widget.amount} SAR';
     final String courseLink = redirectUrl ?? 'https://100-academy.com/courses/${widget.courseId}';
 
     String pricingDetails = 'السعر: $pricePart';
     if (widget.originalPrice != null && widget.originalPrice.toString() != '0' && widget.originalPrice.toString() != widget.amount.toString()) {
-      pricingDetails = 'السعر بعد الخصم: $pricePart\nالسعر الأصلي: ${widget.originalPrice} EGP';
+      pricingDetails = 'السعر بعد الخصم: $pricePart\nالسعر الأصلي: ${widget.originalPrice} SAR';
       if (widget.discountPercentage != null) {
         pricingDetails += '\nنسبة الخصم: ${widget.discountPercentage}%';
       }
@@ -415,7 +415,7 @@ class _PaymentBottomSheetState extends State<PaymentBottomSheet> {
                     children: [
                       if (widget.originalPrice != null && widget.originalPrice.toString() != '0' && widget.originalPrice.toString() != widget.amount.toString()) ...[
                         Text(
-                          '${widget.originalPrice} EGP',
+                          '${widget.originalPrice} SAR',
                           style: const TextStyle(
                             fontSize: 12,
                             color: Colors.grey,

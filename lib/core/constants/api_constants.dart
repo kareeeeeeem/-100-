@@ -16,6 +16,9 @@ class ApiConstants {
   static const String register = 'register';
   static const String logout = 'logout';
   static const String deleteAccount = 'delete-account';
+  static const String forgotPassword = 'password/forgot';
+  static const String verifyOtp = 'password/verify';
+  static const String resetPassword = 'password/reset';
   
   // Home & Courses
   static const String home = 'home';

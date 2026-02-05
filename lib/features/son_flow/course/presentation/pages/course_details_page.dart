@@ -185,9 +185,18 @@ Stack(
                           _buildTag('${course.lessonsCount ?? course.lessons?.length ?? 0} دروس', AppColors.primary),
                           const SizedBox(width: 10),
                           if (course.pricing?.hasDiscount == true) ...[
-                             _buildTag('${course.pricing?.originalPrice} EGP', Colors.grey, isLineThrough: true),
-                             const SizedBox(width: 10),
-                           ],
+                              _buildTag('${course.pricing?.originalPrice} SAR', Colors.grey, isLineThrough: true),
+                              const SizedBox(width: 10),
+                            ],
+                          _buildTag(
+                            (course.pricing?.hasDiscount == true)
+                                ? '${course.pricing!.currentPrice} ${course.pricing?.currency ?? 'SAR'}'
+                                : (course.price?.value != null && (double.tryParse(course.price!.value ?? '0') ?? 0) > 0)
+                                    ? '${course.price!.value} SAR'
+                                    : '0.00 SAR',
+                            AppColors.primary,
+                          ),
+                          const SizedBox(width: 10),
                           _buildTag(course.pricing?.label ?? course.price?.label ?? 'مجاني', AppColors.c589B6E),
                           const SizedBox(width: 10),
                           _buildTag(course.category ?? 'عام', AppColors.c589B6E),
@@ -289,49 +298,53 @@ Stack(
                                       ),
                                     ],
                                   ),
-                                  child: Theme(
-                                    data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-                                    child: ExpansionTile(
-                                      title: Text(
-                                        section.title,
-                                        style: const TextStyle(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w600,
-                                          color: AppColors.primary,
-                                        ),
-                                      ),
-                                      leading: const Icon(Icons.folder_open_rounded, color: AppColors.primary),
-                                      trailing: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.primary.withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(6),
-                                        ),
-                                        child: Text(
-                                          '${section.lessons?.length ?? 0} درس',
+                                    child: Theme(
+                                      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                                      child: ListTile(
+                                        onTap: () {
+                                          context.push(
+                                            AppRoutes.courseSectionDetails,
+                                            extra: {
+                                              'section': section,
+                                              'courseId': widget.courseId,
+                                              'sections': course.sections,
+                                              'currentIndex': course.sections!.indexOf(section),
+                                            },
+                                          );
+                                        },
+                                        title: Text(
+                                          section.title,
                                           style: const TextStyle(
-                                            fontSize: 12,
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w600,
                                             color: AppColors.primary,
-                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        leading: const Icon(Icons.folder_open_rounded, color: AppColors.primary),
+                                        trailing: Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.primary.withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(6),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(
+                                                '${section.lessons?.length ?? 0} درس',
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  color: AppColors.primary,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 4),
+                                              const Icon(Icons.arrow_forward_ios, size: 12, color: AppColors.primary),
+                                            ],
                                           ),
                                         ),
                                       ),
-                                      children: [
-                                        if (section.lessons == null || section.lessons!.isEmpty)
-                                          const Padding(
-                                            padding: EdgeInsets.all(16.0),
-                                            child: Text('سيتم إضافة الدروس قريباً', style: TextStyle(color: Colors.grey, fontSize: 13)),
-                                          )
-                                        else
-                                          Padding(
-                                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                            child: Column(
-                                              children: section.lessons!.map((l) => _buildLessonItem(l, course, context)).toList(),
-                                            ),
-                                          ),
-                                      ],
                                     ),
-                                  ),
                                 );
                               })
                             else
@@ -456,10 +469,10 @@ Stack(
                     : (course.price?.label?.isNotEmpty ?? false)
                         ? course.price!.label!
                         : (course.pricing?.currentPrice != null)
-                            ? '${course.pricing!.currentPrice} ${course.pricing?.currency ?? 'EGP'}'
+                            ? '${course.pricing!.currentPrice} ${course.pricing?.currency ?? 'SAR'}'
                             : (course.price?.value != null)
-                                ? '${course.price!.value} EGP'
-                                : '0.00 EGP',
+                                ? '${course.price!.value} SAR'
+                                : '0.00 SAR',
                 originalPrice: course.pricing?.originalPrice,
                 discountPercentage: course.pricing?.discountPercentage,
               ),

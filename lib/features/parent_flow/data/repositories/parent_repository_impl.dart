@@ -65,6 +65,16 @@ class ParentRepositoryImpl implements ParentRepository {
   }
 
   @override
+  Future<Result<void>> deleteChild(int childId) async {
+    try {
+      await _apiService.deleteChild(childId);
+      return Result.success(null);
+    } catch (e) {
+      return Result.error(ErrorHandler.getFailure(e));
+    }
+  }
+
+  @override
   Future<Result<List<MyCourseItemModel>>> getParentCourses() async {
     try {
       final response = await _apiService.getParentCourses();

@@ -124,7 +124,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text(
-                            '${transaction.amount} EGP',
+                            '${transaction.amount} SAR',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,

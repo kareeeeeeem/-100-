@@ -4,6 +4,7 @@ import 'package:lms/features/son_flow/login/data/data_sources/api/login_api_serv
 import 'package:lms/features/son_flow/login/data/model/login_request_model.dart';
 import 'package:lms/features/son_flow/login/data/model/login_response_model.dart';
 import 'package:lms/features/son_flow/login/data/model/social_login_request_model.dart';
+import 'package:lms/features/son_flow/login/data/model/forgot_password_models.dart';
 
 class LoginApiServiceImpl implements LoginApiService {
   final ApiService apiService;
@@ -26,5 +27,32 @@ class LoginApiServiceImpl implements LoginApiService {
       body: request.toJson(),
     );
     return LoginResponseModel.fromJson(response);
+  }
+
+  @override
+  Future<ForgotPasswordResponse> forgotPassword(ForgotPasswordRequest request) async {
+    final response = await apiService.post(
+      ApiConstants.forgotPassword,
+      body: request.toJson(),
+    );
+    return ForgotPasswordResponse.fromJson(response);
+  }
+
+  @override
+  Future<AuthDefaultResponse> verifyOtp(VerifyOtpRequest request) async {
+    final response = await apiService.post(
+      ApiConstants.verifyOtp,
+      body: request.toJson(),
+    );
+    return AuthDefaultResponse.fromJson(response);
+  }
+
+  @override
+  Future<AuthDefaultResponse> resetPassword(ResetPasswordRequest request) async {
+    final response = await apiService.post(
+      ApiConstants.resetPassword,
+      body: request.toJson(),
+    );
+    return AuthDefaultResponse.fromJson(response);
   }
 }

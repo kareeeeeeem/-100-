@@ -107,7 +107,7 @@ class _LoginPageState extends State<LoginPage> {
                         },
                       ),
                       InkWell(
-                        onTap: () {},
+                        onTap: () => context.push('/forgotPassword'),
                         child: const Text(
                           'نسيت كلمة السر؟',
                           style: TextStyle(

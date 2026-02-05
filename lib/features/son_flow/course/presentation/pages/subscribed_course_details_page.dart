@@ -141,66 +141,69 @@ class _SubscribedCourseDetailsPageState extends State<SubscribedCourseDetailsPag
             final data = state.model.data;
             if (data == null) return const Center(child: Text("لا توجد بيانات"));
 
-            return Column(
-              children: [
-                // --- Video Player Section ---
-                Container(
-                  width: double.infinity,
-                  height: MediaQuery.sizeOf(context).height / 3.5,
-                  decoration: const BoxDecoration(color: Colors.black),
-                  child: (data.lessons?.isEmpty ?? true)
-                      ? const Center(child: Text('لا توجد فيديوهات متاحة', style: TextStyle(color: Colors.white)))
-                      : _chewieController != null && _chewieController!.videoPlayerController.value.isInitialized
-                          ? Chewie(controller: _chewieController!)
-                          : const Center(child: CircularProgressIndicator(color: AppColors.primary)),
-                ),
+            return NestedScrollView(
+              headerSliverBuilder: (context, innerBoxIsScrolled) {
+                return [
+                  // --- Video Player Section (Sliver) ---
+                  SliverToBoxAdapter(
+                    child: Container(
+                      width: double.infinity,
+                      height: MediaQuery.sizeOf(context).height / 3.5,
+                      decoration: const BoxDecoration(color: Colors.black),
+                      child: (data.lessons?.isEmpty ?? true) && (data.sections?.isEmpty ?? true)
+                          ? const Center(child: Text('لا توجد فيديوهات متاحة', style: TextStyle(color: Colors.white)))
+                          : _chewieController != null && _chewieController!.videoPlayerController.value.isInitialized
+                              ? Chewie(controller: _chewieController!)
+                              : const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+                    ),
+                  ),
 
-                // --- TabBar Section ---
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
+                  // --- TabBar Section (Persistent Sliver) ---
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: _SliverAppBarDelegate(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: TabBar(
+                          controller: _tabController,
+                          isScrollable: true,
+                          labelColor: AppColors.primary,
+                          unselectedLabelColor: Colors.grey,
+                          indicatorColor: AppColors.primary,
+                          indicatorWeight: 3,
+                          labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                          tabs: const [
+                            Tab(text: 'الدروس'),
+                            Tab(text: 'البث المباشر'),
+                            Tab(text: 'الامتحانات'),
+                            Tab(text: 'ملفات PDF'),
+                            Tab(text: 'تفاصيل'),
+                          ],
+                        ),
                       ),
-                    ],
+                    ),
                   ),
-                  child: TabBar(
-                    controller: _tabController,
-                    isScrollable: true,
-                    labelColor: AppColors.primary,
-                    unselectedLabelColor: Colors.grey,
-                    indicatorColor: AppColors.primary,
-                    indicatorWeight: 3,
-                    labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                    tabs: const [
-                      Tab(text: 'الدروس'),
-                      Tab(text: 'البث المباشر'),
-                      Tab(text: 'الامتحانات'),
-                      Tab(text: 'ملفات PDF'),
-                      Tab(text: 'تفاصيل'),
-
-                    ],
-                  ),
-                ),
-
-                // --- TabBarView Content ---
-                Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildLessonsTab(data),
-                      _buildLiveSessionsTab(data),
-                      _buildExamsTab(data),
-                      _buildPDFsTab(data),
-                      _buildDetailsTab(data),
-
-                    ],
-                  ),
-                ),
-              ],
+                ];
+              },
+              body: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildLessonsTab(data),
+                  _buildLiveSessionsTab(data),
+                  _buildExamsTab(data),
+                  _buildPDFsTab(data),
+                  _buildDetailsTab(data),
+                ],
+              ),
             );
           } else if (state is CourseDetailsError) {
             return Center(child: Text(state.message));
@@ -228,7 +231,7 @@ class _SubscribedCourseDetailsPageState extends State<SubscribedCourseDetailsPag
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildSectionHeader(context, section, widget.courseId),
+              _buildSectionHeader(context, section, widget.courseId, sections: data.sections, currentIndex: sIndex),
               if (section.lessons == null || section.lessons!.isEmpty)
                 const Padding(
                   padding: EdgeInsets.all(12),
@@ -339,7 +342,7 @@ class _SubscribedCourseDetailsPageState extends State<SubscribedCourseDetailsPag
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildSectionHeader(context, section, widget.courseId),
+              _buildSectionHeader(context, section, widget.courseId, sections: data.sections, currentIndex: sIndex),
               if (section.exams != null && section.exams!.isNotEmpty)
                 ...section.exams!.map((e) => _buildExamItem(e))
               else
@@ -532,7 +535,7 @@ class _SubscribedCourseDetailsPageState extends State<SubscribedCourseDetailsPag
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSectionHeader(context, section, widget.courseId),
+            _buildSectionHeader(context, section, widget.courseId, sections: data.sections, currentIndex: sIndex),
             SectionLiveSessionsList(
               sectionId: section.id.toString(),
               onItemBuilder: (session) => _buildLiveSessionItem(session),
@@ -667,7 +670,7 @@ class _SubscribedCourseDetailsPageState extends State<SubscribedCourseDetailsPag
     }
   }
 
-  Widget _buildSectionHeader(BuildContext context, SectionModel section, int courseId) {
+  Widget _buildSectionHeader(BuildContext context, SectionModel section, int courseId, {List<SectionModel>? sections, int? currentIndex}) {
     return InkWell(
       onTap: () async {
         final result = await context.push(
@@ -675,6 +678,8 @@ class _SubscribedCourseDetailsPageState extends State<SubscribedCourseDetailsPag
           extra: {
             'section': section,
             'courseId': courseId,
+            'sections': sections,
+            'currentIndex': currentIndex,
           },
         );
         // If the user picked a video from the section page, play it here
@@ -717,6 +722,27 @@ class _SubscribedCourseDetailsPageState extends State<SubscribedCourseDetailsPag
         ],
       ),
     );
+  }
+}
+
+class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
+  _SliverAppBarDelegate({required this.child});
+
+  final Widget child;
+
+  @override
+  double get minExtent => 50.0;
+  @override
+  double get maxExtent => 50.0;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return SizedBox.expand(child: child);
+  }
+
+  @override
+  bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
+    return false;
   }
 }
 

@@ -22,7 +22,8 @@ LiveSessionModel _$LiveSessionModelFromJson(Map<String, dynamic> json) =>
       thumbnail: json['thumbnail'] as String?,
       scheduledAt: json['scheduled_at'] as String,
       isArchived: json['is_archived'] as bool,
-      isLive: json['is_live'] as bool,
+      isLive: json['is_live'],
+      liveUrl: json['live_url'] as String?,
       recordedUrl: json['recorded_url'] as String?,
       stats: LiveSessionStatsModel.fromJson(
         json['stats'] as Map<String, dynamic>,
@@ -38,6 +39,7 @@ Map<String, dynamic> _$LiveSessionModelToJson(LiveSessionModel instance) =>
       'scheduled_at': instance.scheduledAt,
       'is_archived': instance.isArchived,
       'is_live': instance.isLive,
+      'live_url': instance.liveUrl,
       'recorded_url': instance.recordedUrl,
       'stats': instance.stats.toJson(),
     };

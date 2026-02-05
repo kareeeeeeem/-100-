@@ -5,7 +5,7 @@ import 'package:lms/features/son_flow/home/data/model/my_courses_response_model.
 
 import 'package:lms/features/parent_flow/data/models/parent_notification_model.dart';
 
-enum ParentStatus { initial, loading, success, error, childAdded, childUpdated, paymentSuccess }
+enum ParentStatus { initial, loading, success, error, childAdded, childUpdated, childDeleted, paymentSuccess }
 
 class ParentState {
   final ParentStatus status;

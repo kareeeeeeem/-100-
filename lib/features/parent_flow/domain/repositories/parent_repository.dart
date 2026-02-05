@@ -12,6 +12,7 @@ abstract class ParentRepository {
   Future<Result<AddChildResponseModel>> addChild(Map<String, dynamic> data);
   Future<Result<ChildModel>> getChildDetails(int childId);
   Future<Result<void>> updateChild(int childId, Map<String, dynamic> data);
+  Future<Result<void>> deleteChild(int childId);
   Future<Result<List<MyCourseItemModel>>> getParentCourses();
   Future<Result<List<dynamic>>> getChildExamResults(int childId);
   Future<Result<List<ParentNotificationModel>>> getNotifications();

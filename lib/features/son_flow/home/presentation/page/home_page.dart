@@ -234,44 +234,57 @@ class _HomePageState extends State<HomePage> {
 
   // ميثود دائرة البث المباشر
   Widget _buildLiveCircle(SliderModel slider) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Container(
-          width: 75, height: 75,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(colors: [AppColors.primary, Color(0xFF4DC9D1)]),
-            borderRadius: BorderRadius.circular(25)
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(3.0),
-            child: Container(
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(22),
-                child: CustomImage(
-                  imagePath: slider.image, // سيتم معالجته داخل CustomImage الجديد
-                  fit: BoxFit.cover,
-                ),
+  String imagePath = slider.image ?? '';
+
+  // ده التعديل الجوهري لصور البثوث
+  if (imagePath.startsWith('http')) {
+    // لو الرابط كامل سيبه زي ما هو
+  } else if (imagePath.startsWith('assets/')) {
+    // لو بدأ بـ assets ما تزودش storage لأنها بتعمل Error 403
+    imagePath = imagePath; 
+  } else {
+    // أي حاجة تانية زود storage عادي
+    imagePath = 'storage/$imagePath';
+  }
+
+  return Stack(
+    clipBehavior: Clip.none,
+    children: [
+      Container(
+        width: 75, height: 75,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(colors: [AppColors.primary, Color(0xFF4DC9D1)]),
+          borderRadius: BorderRadius.circular(25)
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(3.0),
+          child: Container(
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(22),
+              child: CustomImage(
+                imagePath: imagePath, // هيبعت الرابط من غير storage
+                fit: BoxFit.cover,
               ),
             ),
           ),
         ),
-        Positioned(
-          bottom: -2, right: -2,
+      ),
+      Positioned(
+        bottom: -2, right: -2,
+        child: Container(
+          decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+          padding: const EdgeInsets.all(3),
           child: Container(
-            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-            padding: const EdgeInsets.all(3),
-            child: Container(
-              width: 22, height: 22,
-              decoration: const BoxDecoration(color: Color(0xFF4DC9D1), shape: BoxShape.circle),
-              child: const Icon(Icons.videocam, color: Colors.white, size: 14),
-            ),
+            width: 22, height: 22,
+            decoration: const BoxDecoration(color: Color(0xFF4DC9D1), shape: BoxShape.circle),
+            child: const Icon(Icons.videocam, color: Colors.white, size: 14),
           ),
         ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
+}
 
   // كارت الكورس الموحد
   Widget _buildCourseCard(CourseModel course) {
@@ -323,7 +336,7 @@ class _HomePageState extends State<HomePage> {
                   child: Row(
                     children: [
                       if (course.pricing?.hasDiscount == true) ...[
-                        _buildBadge('${course.pricing?.originalPrice} EGP', Colors.grey, isLineThrough: true),
+                        _buildBadge('${course.pricing?.originalPrice} SAR', Colors.grey, isLineThrough: true),
                         const SizedBox(width: 8),
                       ],
                       _buildBadge(course.pricing?.label ?? (course.isFree ? "مجاني" : course.priceLabel), AppColors.c589B6E),

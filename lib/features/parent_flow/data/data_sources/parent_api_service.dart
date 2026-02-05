@@ -53,10 +53,18 @@ class ParentApiService {
       ApiConstants.childDetails(childId),
       headers: {'Authorization': 'Bearer $token'},
     );
-    // Handle case where API returns a list (e.g., [childData])
-    final Map<String, dynamic> data = response is List && response.isNotEmpty
-        ? response.first
-        : response;
+    // Handle wrapped response: can be {"childData": {...}}, or a list [childData], or just {...}
+    Map<String, dynamic> data;
+    if (response is Map && response.containsKey('childData')) {
+      data = response['childData'];
+    } else if (response is List && response.isNotEmpty) {
+      data = response.first;
+    } else if (response is Map) {
+      data = Map<String, dynamic>.from(response);
+    } else {
+      data = {};
+    }
+    
     return ChildModel.fromJson(data);
   }
 
@@ -65,6 +73,14 @@ class ParentApiService {
     await _apiService.put(
       ApiConstants.childDetails(childId),
       body: body,
+      headers: {'Authorization': 'Bearer $token'},
+    );
+  }
+
+  Future<void> deleteChild(int childId) async {
+    final token = await _jwtService.getAccessToken();
+    await _apiService.delete(
+      ApiConstants.childDetails(childId),
       headers: {'Authorization': 'Bearer $token'},
     );
   }

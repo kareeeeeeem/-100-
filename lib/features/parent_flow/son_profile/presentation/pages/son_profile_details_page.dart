@@ -31,7 +31,15 @@ class _SonProfileDetailsPageState extends State<SonProfileDetailsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('بيانات الابن')),
-      body: BlocBuilder<ParentCubit, ParentState>(
+      body: BlocConsumer<ParentCubit, ParentState>(
+        listener: (context, state) {
+          if (state.status == ParentStatus.childDeleted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('تم حذف الابن بنجاح')),
+            );
+            context.pop();
+          }
+        },
         builder: (context, state) {
           if (state.status == ParentStatus.loading) {
              return const Center(child: CircularProgressIndicator());
@@ -124,12 +132,24 @@ class _SonProfileDetailsPageState extends State<SonProfileDetailsPage> {
 
                   CustomElevatedButton(
                     title: 'تعديل',
-                    onPressed: () {
-                      context.pushNamed(
+                    onPressed: () async {
+                      await context.pushNamed(
                         AppRoutes.editProfileDetailsParent,
                         extra: child.id,
                       );
+                      if (context.mounted) {
+                        context.read<ParentCubit>().getChildDetails(child.id);
+                      }
                     },
+                  ),
+                  const SizedBox(height: 12),
+                  CustomElevatedButton(
+                    title: 'حذف الابن',
+                    buttonStyle: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.39)),
+                    ),
+                    onPressed: () => _showDeleteConfirmation(context, child.id),
                   ),
                   const SizedBox(height: 20),
                 ],
@@ -139,6 +159,29 @@ class _SonProfileDetailsPageState extends State<SonProfileDetailsPage> {
 
           return const Center(child: Text('لا توجد بيانات'));
         },
+      ),
+    );
+  }
+
+  void _showDeleteConfirmation(BuildContext context, int childId) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('حذف الابن'),
+        content: const Text('هل أنت متأكد من رغبتك في حذف هذا الابن؟ لا يمكن التراجع عن هذا الإجراء.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('إلغاء'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              context.read<ParentCubit>().deleteChild(childId);
+            },
+            child: const Text('حذف', style: TextStyle(color: Colors.red)),
+          ),
+        ],
       ),
     );
   }

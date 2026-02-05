@@ -8,6 +8,7 @@ import 'package:lms/core/widgets/custom_image.dart';
 import 'package:lms/core/widgets/profile_image_and_edit.dart';
 import 'package:lms/features/parent_flow/course/presentation/widgets/running_course_item_view.dart';
 import 'package:lms/features/parent_flow/home/presentation/widgets/notifications_bottom_sheet.dart';
+import 'package:lms/features/parent_flow/home/presentation/widgets/child_card.dart';
 import 'package:lms/features/parent_flow/presentation/manager/parent_cubit.dart';
 import 'package:lms/features/parent_flow/presentation/manager/parent_state.dart';
 
@@ -29,6 +30,7 @@ class _HomePageState extends State<HomePage> {
     cubit.getLiveSessions();
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,7 +41,7 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // بروفايل الابن
+                // بروفايل ولي الأمر
                 BlocBuilder<ParentCubit, ParentState>(
                   builder: (context, state) {
                     if (state.status == ParentStatus.loading && state.profile == null) {
@@ -49,20 +51,20 @@ class _HomePageState extends State<HomePage> {
                       final profile = state.profile!;
                       return Column(
                         children: [
-                         Container(
-                          width: 120,
-                          height: 120,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(color: AppColors.primary, width: 2),
+                          Container(
+                            width: 120,
+                            height: 120,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(color: AppColors.primary, width: 2),
+                            ),
+                            clipBehavior: Clip.antiAlias,
+                            child: CustomImage(
+                              imagePath: profile.image,
+                              fit: BoxFit.cover,
+                              isUserProfile: true,
+                            ),
                           ),
-                          clipBehavior: Clip.antiAlias,
-                          child: CustomImage(
-                            imagePath: profile.image,
-                            fit: BoxFit.cover,
-                            isUserProfile: true,
-                          ),
-                        ),
                           const SizedBox(height: 10),
                           Text(
                             profile.name,
@@ -75,6 +77,58 @@ class _HomePageState extends State<HomePage> {
                   },
                 ),
                 const SizedBox(height: 20),
+
+                // قسم أبنائي
+                BlocBuilder<ParentCubit, ParentState>(
+                  builder: (context, state) {
+                    if (state.status == ParentStatus.loading && state.children.isEmpty) {
+                      return const SizedBox();
+                    }
+                    if (state.children.isNotEmpty) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'أبنائي',
+                            style: TextStyle(
+                              fontSize: 18.66,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.c303030,
+                            ),
+                          ),
+                          const SizedBox(height: 15),
+                          SizedBox(
+                            height: 110,
+                            child: ListView.separated(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: state.children.length,
+                              separatorBuilder: (context, index) => const SizedBox(width: 15),
+                              itemBuilder: (context, index) {
+                                final child = state.children[index];
+                                return ChildCard(
+                                  child: child,
+                                  onTap: () async {
+                                    await context.pushNamed(
+                                      AppRoutes.sonProfileDetailsParent,
+                                      extra: child.id,
+                                    );
+                                    if (context.mounted) {
+                                      final cubit = context.read<ParentCubit>();
+                                      cubit.getChildren();
+                                      cubit.getParentCourses();
+                                    }
+                                  },
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                        ],
+                      );
+                    }
+                    return const SizedBox();
+                  },
+                ),
 
                 // قسم الإشعارات
                 _buildNotificationTile(context),
@@ -148,13 +202,9 @@ class _HomePageState extends State<HomePage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      'الدورات الخاصة بالابن',
+                      'الدورات الخاصة بالابناء',
                       style: TextStyle(fontSize: 18.66, fontWeight: FontWeight.w700, color: AppColors.c303030),
                     ),
-                    // InkWell(
-                    //   onTap: () {},
-                    //   child: const Text('عرض المزيد', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.primary)),
-                    // ),
                   ],
                 ),
                 const SizedBox(height: 10),
@@ -166,10 +216,12 @@ class _HomePageState extends State<HomePage> {
                       return const Center(child: CircularProgressIndicator());
                     }
                     if (state.courses.isEmpty) {
-                      return const Center(child: Padding(
-                        padding: EdgeInsets.symmetric(vertical: 20),
-                        child: Text("لا توجد دورات حالياً"),
-                      ));
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 20),
+                          child: Text("لا توجد دورات حالياً"),
+                        ),
+                      );
                     }
                     return CustomContainer(
                       borderRadius: 12,
@@ -187,18 +239,23 @@ class _HomePageState extends State<HomePage> {
                 const SizedBox(height: 25),
 
                 // أزرار التحكم المعدلة بالأيقونات
-                _buildActionTile(
-                  context,
-                  title: 'تعديل بيانات الابن',
-                  icon: Icons.edit_note_rounded,
-                  iconColor: Colors.blue,
-                  onTap: () {
-                    final state = context.read<ParentCubit>().state;
-                    if (state.children.isNotEmpty) {
-                      context.pushNamed(AppRoutes.editProfileDetailsParent, extra: state.children.first.id);
-                    }
-                  },
-                ),
+                // _buildActionTile(
+                //   context,
+                //   title: 'تعديل بيانات الابن',
+                //   icon: Icons.edit_note_rounded,
+                //   iconColor: Colors.blue,
+                //   onTap: () async {
+                //     final cubit = context.read<ParentCubit>();
+                //     final state = cubit.state;
+                //     if (state.children.isNotEmpty) {
+                //       await context.pushNamed(AppRoutes.editProfileDetailsParent, extra: state.children.first.id);
+                //       if (context.mounted) {
+                //         cubit.getChildren();
+                //         cubit.getParentCourses();
+                //       }
+                //     }
+                //   },
+                // ),
                 const SizedBox(height: 12),
                 _buildActionTile(
                   context,
@@ -218,7 +275,13 @@ class _HomePageState extends State<HomePage> {
                   title: 'إضافة ابن جديد',
                   icon: Icons.person_add_alt_1_rounded,
                   iconColor: Colors.green,
-                  onTap: () => context.pushNamed(AppRoutes.addNewSon),
+                  onTap: () async {
+                    await context.pushNamed(AppRoutes.addNewSon);
+                    if (context.mounted) {
+                      final cubit = context.read<ParentCubit>();
+                      cubit.getChildren();
+                    }
+                  },
                 ),
                 const SizedBox(height: 12),
                 _buildActionTile(

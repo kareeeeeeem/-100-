@@ -73,6 +73,8 @@ class ParentCubit extends Cubit<ParentState> {
     
     if (result.isSuccess) {
       emit(state.copyWith(status: ParentStatus.paymentSuccess));
+      getPayments(); // Refresh requests list
+      getParentCourses(); // Refresh courses list to show newly unlocked course
     } else {
       emit(state.copyWith(status: ParentStatus.error, errorMessage: result.failure?.message));
     }
@@ -95,6 +97,18 @@ class ParentCubit extends Cubit<ParentState> {
     
     if (result.isSuccess) {
       emit(state.copyWith(status: ParentStatus.childUpdated));
+      getChildren(); // Refresh list
+    } else {
+      emit(state.copyWith(status: ParentStatus.error, errorMessage: result.failure?.message));
+    }
+  }
+
+  Future<void> deleteChild(int childId) async {
+    emit(state.copyWith(status: ParentStatus.loading));
+    final result = await _repository.deleteChild(childId);
+    
+    if (result.isSuccess) {
+      emit(state.copyWith(status: ParentStatus.childDeleted));
       getChildren(); // Refresh list
     } else {
       emit(state.copyWith(status: ParentStatus.error, errorMessage: result.failure?.message));

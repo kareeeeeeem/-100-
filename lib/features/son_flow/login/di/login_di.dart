@@ -9,6 +9,7 @@ import 'package:lms/features/son_flow/login/data/data_sources/api/login_api_serv
 import 'package:lms/features/son_flow/login/data/repository/login_repository_impl.dart';
 import 'package:lms/features/son_flow/login/domain/repository/login_repository.dart';
 import 'package:lms/features/son_flow/login/presentation/manager/login_cubit.dart';
+import 'package:lms/features/son_flow/login/presentation/manager/forgot_password_cubit.dart';
 import 'package:lms/core/service/firebase_auth_service.dart';
 
 class LoginDi extends AppDi {
@@ -30,5 +31,6 @@ class LoginDi extends AppDi {
       ),
     );
     sl.registerFactory(() => LoginCubit(sl<LoginRepository>(), sl<FirebaseAuthService>()));
+    sl.registerFactory(() => ForgotPasswordCubit(sl<LoginApiService>()));
   }
 }

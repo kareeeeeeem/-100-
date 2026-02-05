@@ -33,6 +33,9 @@ import 'package:lms/features/son_flow/home/presentation/page/home_layout.dart';
 import 'package:lms/features/son_flow/instructor_profile/presentation/pages/instructor_profile_page.dart';
 import 'package:lms/features/son_flow/lives/presentation/pages/available_lives_page.dart';
 import 'package:lms/features/son_flow/login/presentation/login_page.dart';
+import 'package:lms/features/son_flow/login/presentation/forgot_password_page.dart';
+import 'package:lms/features/son_flow/login/presentation/verify_otp_page.dart';
+import 'package:lms/features/son_flow/login/presentation/reset_password_page.dart';
 import 'package:lms/features/son_flow/login/presentation/manager/login_cubit.dart';
 import 'package:lms/features/son_flow/profile/presentation/pages/edit_profile_details_page.dart';
 import 'package:lms/features/son_flow/profile/presentation/pages/profile_details_page.dart';
@@ -111,6 +114,43 @@ final class AppRouter {
           return BlocProvider(
             create: (_) => GetIt.instance<RegisterCubit>(),
             child: const RegisterPage(),
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.courseSectionDetails,
+        name: 'courseSectionDetails',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>;
+          return CourseSectionDetailsPage(
+            section: extra['section'] as SectionModel,
+            courseId: extra['courseId'] as int,
+            sections: extra['sections'] as List<SectionModel>?,
+            currentIndex: extra['currentIndex'] as int?,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/forgotPassword',
+        name: 'forgotPassword',
+        builder: (context, state) => const ForgotPasswordPage(),
+      ),
+      GoRoute(
+        path: '/verifyOtp',
+        name: 'verifyOtp',
+        builder: (context, state) {
+          final phone = state.extra as String;
+          return VerifyOtpPage(phone: phone);
+        },
+      ),
+      GoRoute(
+        path: '/resetPassword',
+        name: 'resetPassword',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>;
+          return ResetPasswordPage(
+            phone: extra['phone'] as String,
+            code: extra['code'] as String,
           );
         },
       ),
@@ -238,16 +278,6 @@ final class AppRouter {
                 ),
               ],
                 child: SubscribedCourseDetailsPage(courseId: courseId),
-              );
-            },
-          ),
-          GoRoute(
-            path: AppRoutes.courseSectionDetails,
-            builder: (context, state) {
-              final extra = state.extra as Map<String, dynamic>;
-              return CourseSectionDetailsPage(
-                section: extra['section'] as SectionModel,
-                courseId: extra['courseId'] as int,
               );
             },
           ),

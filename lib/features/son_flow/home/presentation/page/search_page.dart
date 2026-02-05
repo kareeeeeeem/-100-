@@ -140,7 +140,7 @@ class _SearchPageState extends State<SearchPage> {
                     children: [
                       if (course.pricing?.hasDiscount == true) ...[
                         Text(
-                          '${course.pricing?.originalPrice} EGP',
+                          '${course.pricing?.originalPrice} SAR',
                           style: const TextStyle(
                             fontSize: 10,
                             color: Colors.grey,
