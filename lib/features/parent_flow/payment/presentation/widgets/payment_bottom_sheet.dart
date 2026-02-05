@@ -19,11 +19,29 @@ class PaymentBottomSheet extends StatefulWidget {
 class _PaymentBottomSheetState extends State<PaymentBottomSheet> {
   bool _saveCard = false;
   String _selectedPaymentType = 'card';
+  String? _errorMessage;
   
   final _cardNumberController = TextEditingController();
   final _nameController = TextEditingController();
   final _expiryDateController = TextEditingController();
   final _cvvController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _cardNumberController.addListener(_clearError);
+    _nameController.addListener(_clearError);
+    _expiryDateController.addListener(_clearError);
+    _cvvController.addListener(_clearError);
+  }
+
+  void _clearError() {
+    if (_errorMessage != null) {
+      setState(() {
+        _errorMessage = null;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -53,6 +71,9 @@ class _PaymentBottomSheetState extends State<PaymentBottomSheet> {
           );
           Navigator.pop(context);
         } else if (state.status == ParentStatus.error) {
+          setState(() {
+            _errorMessage = state.errorMessage;
+          });
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.errorMessage ?? 'حدث خطأ في عملية الدفع'),
@@ -164,6 +185,28 @@ class _PaymentBottomSheetState extends State<PaymentBottomSheet> {
                     ],
                   ),
                 ],
+                if (_errorMessage != null)
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    margin: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.red.withOpacity(0.2)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.error_outline, color: Colors.red, size: 20),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _errorMessage!,
+                            style: const TextStyle(color: Colors.red, fontSize: 13),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 isLoading
                     ? const CircularProgressIndicator()
                     : CustomElevatedButton(

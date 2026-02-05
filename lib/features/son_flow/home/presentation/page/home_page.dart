@@ -10,6 +10,8 @@ import 'package:lms/features/son_flow/course/presentation/widgets/course_categor
 import 'package:lms/features/son_flow/home/presentation/manager/home_cubit.dart';
 import 'package:lms/features/son_flow/home/data/model/home_response_model.dart';
 import 'package:lms/core/widgets/custom_image.dart';
+import 'package:lms/features/son_flow/home/presentation/manager/profile_cubit.dart';
+import 'package:lms/features/on_boarding/presentation/manger/my_courses_cubit.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -45,6 +47,15 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _onRefresh() async {
+    // تحديث بيانات الهوم، البروفايل، والكورسات معاً
+    await Future.wait<void>([
+      GetIt.instance<HomeCubit>().fetchHomeData(),
+      context.read<ProfileCubit>().getProfileData(isSilent: true),
+      context.read<MyCoursesCubit>().fetchMyCourses(),
+    ]);
+  }
+
   @override
   void dispose() {
     _carouselController.removeListener(_onScroll);
@@ -76,138 +87,142 @@ class _HomePageState extends State<HomePage> {
           } else if (state.status == HomeStatus.success && state.homeData != null) {
             final data = state.homeData!.data;
 
-            return SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 10),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Text('البث المباشر', 
-                      style: TextStyle(fontSize: 18.86, fontWeight: FontWeight.w600, color: AppColors.c303030)),
-                  ),
-                  const SizedBox(height: 10),
-                  
-                  // قسم السلايدر (البث المباشر)
-                  SizedBox(
-                    height: 85,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: data.slider.length,
-                      separatorBuilder: (context, index) => const SizedBox(width: 12),
-                      itemBuilder: (context, index) => _buildLiveCircle(data.slider[index]),
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 25),
-                  
-                  // قسم الأقسام
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('الأقسام', 
-                          style: TextStyle(fontSize: 18.86, fontWeight: FontWeight.w600, color: AppColors.c303030)),
-                        InkWell(
-                          onTap: () => context.pushNamed(AppRoutes.categories),
-                          child: const Text('عرض الكل', 
-                            style: TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600)),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    height: 40,
-                    child: CourseCategoriesListView(
-                      categories: data.categories
-                          .map((e) => CategoryUIModel(
-                                name: e.name,
-                                icon: e.icon,
-                                id: e.id,
-                              ))
-                          .toList(),
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 25),
-                  
-                  // قسم الدورات المميزة (Carousel)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Text('الدورات المميزة', 
-                      style: TextStyle(fontSize: 18.86, fontWeight: FontWeight.w600, color: AppColors.c303030)),
-                  ),
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    height: 220, // تعديل الارتفاع ليناسب التصميم
-                    child: CarouselView(
-                      controller: _carouselController,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemExtent: MediaQuery.sizeOf(context).width * 0.8,
-                      shrinkExtent: MediaQuery.sizeOf(context).width * 0.7,
-                      onTap: (index) {
-                        final course = data.featuredCourses[index];
-                        print("🎯 [HomePage] Navigating to Featured Course Details: ID=${course.id}, Title=${course.title}");
-                        context.pushNamed(
-                          AppRoutes.courseDetails,
-                          extra: course.id,
-                        );
-                      },
-                      children: data.featuredCourses.map((course) {
-                        return _buildCourseCard(course);
-                      }).toList(),
-                    ),
-                  ),
-                  const SizedBox(height: 15),
-                  Center(
-                    child: AnimatedSmoothIndicator(
-                      activeIndex: _activeCourseIndex,
-                      count: data.featuredCourses.length,
-                      effect: const WormEffect(
-                        spacing: 8.0, radius: 4.0, dotWidth: 16, dotHeight: 8, 
-                        dotColor: AppColors.cEEEEEE, activeDotColor: AppColors.primary
-                      ),
-                    ),
-                  ),
-                  
-                  // قسم الدورات القادمة (Upcoming)
-                  if (data.upcomingCourses.isNotEmpty) ...[
-                    const SizedBox(height: 25),
+            return RefreshIndicator(
+              onRefresh: _onRefresh,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 10),
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Text('الدورات القادمة لهذا الأسبوع', 
+                      child: Text('البث المباشر', 
                         style: TextStyle(fontSize: 18.86, fontWeight: FontWeight.w600, color: AppColors.c303030)),
                     ),
                     const SizedBox(height: 10),
-                    ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: data.upcomingCourses.length,
-                      separatorBuilder: (context, index) => const SizedBox(height: 15),
-                      itemBuilder: (context, index) {
-                        final upcomingCourse = data.upcomingCourses[index];
-                        return GestureDetector(
-                          onTap: () {
-                            print("🎯 [HomePage] Navigating to Upcoming Course Details: ID=${upcomingCourse.id}, Title=${upcomingCourse.title}");
-                            context.pushNamed(
-                              AppRoutes.courseDetails,
-                              extra: upcomingCourse.id,
-                            );
-                          },
-                          child: SizedBox(
-                            height: 200, 
-                            child: _buildCourseCard(upcomingCourse)
-                          ),
-                        );
-                      },
+                    
+                    // قسم السلايدر (البث المباشر)
+                    SizedBox(
+                      height: 85,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: data.slider.length,
+                        separatorBuilder: (context, index) => const SizedBox(width: 12),
+                        itemBuilder: (context, index) => _buildLiveCircle(data.slider[index]),
+                      ),
                     ),
+                    
+                    const SizedBox(height: 25),
+                    
+                    // قسم الأقسام
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('الأقسام', 
+                            style: TextStyle(fontSize: 18.86, fontWeight: FontWeight.w600, color: AppColors.c303030)),
+                          InkWell(
+                            onTap: () => context.pushNamed(AppRoutes.categories),
+                            child: const Text('عرض الكل', 
+                              style: TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600)),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      height: 40,
+                      child: CourseCategoriesListView(
+                        categories: data.categories
+                            .map((e) => CategoryUIModel(
+                                  name: e.name,
+                                  icon: e.icon,
+                                  id: e.id,
+                                ))
+                            .toList(),
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 25),
+                    
+                    // قسم الدورات المميزة (Carousel)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Text('الدورات المميزة', 
+                        style: TextStyle(fontSize: 18.86, fontWeight: FontWeight.w600, color: AppColors.c303030)),
+                    ),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      height: 220, // تعديل الارتفاع ليناسب التصميم
+                      child: CarouselView(
+                        controller: _carouselController,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemExtent: MediaQuery.sizeOf(context).width * 0.8,
+                        shrinkExtent: MediaQuery.sizeOf(context).width * 0.7,
+                        onTap: (index) {
+                          final course = data.featuredCourses[index];
+                          print("🎯 [HomePage] Navigating to Featured Course Details: ID=${course.id}, Title=${course.title}");
+                          context.pushNamed(
+                            AppRoutes.courseDetails,
+                            extra: course.id,
+                          );
+                        },
+                        children: data.featuredCourses.map((course) {
+                          return _buildCourseCard(course);
+                        }).toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+                    Center(
+                      child: AnimatedSmoothIndicator(
+                        activeIndex: _activeCourseIndex,
+                        count: data.featuredCourses.length,
+                        effect: const WormEffect(
+                          spacing: 8.0, radius: 4.0, dotWidth: 16, dotHeight: 8, 
+                          dotColor: AppColors.cEEEEEE, activeDotColor: AppColors.primary
+                        ),
+                      ),
+                    ),
+                    
+                    // قسم الدورات القادمة (Upcoming)
+                    if (data.upcomingCourses.isNotEmpty) ...[
+                      const SizedBox(height: 25),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Text('الدورات القادمة لهذا الأسبوع', 
+                          style: TextStyle(fontSize: 18.86, fontWeight: FontWeight.w600, color: AppColors.c303030)),
+                      ),
+                      const SizedBox(height: 10),
+                      ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: data.upcomingCourses.length,
+                        separatorBuilder: (context, index) => const SizedBox(height: 15),
+                        itemBuilder: (context, index) {
+                          final upcomingCourse = data.upcomingCourses[index];
+                          return GestureDetector(
+                            onTap: () {
+                              print("🎯 [HomePage] Navigating to Upcoming Course Details: ID=${upcomingCourse.id}, Title=${upcomingCourse.title}");
+                              context.pushNamed(
+                                AppRoutes.courseDetails,
+                                extra: upcomingCourse.id,
+                              );
+                            },
+                            child: SizedBox(
+                              height: 200, 
+                              child: _buildCourseCard(upcomingCourse)
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                    const SizedBox(height: 30),
                   ],
-                  const SizedBox(height: 30),
-                ],
+                ),
               ),
             );
           }
@@ -307,7 +322,11 @@ class _HomePageState extends State<HomePage> {
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      _buildBadge(course.isFree ? "مجاني" : course.priceLabel, AppColors.c589B6E),
+                      if (course.pricing?.hasDiscount == true) ...[
+                        _buildBadge('${course.pricing?.originalPrice} EGP', Colors.grey, isLineThrough: true),
+                        const SizedBox(width: 8),
+                      ],
+                      _buildBadge(course.pricing?.label ?? (course.isFree ? "مجاني" : course.priceLabel), AppColors.c589B6E),
                       const SizedBox(width: 8),
                       // Duration badge with icon
                       Container(
@@ -351,11 +370,20 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildBadge(String text, Color color) {
+  Widget _buildBadge(String text, Color color, {bool isLineThrough = false}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(6)),
-      child: Text(text, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+          decoration: isLineThrough ? TextDecoration.lineThrough : null,
+          decorationColor: Colors.white,
+        ),
+      ),
     );
   }
 }

@@ -34,7 +34,10 @@ class LiveSessionModel {
   final bool isArchived;
   
   @JsonKey(name: 'is_live')
-  final bool isLive; // Changed from String to bool
+  final dynamic isLive;
+  
+  @JsonKey(name: 'live_url')
+  final String? liveUrl;
   
   @JsonKey(name: 'recorded_url')
   final String? recordedUrl;
@@ -49,6 +52,7 @@ class LiveSessionModel {
     required this.scheduledAt,
     required this.isArchived,
     required this.isLive,
+    this.liveUrl,
     this.recordedUrl,
     required this.stats,
   });
@@ -60,8 +64,9 @@ class LiveSessionModel {
       courseName: (json['course_name']?.toString() ?? '').trim(),
       thumbnail: (json['thumbnail']?.toString())?.trim(),
       scheduledAt: (json['scheduled_at']?.toString() ?? '').trim(),
-      isArchived: json['is_archived'] ?? false,
-      isLive: json['is_live'] ?? false, // Parsing as bool directly
+      isArchived: json['is_archived'] == true || json['is_archived']?.toString() == '1',
+      isLive: json['is_live'],
+      liveUrl: (json['live_url']?.toString())?.trim(),
       recordedUrl: (json['recorded_url']?.toString())?.trim(),
       stats: LiveSessionStatsModel.fromJson(json['stats'] ?? {'date_human': ''}),
     );

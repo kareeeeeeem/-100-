@@ -127,13 +127,37 @@ class _SearchPageState extends State<SearchPage> {
                       color: AppColors.c303030,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 4),
                   Text(
                     course.instructorName,
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.black.withOpacity(0.5),
                     ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      if (course.pricing?.hasDiscount == true) ...[
+                        Text(
+                          '${course.pricing?.originalPrice} EGP',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: Colors.grey,
+                            decoration: TextDecoration.lineThrough,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                      ],
+                      Text(
+                        course.pricing?.label ?? (course.isFree ? "مجاني" : course.priceLabel),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.c589B6E,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

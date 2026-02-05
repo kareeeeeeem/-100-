@@ -156,6 +156,8 @@ class _ProfilePageState extends State<ProfilePage> {
 
                       const SizedBox(height: 20),
                       _buildLiveButton(context),
+                      const SizedBox(height: 12),
+                      _buildTransactionsButton(context),
                       const SizedBox(height: 20),
                       _buildCoursesHeader(),
                       const SizedBox(height: 10),
@@ -309,6 +311,44 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               const Text(
                 'شاهد البثوث المتاحه',
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+              ),
+              const Spacer(),
+              const Icon(Icons.arrow_forward_ios, color: Colors.black),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTransactionsButton(BuildContext context) {
+    return InkWell(
+      onTap: () => context.pushNamed(AppRoutes.transactions),
+      child: CustomContainer(
+        borderRadius: 10,
+        borderAlpha: 0.4,
+        borderWidth: 0.3,
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            spacing: 10,
+            children: [
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: AppColors.c589B6E.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.account_balance_wallet_rounded,
+                  color: AppColors.c589B6E,
+                  size: 30,
+                ),
+              ),
+              const Text(
+                'سجل العمليات المالية',
                 style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
               ),
               const Spacer(),

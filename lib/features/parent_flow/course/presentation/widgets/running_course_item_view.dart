@@ -36,38 +36,18 @@ class RunningCourseItemView extends StatelessWidget {
                           courseItem.title ?? 'بدون عنوان', // عنوان حقيقي من الـ API
                           style: const TextStyle(fontSize: 13.32, fontWeight: FontWeight.w500),
                         ),
-                        const Text(
-                          '6 دروس . 5 ساعات',
-                          style: TextStyle(fontSize: 9.52, color: AppColors.c737373),
+                        Text(
+                          '${courseItem.lessonsCountText} دروس . ${courseItem.duration}',
+                          style: const TextStyle(fontSize: 9.52, color: AppColors.c737373),
                         ),
                       ],
                     ),
                     const Spacer(),
-                    InkWell(
-                      onTap: () {
-                        // هنا بنبعت الـ ID لصفحة الفيديو
-                        context.pushNamed(
-                          AppRoutes.subscribedCourseDetails,
-                          extra: courseItem.id, 
-                        );
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(8.0),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Text(
-                          'استكمال',
-                          style: TextStyle(fontSize: 10, color: Colors.white),
-                        ),
-                      ),
-                    ),
                   ],
                 ),
                 const SizedBox(height: 10),
                 LinearProgressIndicator(
-                  value: 0.5,
+                  value: (double.tryParse(courseItem.progressText) ?? 0) / 100,
                   color: AppColors.c589B6E,
                   minHeight: 9,
                   backgroundColor: AppColors.cD9D9D9,

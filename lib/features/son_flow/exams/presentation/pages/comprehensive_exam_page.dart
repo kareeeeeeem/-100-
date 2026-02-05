@@ -58,7 +58,7 @@ class _ComprehensiveExamPageState extends State<ComprehensiveExamPage> {
 
         if (state is ExamLoaded) {
           final exam = state.exam;
-          final questions = exam.questions;
+          final questions = exam.questions ?? [];
           if (questions.isEmpty) {
             return const Scaffold(body: Center(child: Text('لا يوجد اسئلة')));
           }

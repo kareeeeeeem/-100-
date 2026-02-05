@@ -1,37 +1,57 @@
-import 'package:json_annotation/json_annotation.dart';
 import 'package:lms/features/son_flow/exams/data/models/question_model.dart';
 
-part 'exam_model.g.dart';
-
-@JsonSerializable(explicitToJson: true)
 class ExamModel {
   final int id;
-  @JsonKey(name: 'exam_title')
-  final String examTitle;
-  
-  String get title => examTitle;
-
-  final String duration;
-  final List<QuestionModel> questions;
+  final String title;
+  final String? duration;
+  final int? durationMinutes;
+  final int? passingScore;
+  final int? questionsCount;
+  final bool? isCompleted;
+  final List<QuestionModel>? questions;
 
   ExamModel({
     required this.id,
-    required this.examTitle,
-    required this.duration,
-    required this.questions,
+    required this.title,
+    this.duration,
+    this.durationMinutes,
+    this.passingScore,
+    this.questionsCount,
+    this.isCompleted,
+    this.questions,
   });
 
-  factory ExamModel.fromJson(Map<String, dynamic> json) =>
-      _$ExamModelFromJson(json);
+  factory ExamModel.fromJson(Map<String, dynamic> json) {
+    return ExamModel(
+      id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
+      title: (json['title'] ?? json['exam_title'] ?? '').toString(),
+      duration: json['duration']?.toString(),
+      durationMinutes: int.tryParse(json['duration_minutes']?.toString() ?? ''),
+      passingScore: int.tryParse(json['passing_score']?.toString() ?? ''),
+      questionsCount: int.tryParse(json['questions_count']?.toString() ?? ''),
+      isCompleted: json['is_completed'] == true || json['is_completed']?.toString() == '1',
+      questions: (json['questions'] is List)
+          ? (json['questions'] as List).map((e) => QuestionModel.fromJson(e)).toList()
+          : null,
+    );
+  }
 
-  Map<String, dynamic> toJson() => _$ExamModelToJson(this);
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'title': title,
+        'duration': duration,
+        'duration_minutes': durationMinutes,
+        'passing_score': passingScore,
+        'questions_count': questionsCount,
+        'is_completed': isCompleted,
+        'questions': questions?.map((e) => e.toJson()).toList(),
+      };
 }
 
-@JsonSerializable(explicitToJson: true)
 class ExamResponseModel {
   final bool status;
   final String message;
-  final ExamModel data;
+  final dynamic data;
   final dynamic errors;
 
   ExamResponseModel({
@@ -41,8 +61,12 @@ class ExamResponseModel {
     this.errors,
   });
 
-  factory ExamResponseModel.fromJson(Map<String, dynamic> json) =>
-      _$ExamResponseModelFromJson(json);
-
-  Map<String, dynamic> toJson() => _$ExamResponseModelToJson(this);
+  factory ExamResponseModel.fromJson(Map<String, dynamic> json) {
+    return ExamResponseModel(
+      status: json['status'] == true,
+      message: json['message']?.toString() ?? '',
+      data: json['data'],
+      errors: json['errors'],
+    );
+  }
 }

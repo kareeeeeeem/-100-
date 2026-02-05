@@ -142,10 +142,11 @@ Center( // تغليف النص بـ Center لضمان التوسط الأفقي
                                 child: Column(
                                   children: [
                                     CustomImage(
-                                      imagePath:  profile.avatar ,
+                                      imagePath: assistant.image,
                                       width: 65,
                                       height: 65,
                                       borderRadius: 35,
+                                      isUserProfile: true,
                                     ),
                                     const SizedBox(height: 6),
                                     Text(

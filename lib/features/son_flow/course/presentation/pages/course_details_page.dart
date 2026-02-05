@@ -40,6 +40,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
         ),
       ),
       child: Scaffold(
+        backgroundColor: AppColors.cF6F7FA,
         appBar: AppBar(
           title: const Text('تفاصيل الدورة'),
         ),
@@ -179,12 +180,15 @@ Stack(
                       ),
                       const SizedBox(height: 20),
 
-                      // --- Tags (دروس، سعر، قسم) ---
                       Row(
                         children: [
                           _buildTag('${course.lessonsCount ?? course.lessons?.length ?? 0} دروس', AppColors.primary),
                           const SizedBox(width: 10),
-                          _buildTag(course.price?.label ?? 'مجاني', AppColors.c589B6E),
+                          if (course.pricing?.hasDiscount == true) ...[
+                             _buildTag('${course.pricing?.originalPrice} EGP', Colors.grey, isLineThrough: true),
+                             const SizedBox(width: 10),
+                           ],
+                          _buildTag(course.pricing?.label ?? course.price?.label ?? 'مجاني', AppColors.c589B6E),
                           const SizedBox(width: 10),
                           _buildTag(course.category ?? 'عام', AppColors.c589B6E),
                         ],
@@ -257,50 +261,104 @@ Stack(
                       ),
                       const SizedBox(height: 20),
 
-                      // --- قائمة الدروس ---
-                      Container(
-                        decoration: BoxDecoration(
-                          color: AppColors.cF6F7FA,
-                          borderRadius: BorderRadius.circular(8.39),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: ListView.separated(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: course.lessons?.length ?? 0,
-                            separatorBuilder: (context, index) => const SizedBox(height: 20),
-                            itemBuilder: (context, index) {
-                              final lesson = course.lessons![index];
-                              return Row(
-                                children: [
-                                  const Icon(Icons.play_circle_fill, color: AppColors.primary, size: 40),
-                                  const SizedBox(width: 10),
-                                  Flexible(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                      // --- قائمة الدروس أو السكاشن ---
+                      if ((course.sections != null && course.sections!.isNotEmpty) || (course.lessons != null && course.lessons!.isNotEmpty))
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 16.0),
+                              child: Text(
+                                'محتوى الدورة',
+                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            if (course.sections != null && course.sections!.isNotEmpty)
+                              ...course.sections!.map((section) {
+                                return Container(
+                                  margin: const EdgeInsets.only(bottom: 12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: AppColors.cE8E8E8),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.03),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Theme(
+                                    data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                                    child: ExpansionTile(
+                                      title: Text(
+                                        section.title,
+                                        style: const TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.primary,
+                                        ),
+                                      ),
+                                      leading: const Icon(Icons.folder_open_rounded, color: AppColors.primary),
+                                      trailing: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.primary.withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: Text(
+                                          '${section.lessons?.length ?? 0} درس',
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: AppColors.primary,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
                                       children: [
-                                        Text(
-                                          lesson.title ?? '',
-                                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                                        ),
-                                        Text(
-                                          lesson.duration ?? '',
-                                          style: const TextStyle(fontSize: 12, color: AppColors.c8C8C8C),
-                                        ),
+                                        if (section.lessons == null || section.lessons!.isEmpty)
+                                          const Padding(
+                                            padding: EdgeInsets.all(16.0),
+                                            child: Text('سيتم إضافة الدروس قريباً', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                                          )
+                                        else
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                            child: Column(
+                                              children: section.lessons!.map((l) => _buildLessonItem(l, course, context)).toList(),
+                                            ),
+                                          ),
                                       ],
                                     ),
                                   ),
-                                ],
-                              );
-                            },
-                          ),
+                                );
+                              })
+                            else
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: AppColors.cF6F7FA,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: ListView.separated(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  padding: const EdgeInsets.all(12),
+                                  itemCount: course.lessons?.length ?? 0,
+                                  separatorBuilder: (context, index) => const Divider(height: 24, color: AppColors.cE8E8E8),
+                                  itemBuilder: (context, index) {
+                                    final lesson = course.lessons![index];
+                                    return _buildLessonItem(lesson, course, context);
+                                  },
+                                ),
+                              ),
+                          ],
                         ),
-                      ),
                     ],
                   ),
-                ),);
-              }
+                ),
+              );
+            }
             return const SizedBox();
           },
         ),
@@ -313,30 +371,8 @@ Stack(
                 child: CustomElevatedButton(
                   title: (course?.isSubscribed ?? false) ? 'الذهاب الى الكورس' : 'احجز الان',
                   onPressed: () {
-                    if (course?.isSubscribed ?? false) {
-                      context.pushNamed(AppRoutes.subscribedCourseDetails, extra: widget.courseId);
-                    } else {
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.white,
-                        builder: (modalContext) {
-                          return BlocProvider.value(
-                            value: context.read<PaymentCubit>(),
-                            child: SizedBox(
-                              height: MediaQuery.sizeOf(context).height * 0.9,
-                              child: PaymentBottomSheet(
-                                courseId: widget.courseId,
-                                amount: double.tryParse((course?.price?.value ?? '0')
-                                        .replaceAll(RegExp(r'[^0-9.]'), '')) ??
-                                    0.0,
-                                courseTitle: course?.title ?? '',
-                                priceLabel: course?.price?.label ?? '',
-                              ),
-                            ),
-                          );
-                        },
-                      );
+                    if (course != null) {
+                      _handleAction(course, context);
                     }
                   },
                 ),
@@ -349,7 +385,92 @@ Stack(
     );
   }
 
-  Widget _buildTag(String label, Color color) {
+  Widget _buildLessonItem(dynamic lesson, dynamic course, BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: InkWell(
+        onTap: () => _handleAction(course, context),
+        borderRadius: BorderRadius.circular(10),
+        child: Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.05),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.play_arrow_rounded, color: AppColors.primary, size: 24),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      lesson.title ?? '',
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.c1E1E1E),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      lesson.duration ?? '',
+                      style: const TextStyle(fontSize: 11, color: AppColors.c8C8C8C),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.lock_outline_rounded, color: AppColors.cC7C9D9, size: 18),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _handleAction(dynamic course, BuildContext context) {
+    if (course.isSubscribed) {
+      context.pushNamed(AppRoutes.subscribedCourseDetails, extra: widget.courseId);
+    } else {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.white,
+        builder: (modalContext) {
+          return BlocProvider.value(
+            value: context.read<PaymentCubit>(),
+            child: SizedBox(
+              height: MediaQuery.sizeOf(context).height * 0.9,
+              child: PaymentBottomSheet(
+                courseId: widget.courseId,
+                amount: double.tryParse((course.pricing?.currentPrice?.toString() ?? course.price?.value ?? '0')
+                        .replaceAll(RegExp(r'[^0-9.]'), '')) ??
+                    0.0,
+                courseTitle: course.title ?? '',
+                priceLabel: (course.pricing?.label?.isNotEmpty ?? false)
+                    ? course.pricing!.label!
+                    : (course.price?.label?.isNotEmpty ?? false)
+                        ? course.price!.label!
+                        : (course.pricing?.currentPrice != null)
+                            ? '${course.pricing!.currentPrice} ${course.pricing?.currency ?? 'EGP'}'
+                            : (course.price?.value != null)
+                                ? '${course.price!.value} EGP'
+                                : '0.00 EGP',
+                originalPrice: course.pricing?.originalPrice,
+                discountPercentage: course.pricing?.discountPercentage,
+              ),
+            ),
+          );
+        },
+      );
+    }
+  }
+
+  Widget _buildTag(String label, Color color, {bool isLineThrough = false}) {
     return Container(
       decoration: BoxDecoration(
         color: color,
@@ -358,7 +479,13 @@ Stack(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       child: Text(
         label,
-        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: Colors.white),
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w500,
+          color: Colors.white,
+          decoration: isLineThrough ? TextDecoration.lineThrough : null,
+          decorationColor: Colors.white,
+        ),
       ),
     );
   }

@@ -14,6 +14,7 @@ import 'package:lms/features/son_flow/home/presentation/manager/payment_cubit.da
 import 'package:lms/features/son_flow/home/presentation/manager/search_cubit.dart';
 import 'package:lms/features/son_flow/home/presentation/manager/profile_cubit.dart';
 import 'package:lms/features/son_flow/home/presentation/manager/update_profile_cubit.dart';
+import 'package:lms/features/son_flow/home/presentation/manager/transactions/transactions_cubit.dart';
 import 'package:lms/features/son_flow/dashboard/domain/repositories/dashboard_repository.dart';
 
 class HomeDi extends AppDi {
@@ -40,5 +41,6 @@ class HomeDi extends AppDi {
     sl.registerFactory(() => CategoriesCubit(sl<HomeRepository>()));
     sl.registerFactory(() => SearchCubit(sl<HomeRepository>()));
     sl.registerFactory(() => PaymentCubit(sl<HomeRepository>()));
+    sl.registerFactory(() => TransactionsCubit(sl<HomeRepository>()));
   }
 }

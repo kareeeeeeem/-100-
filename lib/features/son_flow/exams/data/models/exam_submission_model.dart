@@ -1,12 +1,5 @@
-import 'package:json_annotation/json_annotation.dart';
-
-part 'exam_submission_model.g.dart';
-
-@JsonSerializable()
 class ExamSubmissionModel {
-  @JsonKey(name: 'attempt_id')
   final int attemptId;
-  
   final String score;
   final bool passed;
 
@@ -16,28 +9,17 @@ class ExamSubmissionModel {
     required this.passed,
   });
 
-  factory ExamSubmissionModel.fromJson(Map<String, dynamic> json) =>
-      _$ExamSubmissionModelFromJson(json);
+  factory ExamSubmissionModel.fromJson(Map<String, dynamic> json) {
+    return ExamSubmissionModel(
+      attemptId: int.tryParse(json['attempt_id']?.toString() ?? '') ?? 0,
+      score: json['score']?.toString() ?? '',
+      passed: json['passed'] == true || json['passed']?.toString() == '1',
+    );
+  }
 
-  Map<String, dynamic> toJson() => _$ExamSubmissionModelToJson(this);
-}
-
-@JsonSerializable()
-class ExamSubmissionResponseModel {
-  final bool status;
-  final String message;
-  final ExamSubmissionModel data;
-  final dynamic errors;
-
-  ExamSubmissionResponseModel({
-    required this.status,
-    required this.message,
-    required this.data,
-    this.errors,
-  });
-
-  factory ExamSubmissionResponseModel.fromJson(Map<String, dynamic> json) =>
-      _$ExamSubmissionResponseModelFromJson(json);
-
-  Map<String, dynamic> toJson() => _$ExamSubmissionResponseModelToJson(this);
+  Map<String, dynamic> toJson() => {
+        'attempt_id': attemptId,
+        'score': score,
+        'passed': passed,
+      };
 }

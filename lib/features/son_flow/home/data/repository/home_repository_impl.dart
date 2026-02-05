@@ -1,10 +1,12 @@
 import 'package:lms/core/errors/error_handler.dart';
+import 'package:lms/core/errors/failures.dart';
 import 'package:lms/core/models/result.dart';
 import 'package:lms/features/son_flow/home/data/data_sources/api/home_api_service.dart';
 import 'package:lms/features/son_flow/home/data/model/course_details_model.dart';
 import 'package:lms/features/son_flow/home/data/model/home_response_model.dart';
 import 'package:lms/features/son_flow/home/data/model/my_courses_response_model.dart';
 import 'package:lms/features/son_flow/home/data/model/profile_response_model.dart';
+import 'package:lms/features/son_flow/home/data/model/transaction_response_model.dart';
 import 'package:lms/features/son_flow/home/domain/repository/login_repository.dart';
 import 'package:lms/features/son_flow/login/data/model/notifications_response_model.dart';
 
@@ -82,11 +84,16 @@ class HomeRepositoryImpl implements HomeRepository {
     required String newPasswordConfirmation,
   }) async {
     try {
-      await homeApiService.changePassword(
+      final response = await homeApiService.changePassword(
         currentPassword: currentPassword,
         newPassword: newPassword,
         newPasswordConfirmation: newPasswordConfirmation,
       );
+      
+      if (response['status'] == false) {
+        return Result.error(ServerFailure(response['message'] ?? 'فشل تغيير كلمة المرور'));
+      }
+      
       return Result.success(null);
     } catch (e) {
       return Result.error(ErrorHandler.getFailure(e));
@@ -148,6 +155,24 @@ class HomeRepositoryImpl implements HomeRepository {
   }
 
   @override
+  Future<Result<Map<String, dynamic>>> processPayment({
+    required int courseId,
+    required String paymentMethod,
+    String? guardianPhone,
+  }) async {
+    try {
+      final result = await homeApiService.processPayment(
+        courseId: courseId,
+        paymentMethod: paymentMethod,
+        guardianPhone: guardianPhone,
+      );
+      return Result.success(result);
+    } catch (e) {
+      return Result.error(ErrorHandler.getFailure(e));
+    }
+  }
+
+  @override
   Future<Result<NoOutput>> logout() async {
     try {
       await homeApiService.logout();
@@ -162,6 +187,16 @@ class HomeRepositoryImpl implements HomeRepository {
     try {
       await homeApiService.deleteAccount();
       return Result.success(null);
+    } catch (e) {
+      return Result.error(ErrorHandler.getFailure(e));
+    }
+  }
+
+  @override
+  Future<Result<TransactionResponseModel>> getTransactions() async {
+    try {
+      final result = await homeApiService.getTransactions();
+      return Result.success(result);
     } catch (e) {
       return Result.error(ErrorHandler.getFailure(e));
     }

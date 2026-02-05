@@ -22,6 +22,16 @@ class ExamRepositoryImpl implements ExamRepository {
   }
 
   @override
+  Future<Result<List<ExamModel>>> getExamsBySection(String sectionId) async {
+    try {
+      final response = await _apiService.getExamsBySection(sectionId);
+      return Result.success(response);
+    } catch (e) {
+      return Result.error(ErrorHandler.getFailure(e));
+    }
+  }
+
+  @override
   Future<Result<ExamModel>> getExam(String examId) async {
     try {
       final response = await _apiService.getExam(examId);

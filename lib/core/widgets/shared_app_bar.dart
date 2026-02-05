@@ -65,7 +65,7 @@ class _SharedAppBarState extends State<SharedAppBar> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'أهلاً بك $userName',
+                    'أهلاً بك ${userName.split(' ').first}',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -123,13 +123,11 @@ class _SharedAppBarState extends State<SharedAppBar> {
               shape: BoxShape.circle,
             ),
             clipBehavior: Clip.antiAlias,
-            child: userAvatar != null
-                ? CustomImage(
-                    imagePath: userAvatar!,
-                    fit: BoxFit.cover,
-                    isUserProfile: true,
-                  )
-                : const Icon(Icons.person, color: Colors.grey),
+            child: CustomImage(
+              imagePath: userAvatar,
+              fit: BoxFit.cover,
+              isUserProfile: true,
+            ),
           ),
           Positioned(
             bottom: 0,

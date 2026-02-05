@@ -48,11 +48,24 @@ class _EditSonProfileDetailsPageState extends State<EditSonProfileDetailsPage> {
   void _handleSubmit() {
     if (_formKey.currentState?.validate() ?? false) {
       if (_childId != null) {
-        final data = <String, dynamic>{
-          'name': _nameController.text.trim(),
-          'email': _emailController.text.trim(),
-          'phone': _phoneController.text.trim(),
-        };
+        final parentCubit = context.read<ParentCubit>();
+        final currentChild = parentCubit.state.selectedChild;
+        
+        final data = <String, dynamic>{};
+        
+        final newName = _nameController.text.trim();
+        final newEmail = _emailController.text.trim();
+        final newPhone = _phoneController.text.trim();
+
+        if (currentChild != null) {
+          if (newName != currentChild.name) data['name'] = newName;
+          if (newEmail != currentChild.email) data['email'] = newEmail;
+          if (newPhone != (currentChild.phone ?? '')) data['phone'] = newPhone;
+        } else {
+          data['name'] = newName;
+          data['email'] = newEmail;
+          data['phone'] = newPhone;
+        }
 
         // Only include password if it's provided
         if (_passwordController.text.isNotEmpty) {
@@ -60,7 +73,14 @@ class _EditSonProfileDetailsPageState extends State<EditSonProfileDetailsPage> {
           data['password_confirmation'] = _passwordConfirmationController.text;
         }
 
-        context.read<ParentCubit>().updateChild(_childId!, data);
+        if (data.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('لم يتم إجراء أي تغييرات')),
+          );
+          return;
+        }
+
+        parentCubit.updateChild(_childId!, data);
       }
     }
   }

@@ -100,7 +100,7 @@ class PrefaceExamDetailsPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        'عدد الأسئلة: ${exam.questions.length} سؤال',
+                        'عدد الأسئلة: ${exam.questions?.length ?? exam.questionsCount ?? 0} سؤال',
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w800,

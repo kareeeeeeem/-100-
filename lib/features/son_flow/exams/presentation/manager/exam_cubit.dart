@@ -18,6 +18,17 @@ class ExamCubit extends Cubit<ExamState> {
     }
   }
 
+  Future<void> loadExamsBySection(String sectionId) async {
+    emit(ExamLoading());
+    final result = await _repository.getExamsBySection(sectionId);
+
+    if (result.isSuccess) {
+      emit(ExamsLoaded(result.data!));
+    } else {
+      emit(ExamError(result.failure?.message ?? 'Unknown Error'));
+    }
+  }
+
   Future<void> loadExam(String examId) async {
     emit(ExamLoading());
     final result = await _repository.getExam(examId);

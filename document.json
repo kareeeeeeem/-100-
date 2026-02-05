@@ -458,6 +458,322 @@
         }
       }
     },
+    "/v1/password/forgot": {
+      "post": {
+        "operationId": "authApi.forgotPassword",
+        "tags": [
+          "AuthApi"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "identifier": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "identifier"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "تم إرسال كود التحقق بنجاح عبر واتساب."
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "phone": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "phone"
+                      ]
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "هذا الحساب غير موجود أو لا يمتلك رقم هاتف مربوط."
+                      ]
+                    },
+                    "data": {
+                      "type": "null"
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationException"
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "type": "boolean"
+                        },
+                        "message": {
+                          "type": "string",
+                          "enum": [
+                            "خطأ فني في الإرسال."
+                          ]
+                        },
+                        "data": {
+                          "type": "null"
+                        },
+                        "errors": {
+                          "type": "null"
+                        }
+                      },
+                      "required": [
+                        "status",
+                        "message",
+                        "data",
+                        "errors"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "type": "boolean"
+                        },
+                        "message": {
+                          "type": "string",
+                          "enum": [
+                            "فشل إرسال الرسالة، يرجى المحاولة لاحقاً."
+                          ]
+                        },
+                        "data": {
+                          "type": "null"
+                        },
+                        "errors": {
+                          "type": "null"
+                        }
+                      },
+                      "required": [
+                        "status",
+                        "message",
+                        "data",
+                        "errors"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/password/verify": {
+      "post": {
+        "operationId": "authApi.verifyOtp",
+        "summary": "2. التحقق من الكود (Verify OTP)",
+        "tags": [
+          "AuthApi"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "phone": {
+                    "type": "string"
+                  },
+                  "code": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "phone",
+                  "code"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "تم التحقق من الكود بنجاح، يمكنك تعيين كلمة مرور جديدة."
+                      ]
+                    },
+                    "data": {
+                      "type": "null"
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationException"
+          }
+        }
+      }
+    },
+    "/v1/password/reset": {
+      "post": {
+        "operationId": "authApi.resetPassword",
+        "summary": "3. تعيين كلمة المرور الجديدة (Reset Password)",
+        "tags": [
+          "AuthApi"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "phone": {
+                    "type": "string"
+                  },
+                  "code": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 8
+                  },
+                  "password_confirmation": {
+                    "type": "string",
+                    "minLength": 8
+                  }
+                },
+                "required": [
+                  "phone",
+                  "code",
+                  "password",
+                  "password_confirmation"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "تم تغيير كلمة المرور بنجاح، يمكنك الآن تسجيل الدخول."
+                      ]
+                    },
+                    "data": {
+                      "type": "null"
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationException"
+          }
+        }
+      }
+    },
     "/v1/logout": {
       "post": {
         "operationId": "authApi.logout",
@@ -1253,6 +1569,131 @@
         }
       }
     },
+    "/v1/sections/{section_id}/exams": {
+      "get": {
+        "operationId": "examApi.getExamsBySection",
+        "tags": [
+          "ExamApi"
+        ],
+        "parameters": [
+          {
+            "name": "section_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "type": "boolean"
+                        },
+                        "message": {
+                          "type": "string",
+                          "enum": [
+                            "تم جلب اختبارات القسم بنجاح"
+                          ]
+                        },
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer"
+                              },
+                              "title": {
+                                "type": "string"
+                              },
+                              "duration_minutes": {
+                                "type": "integer"
+                              },
+                              "passing_score": {
+                                "type": "integer"
+                              },
+                              "questions_count": {
+                                "type": "integer",
+                                "minimum": 0
+                              },
+                              "is_completed": {
+                                "type": "boolean",
+                                "description": "يمكن إضافة حالة الطالب (هل حل الاختبار سابقاً؟)"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "title",
+                              "duration_minutes",
+                              "passing_score",
+                              "questions_count",
+                              "is_completed"
+                            ]
+                          }
+                        },
+                        "errors": {
+                          "type": "null"
+                        }
+                      },
+                      "required": [
+                        "status",
+                        "message",
+                        "data",
+                        "errors"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "type": "boolean"
+                        },
+                        "message": {
+                          "type": "string",
+                          "enum": [
+                            "لا توجد اختبارات في هذا القسم حالياً"
+                          ]
+                        },
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "minItems": 0,
+                          "maxItems": 0,
+                          "additionalItems": false
+                        },
+                        "errors": {
+                          "type": "null"
+                        }
+                      },
+                      "required": [
+                        "status",
+                        "message",
+                        "data",
+                        "errors"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthenticationException"
+          }
+        }
+      }
+    },
     "/v1/exams/{exam_id}": {
       "get": {
         "operationId": "examApi.show",
@@ -1477,11 +1918,21 @@
         }
       }
     },
-    "/v1/live-sessions": {
+    "/v1/sections/{section_id}/live-sessions": {
       "get": {
         "operationId": "liveSessionApi.index",
         "tags": [
           "LiveSessionApi"
+        ],
+        "parameters": [
+          {
+            "name": "section_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
         ],
         "responses": {
           "200": {
@@ -1759,15 +2210,18 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 255
+                  },
                   "email": {
                     "type": "string",
-                    "format": "email"
-                  },
-                  "name": {
-                    "type": "string"
+                    "format": "email",
+                    "maxLength": 255
                   },
                   "phone": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20
                   },
                   "password": {
                     "type": "string",
@@ -1778,8 +2232,8 @@
                   }
                 },
                 "required": [
-                  "email",
                   "name",
+                  "email",
                   "phone",
                   "password",
                   "identity_number"
@@ -1796,35 +2250,53 @@
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
                     "message": {
                       "type": "string",
                       "enum": [
-                        "تم ربط الابن بنجاح"
+                        "تم إنشاء حساب الطالب وربطه بولي الأمر بنجاح."
                       ]
                     },
-                    "child": {
+                    "data": {
                       "type": "object",
                       "properties": {
                         "id": {
-                          "type": "string"
+                          "type": "integer"
                         },
                         "name": {
                           "type": "string"
                         },
                         "email": {
                           "type": "string"
+                        },
+                        "phone": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "identity_number": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
                         }
                       },
                       "required": [
                         "id",
                         "name",
-                        "email"
+                        "email",
+                        "phone",
+                        "identity_number"
                       ]
                     }
                   },
                   "required": [
+                    "status",
                     "message",
-                    "child"
+                    "data"
                   ]
                 }
               }
@@ -1833,21 +2305,25 @@
           "401": {
             "$ref": "#/components/responses/AuthenticationException"
           },
-          "404": {
+          "403": {
             "description": "",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
                     "message": {
                       "type": "string",
                       "enum": [
-                        "لم يتم العثور على الطالب أو ليس طالبًا."
+                        "هذا الطالب مرتبط بولي أمر آخر بالفعل، يرجى التواصل مع الدعم."
                       ]
                     }
                   },
                   "required": [
+                    "status",
                     "message"
                   ]
                 }
@@ -1859,14 +2335,58 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "errors": {
-                      "$ref": "#/components/schemas/MessageBag"
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "type": "boolean"
+                        },
+                        "message": {
+                          "type": "string",
+                          "enum": [
+                            "رقم الهوية الرقمية مستخدم مسبقاً."
+                          ]
+                        }
+                      },
+                      "required": [
+                        "status",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "type": "boolean"
+                        },
+                        "message": {
+                          "type": "string",
+                          "enum": [
+                            "هذا البريد الإلكتروني مسجل مسبقاً لنوع حساب غير طالب."
+                          ]
+                        }
+                      },
+                      "required": [
+                        "status",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "type": "boolean"
+                        },
+                        "errors": {
+                          "$ref": "#/components/schemas/MessageBag"
+                        }
+                      },
+                      "required": [
+                        "status",
+                        "errors"
+                      ]
                     }
-                  },
-                  "required": [
-                    "errors"
                   ]
                 }
               }
@@ -1901,7 +2421,8 @@
                     "type": [
                       "string",
                       "null"
-                    ]
+                    ],
+                    "maxLength": 255
                   },
                   "email": {
                     "type": [
@@ -1914,7 +2435,8 @@
                     "type": [
                       "string",
                       "null"
-                    ]
+                    ],
+                    "maxLength": 20
                   },
                   "password": {
                     "type": [
@@ -1943,6 +2465,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
                     "message": {
                       "type": "string",
                       "enum": [
@@ -1953,7 +2478,7 @@
                       "type": "object",
                       "properties": {
                         "id": {
-                          "type": "integer"
+                          "type": "string"
                         },
                         "name": {
                           "type": "string"
@@ -1962,10 +2487,7 @@
                           "type": "string"
                         },
                         "phone": {
-                          "type": [
-                            "string",
-                            "null"
-                          ]
+                          "type": "string"
                         }
                       },
                       "required": [
@@ -1977,6 +2499,7 @@
                     }
                   },
                   "required": [
+                    "status",
                     "message",
                     "child"
                   ]
@@ -1987,8 +2510,77 @@
           "401": {
             "$ref": "#/components/responses/AuthenticationException"
           },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "الطالب غير موجود أو ليس مرتبطاً بحسابك."
+                      ]
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
           "422": {
-            "$ref": "#/components/responses/ValidationException"
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "errors": {
+                      "$ref": "#/components/schemas/MessageBag"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "فشل تحديث البيانات، حاول مرة أخرى."
+                      ]
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ]
+                }
+              }
+            }
           }
         }
       },
@@ -2013,18 +2605,42 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "prefixItems": [
-                    {
-                      "type": "string",
-                      "enum": [
-                        "childData"
+                  "type": "object",
+                  "properties": {
+                    "childData": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "avatar": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "courses": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "email",
+                        "avatar",
+                        "courses"
                       ]
                     }
-                  ],
-                  "minItems": 1,
-                  "maxItems": 1,
-                  "additionalItems": false
+                  },
+                  "required": [
+                    "childData"
+                  ]
                 }
               }
             }
@@ -2338,6 +2954,123 @@
           },
           "422": {
             "$ref": "#/components/responses/ValidationException"
+          }
+        }
+      }
+    },
+    "/v1/payment/checkout": {
+      "post": {
+        "operationId": "payment.process",
+        "summary": "معالجة طلب الدفع (AJAX Request)",
+        "tags": [
+          "Payment"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "course_id": {
+                    "type": "integer"
+                  },
+                  "payment_method": {
+                    "type": "string",
+                    "enum": [
+                      "paynow",
+                      "guardian"
+                    ]
+                  },
+                  "guardian_phone": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "course_id",
+                  "payment_method"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "نرجع رابط الدفع (Unified Checkout URL) للجافاسكريبت\n\n6. الرد على الـ AJAX في المتصفح لإغلاق الموديل وتوجيه الطالب لصفحة \"تم إرسال الطلب\"",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean"
+                        },
+                        "redirect_url": {}
+                      },
+                      "required": [
+                        "success",
+                        "redirect_url"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "guardian_success"
+                          ]
+                        },
+                        "redirect_url": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "success",
+                        "status",
+                        "redirect_url"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthenticationException"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationException"
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "حدث خطأ غير متوقع أثناء معالجة الطلب."
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "message"
+                  ]
+                }
+              }
+            }
           }
         }
       }
@@ -2799,14 +3532,32 @@
             ]
           },
           "category": {
-            "type": "string",
-            "description": "ديناميكي من جدول الكورس"
+            "type": "string"
           },
-          "price": {
+          "pricing": {
             "type": "object",
+            "description": "سكشن الأسعار المطور بالخصم",
             "properties": {
-              "value": {
+              "original_price": {
+                "type": "number"
+              },
+              "discount_price": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "has_discount": {
                 "type": "string"
+              },
+              "current_price": {
+                "type": "number"
+              },
+              "currency": {
+                "type": "string",
+                "enum": [
+                  "SAR"
+                ]
               },
               "is_free": {
                 "type": "boolean"
@@ -2823,12 +3574,23 @@
                     ]
                   }
                 ]
+              },
+              "discount_percentage": {
+                "type": [
+                  "string",
+                  "null"
+                ]
               }
             },
             "required": [
-              "value",
+              "original_price",
+              "discount_price",
+              "has_discount",
+              "current_price",
+              "currency",
               "is_free",
-              "label"
+              "label",
+              "discount_percentage"
             ]
           },
           "thumbnail": {
@@ -2856,7 +3618,7 @@
               "image"
             ]
           },
-          "lessons_count": {
+          "total_lessons_count": {
             "type": "string"
           },
           "is_subscribed": {
@@ -2867,6 +3629,10 @@
               "string",
               "null"
             ]
+          },
+          "sections": {
+            "type": "string",
+            "description": "عرض الفصول (Sections) وبداخلها الدروس والامتحانات"
           }
         },
         "required": [
@@ -2874,12 +3640,13 @@
           "title",
           "duration",
           "category",
-          "price",
+          "pricing",
           "thumbnail",
           "instructor",
-          "lessons_count",
+          "total_lessons_count",
           "is_subscribed",
-          "progress_percentage"
+          "progress_percentage",
+          "sections"
         ],
         "title": "CourseResource"
       },
@@ -3052,12 +3819,15 @@
           "is_live": {
             "type": "string"
           },
+          "live_url": {
+            "type": "string",
+            "description": "دالة سنضيفها في الـ Model"
+          },
           "recorded_url": {
             "type": [
               "string",
               "null"
-            ],
-            "description": "دالة سنضيفها في الـ Model"
+            ]
           },
           "stats": {
             "type": "object",
@@ -3080,6 +3850,7 @@
           "scheduled_at",
           "is_archived",
           "is_live",
+          "live_url",
           "recorded_url",
           "stats"
         ],
@@ -3193,6 +3964,12 @@
           "question_text": {
             "type": "string"
           },
+          "question_image": {
+            "type": "string"
+          },
+          "difficulty": {
+            "type": "string"
+          },
           "type": {
             "type": "string"
           },
@@ -3204,6 +3981,8 @@
         "required": [
           "id",
           "question_text",
+          "question_image",
+          "difficulty",
           "type",
           "options"
         ],

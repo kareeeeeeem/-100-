@@ -57,13 +57,14 @@ class CourseModel {
   final String title;
   final String? thumbnail;
   final String duration;
-  final String? category; // Added category
+  final String? category;
   final InstructorModel? instructor;
   final PriceModel? price;
+  final PricingInfo? pricing; // Added pricing for discounts
   final String? lessonsCount;
   final String? progressPercentage;
   final bool isFavorited;
-  final bool isSubscribed; // Added isSubscribed
+  final bool isSubscribed;
 
   CourseModel({
     required this.id,
@@ -73,6 +74,7 @@ class CourseModel {
     this.category,
     this.instructor,
     this.price,
+    this.pricing,
     this.lessonsCount,
     this.progressPercentage,
     this.isFavorited = false,
@@ -80,7 +82,6 @@ class CourseModel {
   });
 
   factory CourseModel.fromJson(Map<String, dynamic> json) {
-    // Robust ID parsing: Handles int, String, and alternate key 'course_id'
     final dynamic rawId = json['id'] ?? json['course_id'];
     
     return CourseModel(
@@ -91,6 +92,7 @@ class CourseModel {
         category: (json['category']?.toString())?.trim(),
         instructor: json['instructor'] != null ? InstructorModel.fromJson(json['instructor']) : null,
         price: json['price'] != null ? PriceModel.fromJson(json['price']) : null,
+        pricing: json['pricing'] is Map<String, dynamic> ? PricingInfo.fromJson(json['pricing']) : null,
         lessonsCount: json['lessons_count']?.toString().trim(),
         progressPercentage: json['progress_percentage']?.toString().trim(),
         isFavorited: json['is_favorited'] ?? false,
@@ -98,7 +100,6 @@ class CourseModel {
       );
   }
 
-  // Helper getters for compatibility with existing UI
   String get instructorName => instructor?.name ?? 'مدرب أكاديمية 100';
   String get priceLabel => price?.label ?? '';
   bool get isFree => price?.isFree ?? false;
@@ -111,6 +112,7 @@ class CourseModel {
     'category': category,
     'instructor': instructor?.toJson(),
     'price': price?.toJson(),
+    'pricing': pricing?.toJson(),
     'lessons_count': lessonsCount,
     'progress_percentage': progressPercentage,
     'is_favorited': isFavorited,
@@ -138,6 +140,50 @@ class InstructorModel {
   };
 }
 
+class PricingInfo {
+  final dynamic originalPrice;
+  final dynamic discountPrice;
+  final dynamic hasDiscount;
+  final dynamic currentPrice;
+  final String? currency;
+  final bool? isFree;
+  final String? label;
+  final String? discountPercentage;
+
+  PricingInfo({
+    this.originalPrice,
+    this.discountPrice,
+    this.hasDiscount,
+    this.currentPrice,
+    this.currency,
+    this.isFree,
+    this.label,
+    this.discountPercentage,
+  });
+
+  factory PricingInfo.fromJson(Map<String, dynamic> json) => PricingInfo(
+        originalPrice: json['original_price'],
+        discountPrice: json['discount_price'],
+        hasDiscount: json['has_discount'],
+        currentPrice: json['current_price'],
+        currency: json['currency'],
+        isFree: json['is_free'],
+        label: json['label'],
+        discountPercentage: json['discount_percentage']?.toString(),
+      );
+
+  Map<String, dynamic> toJson() => {
+        'original_price': originalPrice,
+        'discount_price': discountPrice,
+        'has_discount': hasDiscount,
+        'current_price': currentPrice,
+        'currency': currency,
+        'is_free': isFree,
+        'label': label,
+        'discount_percentage': discountPercentage,
+      };
+}
+
 class PriceModel {
   final String value;
   final bool isFree;
@@ -148,7 +194,7 @@ class PriceModel {
   factory PriceModel.fromJson(Map<String, dynamic> json) => PriceModel(
     value: json['value']?.toString() ?? '1',
     isFree: json['is_free'] ?? false,
-    label: json['label'] is Map ? json['label']['value'] ?? '' : json['label'] ?? '', // Handle anyOf case in spec
+    label: json['label'] is Map ? json['label']['value'] ?? '' : json['label'] ?? '',
   );
 
   Map<String, dynamic> toJson() => {

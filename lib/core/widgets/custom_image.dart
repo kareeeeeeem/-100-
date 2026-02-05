@@ -49,8 +49,7 @@ class CustomImage extends StatelessWidget {
         // Only add /storage/ if it's NOT an /assets/ path and NOT an /api/ path
         if (trimmedPath.contains('100-academy.com') && 
             !trimmedPath.contains('/storage/') && 
-            !trimmedPath.contains('/api/') &&
-            !trimmedPath.contains('/assets/')) {
+            !trimmedPath.contains('/api/')) {
           finalUrl = trimmedPath.replaceFirst('100-academy.com', '100-academy.com/storage');
         }
       } else {
@@ -65,14 +64,8 @@ class CustomImage extends StatelessWidget {
         }
         
         // Determine base URL: use /storage/ for most things, but not for /assets/
-        if (path.startsWith('assets/')) {
-          // Public assets (like slides) are at the domain root
-          final String domain = ApiConstants.baseUrl.split('/api/')[0];
-          finalUrl = '$domain/$path';
-        } else {
-          // Regular uploads are in /storage/
-          finalUrl = '${ApiConstants.imageBaseUrl}/$path';
-        }
+        // Regular uploads are in /storage/
+        finalUrl = '${ApiConstants.imageBaseUrl}/$path';
       }
     }
 

@@ -1,14 +1,6 @@
-import 'package:json_annotation/json_annotation.dart';
-
-part 'question_model.g.dart';
-
-@JsonSerializable()
 class QuestionModel {
   final String id;
-  
-  @JsonKey(name: 'question_text')
   final String questionText;
-  
   final String type; // mcq or whiteboard
   final String options; // comma-separated string like "Figma,Photoshop,Sketch"
 
@@ -19,17 +11,28 @@ class QuestionModel {
     required this.options,
   });
 
-  factory QuestionModel.fromJson(Map<String, dynamic> json) =>
-      _$QuestionModelFromJson(json);
+  factory QuestionModel.fromJson(Map<String, dynamic> json) {
+    return QuestionModel(
+      id: json['id']?.toString() ?? '',
+      questionText: json['question_text']?.toString() ?? '',
+      type: json['type']?.toString() ?? 'mcq',
+      options: json['options']?.toString() ?? '',
+    );
+  }
 
-  Map<String, dynamic> toJson() => _$QuestionModelToJson(this);
-  
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'question_text': questionText,
+        'type': type,
+        'options': options,
+      };
+
   // Helper to parse options into a list
   List<String> get optionsList {
     if (options.isEmpty) return [];
     return options.split(',').map((e) => e.trim()).toList();
   }
-  
+
   bool get isMultipleChoice => type.toLowerCase() == 'mcq';
   bool get isWhiteboard => type.toLowerCase() == 'whiteboard';
 }

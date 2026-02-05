@@ -5,6 +5,7 @@ import 'package:lms/features/son_flow/exams/data/models/exam_result_model.dart';
 
 abstract class ExamRepository {
   Future<Result<List<ExamModel>>> getExams();
+  Future<Result<List<ExamModel>>> getExamsBySection(String sectionId);
   Future<Result<ExamModel>> getExam(String examId);
   
   Future<Result<ExamSubmissionModel>> submitExam(

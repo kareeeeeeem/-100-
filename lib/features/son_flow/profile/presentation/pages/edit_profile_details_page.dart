@@ -142,28 +142,65 @@ class _EditProfileDetailsPageState extends State<EditProfileDetailsPage> {
                     CustomElevatedButton(
                       title: 'حفظ',
                       isLoading: state is ProfileUpdateLoading || state is ChangePasswordLoading,
-                      onPressed: () {
+                      onPressed: () async {
                         if (_formKey.currentState!.validate()) {
-                          // Update profile data
-                          context.read<ProfileCubit>().updateProfileData(
-                            name: _nameController.text.trim(),
-                            email: _emailController.text.trim(),
-                          );
+                          final profileCubit = context.read<ProfileCubit>();
+                          final state = profileCubit.state;
+                          
+                          ProfileData? currentData;
+                          if (state is ProfileSuccess) {
+                            currentData = state.profileModel.data;
+                          } else if (profileCubit.state is ProfileSuccess) {
+                            currentData = (profileCubit.state as ProfileSuccess).profileModel.data;
+                          }
 
-                          // Change password if fields are not empty
+                          final newName = _nameController.text.trim();
+                          final newEmail = _emailController.text.trim();
+                          
+                          bool profileChanged = false;
+                          if (currentData != null) {
+                            if (newName != currentData.name || newEmail != currentData.email) {
+                              profileChanged = true;
+                            }
+                          } else {
+                            // If for some reason we don't have current data, assume changed if not empty
+                            profileChanged = newName.isNotEmpty || newEmail.isNotEmpty;
+                          }
+
+                          // 1. Update Profile if changed
+                          if (profileChanged) {
+                            await profileCubit.updateProfileData(
+                              name: newName,
+                              email: newEmail,
+                            );
+                            
+                            // Check if profile update failed
+                            if (profileCubit.state is ProfileUpdateError) {
+                              return; // Stop if profile update failed to let user fix it
+                            }
+                          }
+
+                          // 2. Change password if fields are not empty
                           if (_currentPasswordController.text.isNotEmpty ||
                               _newPasswordController.text.isNotEmpty ||
                               _confirmPasswordController.text.isNotEmpty) {
+                            
                             if (_newPasswordController.text != _confirmPasswordController.text) {
                                ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(content: Text('كلمات السر الجديدة غير متطابقة'), backgroundColor: Colors.orange),
                               );
                               return;
                             }
-                            context.read<ProfileCubit>().changeProfilePassword(
+
+                            await profileCubit.changeProfilePassword(
                               currentPassword: _currentPasswordController.text,
                               newPassword: _newPasswordController.text,
                               confirmPassword: _confirmPasswordController.text,
+                            );
+                          } else if (!profileChanged) {
+                            // If nothing changed at all
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('لم يتم إجراء أي تغييرات')),
                             );
                           }
                         }

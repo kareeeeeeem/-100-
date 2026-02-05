@@ -3,6 +3,7 @@ import 'package:lms/features/son_flow/home/data/model/course_details_model.dart'
 import 'package:lms/features/son_flow/home/data/model/home_response_model.dart';
 import 'package:lms/features/son_flow/home/data/model/my_courses_response_model.dart';
 import 'package:lms/features/son_flow/home/data/model/profile_response_model.dart';
+import 'package:lms/features/son_flow/home/data/model/transaction_response_model.dart';
 import 'package:lms/features/son_flow/login/data/model/notifications_response_model.dart';
 
 abstract class HomeRepository {
@@ -29,6 +30,12 @@ abstract class HomeRepository {
     required String cvv,
     required String paymentType,
   });
+  Future<Result<Map<String, dynamic>>> processPayment({
+    required int courseId,
+    required String paymentMethod,
+    String? guardianPhone,
+  });
   Future<Result<NoOutput>> logout();
   Future<Result<void>> deleteAccount();
+  Future<Result<TransactionResponseModel>> getTransactions();
 }

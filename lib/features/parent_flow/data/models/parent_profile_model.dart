@@ -15,7 +15,7 @@ class ParentProfileModel {
 
   factory ParentProfileModel.fromJson(Map<String, dynamic> json) {
     return ParentProfileModel(
-      id: json['id'].toString(), // Convert to string safe
+      id: json['id']?.toString() ?? '',
       name: (json['name']?.toString() ?? '').trim(),
       email: (json['email']?.toString() ?? '').trim(),
       phone: (json['phone']?.toString() ?? '').trim(),

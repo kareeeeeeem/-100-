@@ -20,6 +20,16 @@ class LiveSessionRepositoryImpl implements LiveSessionRepository {
   }
 
   @override
+  Future<Result<LiveSessionsDataModel>> getSectionLiveSessions(String sectionId) async {
+    try {
+      final response = await _apiService.getSectionLiveSessions(sectionId);
+      return Result.success(response);
+    } catch (e) {
+      return Result.error(ErrorHandler.getFailure(e));
+    }
+  }
+
+  @override
   Future<Result<JoinSessionDataModel>> joinSession(String sessionId) async {
     try {
       final response = await _apiService.joinSession(sessionId);

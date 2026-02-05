@@ -19,6 +19,17 @@ class LiveSessionCubit extends Cubit<LiveSessionState> {
     }
   }
 
+  Future<void> loadSectionLiveSessions(String sectionId) async {
+    emit(LiveSessionLoading());
+    final result = await _repository.getSectionLiveSessions(sectionId);
+
+    if (result.isSuccess) {
+      emit(LiveSessionsLoaded(result.data!));
+    } else {
+      emit(LiveSessionError(result.failure?.message ?? 'Unknown Error'));
+    }
+  }
+
   Future<void> joinSession(String sessionId) async {
     LiveSessionsDataModel? currentSessions;
     if (state is LiveSessionsLoaded) {

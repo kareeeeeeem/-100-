@@ -26,4 +26,5 @@ User _$UserFromJson(Map<String, dynamic> json) => User(
   userType: json['user_type'] as String,
   userTypeText: json['user_type_text'] as String?,
   identityNumber: json['identity_number'] as String?,
+  image: json['image'] as String?,
 );

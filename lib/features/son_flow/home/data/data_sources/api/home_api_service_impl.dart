@@ -6,6 +6,7 @@ import 'package:lms/features/son_flow/home/data/model/course_details_model.dart'
 import 'package:lms/features/son_flow/home/data/model/home_response_model.dart';
 import 'package:lms/features/son_flow/home/data/model/my_courses_response_model.dart';
 import 'package:lms/features/son_flow/home/data/model/profile_response_model.dart';
+import 'package:lms/features/son_flow/home/data/model/transaction_response_model.dart';
 import 'package:lms/features/son_flow/login/data/model/notifications_response_model.dart';
 
 class HomeApiServiceImpl implements HomeApiService {
@@ -115,13 +116,13 @@ class HomeApiServiceImpl implements HomeApiService {
   }
 
   @override
-  Future<void> changePassword({
+  Future<Map<String, dynamic>> changePassword({
     required String currentPassword,
     required String newPassword,
     required String newPasswordConfirmation,
   }) async {
     final token = await jwtService.getAccessToken();
-    await apiService.post(
+    final response = await apiService.post(
       ApiConstants.changePassword,
       body: {
         'current_password': currentPassword,
@@ -130,6 +131,7 @@ class HomeApiServiceImpl implements HomeApiService {
       },
       headers: {'Authorization': 'Bearer $token'},
     );
+    return response;
   }
 
   @override
@@ -178,5 +180,34 @@ class HomeApiServiceImpl implements HomeApiService {
       },
       headers: {'Authorization': 'Bearer $token'},
     );
+  }
+
+  @override
+  Future<Map<String, dynamic>> processPayment({
+    required int courseId,
+    required String paymentMethod,
+    String? guardianPhone,
+  }) async {
+    final token = await jwtService.getAccessToken();
+    final response = await apiService.post(
+      ApiConstants.paymentCheckout,
+      body: {
+        'course_id': courseId,
+        'payment_method': paymentMethod,
+        if (guardianPhone != null) 'guardian_phone': guardianPhone,
+      },
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    return response;
+  }
+
+  @override
+  Future<TransactionResponseModel> getTransactions() async {
+    final token = await jwtService.getAccessToken();
+    final response = await apiService.get(
+      ApiConstants.transactions,
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    return TransactionResponseModel.fromJson(response);
   }
 }

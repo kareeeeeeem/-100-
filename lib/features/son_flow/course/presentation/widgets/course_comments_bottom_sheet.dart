@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
-
 import 'package:lms/core/utils/app_colors.dart';
-import 'package:lms/core/utils/app_images.dart';
 import 'package:lms/core/widgets/custom_text_form_field.dart';
 import 'package:lms/features/son_flow/community/presentation/manager/comments_cubit.dart';
 import 'package:lms/features/son_flow/community/presentation/manager/comments_state.dart';
-
 import 'package:get_it/get_it.dart';
 import 'package:lms/core/service/jwt_service.dart';
 import 'package:lms/core/widgets/custom_image.dart';
@@ -29,8 +25,6 @@ class CourseCommentsBottomSheet extends StatefulWidget {
 class _CourseCommentsBottomSheetState extends State<CourseCommentsBottomSheet> {
   final TextEditingController _commentController = TextEditingController();
   String? _currentUserAvatar;
-  int? _replyingToCommentId;
-  String? _replyingToUserName;
 
   @override
   void initState() {
@@ -51,13 +45,6 @@ class _CourseCommentsBottomSheetState extends State<CourseCommentsBottomSheet> {
   void dispose() {
     _commentController.dispose();
     super.dispose();
-  }
-
-  void _cancelReply() {
-    setState(() {
-      _replyingToCommentId = null;
-      _replyingToUserName = null;
-    });
   }
 
   @override
@@ -138,35 +125,13 @@ class _CourseCommentsBottomSheetState extends State<CourseCommentsBottomSheet> {
                 itemCount: comments.length,
                 separatorBuilder: (context, index) => const SizedBox(height: 20),
                 itemBuilder: (context, index) {
-                  final comment = comments[index];
-                  return _buildCommentItem(comment);
+                  return _buildCommentItem(comments[index]);
                 },
               );
             },
           ),
         ),
-        // Reply Preview Bar
-        if (_replyingToCommentId != null)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            color: Colors.grey[100],
-            child: Row(
-              children: [
-                const Icon(Icons.reply, size: 16, color: AppColors.primary),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'الرد على ${_replyingToUserName}',
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-                  ),
-                ),
-                InkWell(
-                  onTap: _cancelReply,
-                  child: const Icon(Icons.cancel, size: 18, color: Colors.grey),
-                ),
-              ],
-            ),
-          ),
+        
         // Comment Input Area
         Container(
           padding: EdgeInsets.only(
@@ -206,7 +171,7 @@ class _CourseCommentsBottomSheetState extends State<CourseCommentsBottomSheet> {
                     Expanded(
                       child: CustomTextFormField(
                         controller: _commentController,
-                        hintText: _replyingToCommentId != null ? 'اكتب ردك هنا...' : 'اضف تعليق...',
+                        hintText: 'اضف تعليق...',
                         fillColor: AppColors.cF6F7FA,
                         suffix: IconButton(
                           icon: const Icon(Icons.send_rounded, color: AppColors.primary),
@@ -216,10 +181,8 @@ class _CourseCommentsBottomSheetState extends State<CourseCommentsBottomSheet> {
                               context.read<CommentsCubit>().addComment(
                                 widget.courseId, 
                                 text,
-                                parentId: _replyingToCommentId,
                               );
                               _commentController.clear();
-                              _cancelReply();
                               FocusScope.of(context).unfocus();
                             }
                           },
@@ -249,7 +212,7 @@ class _CourseCommentsBottomSheetState extends State<CourseCommentsBottomSheet> {
     );
   }
 
-  Widget _buildCommentItem(CommentModel comment, {bool isReply = false}) {
+  Widget _buildCommentItem(CommentModel comment) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -258,8 +221,8 @@ class _CourseCommentsBottomSheetState extends State<CourseCommentsBottomSheet> {
           spacing: 12,
           children: [
             Container(
-              width: isReply ? 28 : 36,
-              height: isReply ? 28 : 36,
+              width: 36,
+              height: 36,
               decoration: const BoxDecoration(shape: BoxShape.circle),
               clipBehavior: Clip.antiAlias,
               child: CustomImage(
@@ -296,65 +259,12 @@ class _CourseCommentsBottomSheetState extends State<CourseCommentsBottomSheet> {
                     comment.commentText,
                     style: const TextStyle(fontSize: 13, height: 1.4),
                   ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      _buildActionIcon(Icons.thumb_up_alt_outlined, comment.likesCount.toString()),
-                      const SizedBox(width: 16),
-                      _buildActionIcon(Icons.thumb_down_alt_outlined, comment.dislikesCount.toString()),
-                      const Spacer(),
-                      if (!isReply)
-                        TextButton(
-                          onPressed: () {
-                            setState(() {
-                              _replyingToCommentId = comment.id;
-                              _replyingToUserName = comment.userName;
-                            });
-                          },
-                          style: TextButton.styleFrom(
-                            padding: EdgeInsets.zero,
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          child: const Text(
-                            'رد',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
                 ],
               ),
             ),
           ],
         ),
-        if (comment.replies.isNotEmpty)
-          Padding(
-            padding: const EdgeInsetsDirectional.only(start: 48, top: 12),
-            child: Column(
-              children: comment.replies.map((reply) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _buildCommentItem(reply, isReply: true),
-              )).toList(),
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildActionIcon(IconData icon, String count) {
-    return Row(
-      children: [
-        Icon(icon, size: 14, color: Colors.grey[600]),
-        const SizedBox(width: 4),
-        Text(
-          count,
-          style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-        ),
+        // تم حذف جزء الردود وزر الرد من هنا
       ],
     );
   }

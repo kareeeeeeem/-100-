@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:lms/core/constants/api_constants.dart';
 import 'package:lms/core/network/service/api_service.dart';
 import 'package:lms/core/service/jwt_service.dart';
@@ -14,12 +15,41 @@ class ExamApiService {
   Future<List<ExamModel>> getExams() async {
     final token = await _jwtService.getAccessToken();
     final response = await _apiService.get(
-      ApiConstants.exams,
+      ApiConstants.examsList,
       headers: {'Authorization': 'Bearer $token'},
     );
     
-    final List<dynamic> data = response is List ? response : (response['data'] ?? []);
-    return data.map((e) => ExamModel.fromJson(e)).toList();
+    final dynamic rawData = response is List ? response : (response['data'] ?? []);
+    List<dynamic> list = [];
+    if (rawData is List) {
+      list = rawData;
+    } else if (rawData is Map && rawData['data'] is List) {
+      list = rawData['data'];
+    } else if (rawData is Map && rawData['exams'] is List) {
+      list = rawData['exams'];
+    }
+
+    return list.map((e) => ExamModel.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<List<ExamModel>> getExamsBySection(String sectionId) async {
+    final token = await _jwtService.getAccessToken();
+    final response = await _apiService.get(
+      ApiConstants.sectionExams(sectionId),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    
+    final dynamic rawData = response is List ? response : (response['data'] ?? []);
+    List<dynamic> list = [];
+    if (rawData is List) {
+      list = rawData;
+    } else if (rawData is Map && rawData['data'] is List) {
+      list = rawData['data'];
+    } else if (rawData is Map && rawData['exams'] is List) {
+      list = rawData['exams'];
+    }
+
+    return list.map((e) => ExamModel.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   Future<ExamModel> getExam(String examId) async {
@@ -30,7 +60,7 @@ class ExamApiService {
     );
     
     final responseModel = ExamResponseModel.fromJson(response);
-    return responseModel.data;
+    return ExamModel.fromJson(responseModel.data is Map ? responseModel.data : {});
   }
 
   Future<ExamSubmissionModel> submitExam(
@@ -44,8 +74,8 @@ class ExamApiService {
       headers: {'Authorization': 'Bearer $token'},
     );
     
-    final responseModel = ExamSubmissionResponseModel.fromJson(response);
-    return responseModel.data;
+    final responseModel = ExamResponseModel.fromJson(response);
+    return ExamSubmissionModel.fromJson(responseModel.data is Map ? responseModel.data : {});
   }
 
   Future<ExamResultModel> getExamResults(String attemptId) async {
@@ -55,7 +85,7 @@ class ExamApiService {
       headers: {'Authorization': 'Bearer $token'},
     );
     
-    final responseModel = ExamResultResponseModel.fromJson(response);
-    return responseModel.data;
+    final responseModel = ExamResponseModel.fromJson(response);
+    return ExamResultModel.fromJson(responseModel.data is Map ? responseModel.data : {});
   }
 }

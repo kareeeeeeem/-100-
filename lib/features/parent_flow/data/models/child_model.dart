@@ -5,6 +5,7 @@ class ChildModel {
   final String name;
   final String email;
   final String? phone;
+  final String? identityNumber;
   final String? avatar;
   final Map<String, dynamic>? stats;
   final List<MyCourseItemModel>? courses;
@@ -14,23 +15,36 @@ class ChildModel {
     required this.name,
     required this.email,
     this.phone,
+    this.identityNumber,
     this.avatar,
     this.stats,
     this.courses,
   });
 
   factory ChildModel.fromJson(Map<String, dynamic> json) {
-    return ChildModel(
-      id: json['id'],
-      name: (json['name']?.toString() ?? '').trim(),
-      email: (json['email']?.toString() ?? '').trim(),
-      phone: (json['phone']?.toString())?.trim(),
-      avatar: (json['avatar']?.toString())?.trim(),
-      stats: json['stats'],
-      courses: json['courses'] != null
-          ? (json['courses'] as List).map((e) => MyCourseItemModel.fromJson(e)).toList()
-          : [],
-    );
+    try {
+      return ChildModel(
+        id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
+        name: (json['name']?.toString() ?? '').trim(),
+        email: (json['email']?.toString() ?? '').trim(),
+        phone: (json['phone']?.toString())?.trim(),
+        identityNumber: (json['identity_number']?.toString())?.trim(),
+        avatar: (json['avatar']?.toString())?.trim(),
+        stats: (json['stats'] is Map) ? Map<String, dynamic>.from(json['stats']) : null,
+        courses: (json['courses'] is List)
+            ? (json['courses'] as List).map((e) => MyCourseItemModel.fromJson(e)).toList()
+            : [],
+      );
+    } catch (e) {
+      print('❌ Error parsing ChildModel: $e');
+      print('   Data: $json');
+      // Return a basic model instead of crashing
+      return ChildModel(
+        id: 0,
+        name: 'خطأ في التحميل',
+        email: '',
+      );
+    }
   }
 
   Map<String, dynamic> toJson() {

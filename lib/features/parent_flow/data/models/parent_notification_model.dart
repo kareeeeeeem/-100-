@@ -1,29 +1,47 @@
-import 'package:json_annotation/json_annotation.dart';
-
-part 'parent_notification_model.g.dart';
-
-@JsonSerializable()
 class ParentNotificationModel {
-  final String id;
+  final dynamic id;
   final String title;
-  final String body;
-  @JsonKey(name: 'created_at')
+  final String? message;
+  final String? type;
+  final String? senderImage;
+  final bool isRead;
   final String createdAt;
-  @JsonKey(name: 'read_at')
-  final String? readAt;
-
-  bool get isRead => readAt != null;
+  final String? targetId;
 
   ParentNotificationModel({
     required this.id,
     required this.title,
-    required this.body,
+    this.message,
+    this.type,
+    this.senderImage,
+    required this.isRead,
     required this.createdAt,
-    this.readAt,
+    this.targetId,
   });
 
-  factory ParentNotificationModel.fromJson(Map<String, dynamic> json) =>
-      _$ParentNotificationModelFromJson(json);
+  factory ParentNotificationModel.fromJson(Map<String, dynamic> json) {
+    return ParentNotificationModel(
+      id: json['id'],
+      title: json['title']?.toString() ?? '',
+      message: json['message']?.toString(),
+      type: json['type']?.toString(),
+      senderImage: json['sender_image']?.toString(),
+      isRead: json['is_read'] is bool ? json['is_read'] : (json['is_read']?.toString() == '1'),
+      createdAt: json['created_at']?.toString() ?? '',
+      targetId: json['target_id']?.toString(),
+    );
+  }
 
-  Map<String, dynamic> toJson() => _$ParentNotificationModelToJson(this);
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'message': message,
+      'type': type,
+      'sender_image': senderImage,
+      'is_read': isRead,
+      'created_at': createdAt,
+      'target_id': targetId,
+    };
+  }
 }

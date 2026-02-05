@@ -20,7 +20,11 @@ class ParentApiService {
       ApiConstants.parentProfile,
       headers: {'Authorization': 'Bearer $token'},
     );
-    return ParentProfileModel.fromJson(response);
+    // Handle wrapped response
+    final Map<String, dynamic> data = response is Map && response.containsKey('data') 
+        ? response['data'] 
+        : response;
+    return ParentProfileModel.fromJson(data);
   }
 
   Future<List<ChildModel>> getChildren() async {
@@ -49,7 +53,11 @@ class ParentApiService {
       ApiConstants.childDetails(childId),
       headers: {'Authorization': 'Bearer $token'},
     );
-    return ChildModel.fromJson(response);
+    // Handle case where API returns a list (e.g., [childData])
+    final Map<String, dynamic> data = response is List && response.isNotEmpty
+        ? response.first
+        : response;
+    return ChildModel.fromJson(data);
   }
 
   Future<void> updateChild(int childId, Map<String, dynamic> body) async {

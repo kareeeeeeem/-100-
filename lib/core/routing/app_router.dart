@@ -50,6 +50,10 @@ import 'package:lms/features/son_flow/home/presentation/manager/payment_cubit.da
 import 'package:lms/features/son_flow/exams/presentation/manager/exam_cubit.dart';
 import 'package:lms/features/son_flow/live_sessions/presentation/manager/live_session_cubit.dart';
 import 'package:lms/features/son_flow/home/presentation/manager/profile_cubit.dart';
+import 'package:lms/features/son_flow/home/presentation/manager/transactions/transactions_cubit.dart';
+import 'package:lms/features/son_flow/home/presentation/page/transactions_page.dart';
+import 'package:lms/features/son_flow/course/presentation/pages/course_section_details_page.dart';
+import 'package:lms/features/son_flow/home/data/model/section_model.dart';
 
 final class AppRouter {
   AppRouter._();
@@ -238,12 +242,32 @@ final class AppRouter {
             },
           ),
           GoRoute(
+            path: AppRoutes.courseSectionDetails,
+            builder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>;
+              return CourseSectionDetailsPage(
+                section: extra['section'] as SectionModel,
+                courseId: extra['courseId'] as int,
+              );
+            },
+          ),
+          GoRoute(
             path: AppRoutes.exams,
             name: AppRoutes.exams,
             builder: (context, state) {
               return BlocProvider(
                 create: (context) => GetIt.instance<ExamCubit>()..loadExams(),
                 child: const ExamsPage(),
+              );
+            },
+          ),
+          GoRoute(
+            path: AppRoutes.transactions,
+            name: AppRoutes.transactions,
+            builder: (context, state) {
+              return BlocProvider(
+                create: (context) => GetIt.instance<TransactionsCubit>(),
+                child: const TransactionsPage(),
               );
             },
           ),

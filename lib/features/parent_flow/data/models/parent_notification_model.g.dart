@@ -9,11 +9,14 @@ part of 'parent_notification_model.dart';
 ParentNotificationModel _$ParentNotificationModelFromJson(
   Map<String, dynamic> json,
 ) => ParentNotificationModel(
-  id: json['id'] as String,
+  id: json['id'],
   title: json['title'] as String,
-  body: json['body'] as String,
+  message: json['message'] as String?,
+  type: json['type'] as String?,
+  senderImage: json['sender_image'] as String?,
+  isRead: json['is_read'] as bool,
   createdAt: json['created_at'] as String,
-  readAt: json['read_at'] as String?,
+  targetId: json['target_id'] as String?,
 );
 
 Map<String, dynamic> _$ParentNotificationModelToJson(
@@ -21,7 +24,10 @@ Map<String, dynamic> _$ParentNotificationModelToJson(
 ) => <String, dynamic>{
   'id': instance.id,
   'title': instance.title,
-  'body': instance.body,
+  'message': instance.message,
+  'type': instance.type,
+  'sender_image': instance.senderImage,
+  'is_read': instance.isRead,
   'created_at': instance.createdAt,
-  'read_at': instance.readAt,
+  'target_id': instance.targetId,
 };

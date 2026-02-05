@@ -20,6 +20,17 @@ class LiveSessionApiService {
     return responseModel.data;
   }
 
+  Future<LiveSessionsDataModel> getSectionLiveSessions(String sectionId) async {
+    final token = await _jwtService.getAccessToken();
+    final response = await _apiService.get(
+      ApiConstants.sectionLiveSessions(sectionId),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    
+    final responseModel = LiveSessionsResponseModel.fromJson(response);
+    return responseModel.data;
+  }
+
   Future<JoinSessionDataModel> joinSession(String sessionId) async {
     final token = await _jwtService.getAccessToken();
     final response = await _apiService.get(
