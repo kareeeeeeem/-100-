@@ -13,8 +13,12 @@ class LiveSessionCubit extends Cubit<LiveSessionState> {
     final result = await _repository.getLiveSessions();
 
     if (result.isSuccess) {
+      // ضيف السطر ده وبص على الـ Console عندك
+      print("✅ [LiveCubit] Data loaded: ${result.data?.availableNow.length} Live, ${result.data?.archived.length} Archived");
       emit(LiveSessionsLoaded(result.data!));
     } else {
+      // ضيف السطر ده لو حصل فشل في الـ API
+      print("❌ [LiveCubit] Error: ${result.failure?.message}");
       emit(LiveSessionError(result.failure?.message ?? 'Unknown Error'));
     }
   }

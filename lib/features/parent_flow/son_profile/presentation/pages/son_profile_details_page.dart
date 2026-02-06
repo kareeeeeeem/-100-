@@ -143,14 +143,14 @@ class _SonProfileDetailsPageState extends State<SonProfileDetailsPage> {
                     },
                   ),
                   const SizedBox(height: 12),
-                  CustomElevatedButton(
-                    title: 'حذف الابن',
-                    buttonStyle: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.39)),
-                    ),
-                    onPressed: () => _showDeleteConfirmation(context, child.id),
-                  ),
+                  // CustomElevatedButton(
+                  //   title: 'حذف الابن',
+                  //   buttonStyle: ElevatedButton.styleFrom(
+                  //     backgroundColor: Colors.red,
+                  //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.39)),
+                  //   ),
+                  //   onPressed: () => _showDeleteConfirmation(context, child.id),
+                  // ),
                   const SizedBox(height: 20),
                 ],
               ),

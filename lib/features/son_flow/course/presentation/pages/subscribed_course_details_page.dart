@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:chewie/chewie.dart';
 import 'package:video_player/video_player.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:lms/features/son_flow/home/data/model/course_details_cubit.dart';
 import 'package:lms/features/son_flow/home/data/model/course_details_model.dart';
 import 'package:lms/core/utils/app_colors.dart';
@@ -19,7 +20,11 @@ import 'package:lms/features/son_flow/live_sessions/presentation/manager/live_se
 import 'package:lms/features/son_flow/live_sessions/presentation/manager/live_session_state.dart';
 import 'package:lms/features/son_flow/live_sessions/data/models/live_session_model.dart';
 import 'package:get_it/get_it.dart';
+import 'package:lms/features/son_flow/course/presentation/widgets/section_lessons_list.dart';
+import 'package:lms/features/son_flow/course/presentation/widgets/section_print_links_list.dart';
 import 'package:lms/features/son_flow/live_sessions/domain/repositories/live_session_repository.dart';
+import 'package:lms/features/son_flow/pdfs/presentation/manager/print_links_cubit.dart';
+import 'package:lms/features/son_flow/pdfs/presentation/manager/print_links_state.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 
@@ -34,7 +39,10 @@ class SubscribedCourseDetailsPage extends StatefulWidget {
 class _SubscribedCourseDetailsPageState extends State<SubscribedCourseDetailsPage> with SingleTickerProviderStateMixin {
   VideoPlayerController? _videoPlayerController;
   ChewieController? _chewieController;
+  YoutubePlayerController? _youtubePlayerController;
   late TabController _tabController;
+  bool _isYoutubeVideo = false;
+  String? _currentVideoUrl;
 
   @override
   void initState() {
@@ -43,29 +51,79 @@ class _SubscribedCourseDetailsPageState extends State<SubscribedCourseDetailsPag
     context.read<CourseDetailsCubit>().fetchCourseDetails(widget.courseId);
   }
 
-  void _initializePlayer(String url) async {
-    if (url.isEmpty) return;
+  void _initializePlayer(String url, {bool forcePlay = false}) async {
+    if (url.isEmpty) {
+      debugPrint('⚠️ _initializePlayer called with empty URL');
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('رابط الفيديو غير متوفر')));
+      return;
+    }
+    if (url == _currentVideoUrl && !forcePlay) {
+      debugPrint('ℹ️ Video already playing: $url');
+      return;
+    }
     
-    await _videoPlayerController?.dispose();
-    _chewieController?.dispose();
+    debugPrint('🎬 Initializing player for: $url (Force: $forcePlay)');
+    setState(() {
+      _currentVideoUrl = url;
+    });
+    
+    // Dispose previous players
+    final oldVideoController = _videoPlayerController;
+    final oldChewieController = _chewieController;
+    final oldYoutubeController = _youtubePlayerController;
+
+    _videoPlayerController = null;
+    _chewieController = null;
+    _youtubePlayerController = null;
+
+    if (mounted) setState(() {}); // Force rebuild to show loading
+
+    // Dispose in background to avoid blocking new playback
+    Future.microtask(() async {
+      try {
+        await oldVideoController?.dispose();
+        oldChewieController?.dispose();
+        oldYoutubeController?.dispose();
+      } catch (e) {
+        debugPrint('⚠️ Error disposing video player: $e');
+      }
+    });
 
     try {
-      _videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(url));
-      await _videoPlayerController!.initialize();
+      // Check if URL is YouTube
+      final videoId = YoutubePlayer.convertUrlToId(url);
       
-      _chewieController = ChewieController(
-        videoPlayerController: _videoPlayerController!,
-        autoPlay: true,
-        looping: false,
-        aspectRatio: 16 / 9,
-        allowFullScreen: true,
-        materialProgressColors: ChewieProgressColors(
-          playedColor: AppColors.primary,
-          handleColor: AppColors.primary,
-          backgroundColor: Colors.grey,
-          bufferedColor: Colors.white.withOpacity(0.5),
-        ),
-      );
+      if (videoId != null) {
+        // YouTube video
+        _isYoutubeVideo = true;
+        _youtubePlayerController = YoutubePlayerController(
+          initialVideoId: videoId,
+          flags: const YoutubePlayerFlags(
+            autoPlay: true,
+            mute: false,
+            enableCaption: false,
+          ),
+        );
+      } else {
+        // Regular video
+        _isYoutubeVideo = false;
+        _videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(url));
+        await _videoPlayerController!.initialize();
+        
+        _chewieController = ChewieController(
+          videoPlayerController: _videoPlayerController!,
+          autoPlay: true,
+          looping: false,
+          aspectRatio: 16 / 9,
+          allowFullScreen: true,
+          materialProgressColors: ChewieProgressColors(
+            playedColor: AppColors.primary,
+            handleColor: AppColors.primary,
+            backgroundColor: Colors.grey,
+            bufferedColor: Colors.white.withOpacity(0.5),
+          ),
+        );
+      }
     } catch (e) {
       debugPrint('❌ Error initializing video player: $e');
     }
@@ -77,6 +135,7 @@ class _SubscribedCourseDetailsPageState extends State<SubscribedCourseDetailsPag
   void dispose() {
     _videoPlayerController?.dispose();
     _chewieController?.dispose();
+    _youtubePlayerController?.dispose();
     _tabController.dispose();
     super.dispose();
   }
@@ -109,30 +168,7 @@ class _SubscribedCourseDetailsPageState extends State<SubscribedCourseDetailsPag
       ),
       body: BlocConsumer<CourseDetailsCubit, CourseDetailsState>(
         listener: (context, state) {
-          if (state is CourseDetailsSuccess) {
-            final data = state.model.data;
-            if (_videoPlayerController == null) {
-              String? videoUrl;
-              
-              // 1. Try global lessons
-              if (data?.lessons?.isNotEmpty ?? false) {
-                videoUrl = data!.lessons![0].videoUrl;
-              } 
-              // 2. Fallback to first lesson in first section
-              else if (data?.sections?.isNotEmpty ?? false) {
-                for (var section in data!.sections!) {
-                  if (section.lessons?.isNotEmpty ?? false) {
-                    videoUrl = section.lessons![0].videoUrl;
-                    break;
-                  }
-                }
-              }
-
-              if (videoUrl != null && videoUrl.isNotEmpty) {
-                _initializePlayer(videoUrl);
-              }
-            }
-          }
+          // Auto-play removed as per user request
         },
         builder: (context, state) {
           if (state is CourseDetailsLoading) {
@@ -152,9 +188,34 @@ class _SubscribedCourseDetailsPageState extends State<SubscribedCourseDetailsPag
                       decoration: const BoxDecoration(color: Colors.black),
                       child: (data.lessons?.isEmpty ?? true) && (data.sections?.isEmpty ?? true)
                           ? const Center(child: Text('لا توجد فيديوهات متاحة', style: TextStyle(color: Colors.white)))
-                          : _chewieController != null && _chewieController!.videoPlayerController.value.isInitialized
-                              ? Chewie(controller: _chewieController!)
-                              : const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+                          : _currentVideoUrl == null
+                              ? const Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.play_circle_outline, color: Colors.white, size: 48),
+                                      SizedBox(height: 8),
+                                      Text('اختر درساً للبدء', style: TextStyle(color: Colors.white, fontSize: 16)),
+                                    ],
+                                  ),
+                                )
+                              : _isYoutubeVideo && _youtubePlayerController != null
+                                  ? YoutubePlayer(
+                                      key: ValueKey(_currentVideoUrl),
+                                      controller: _youtubePlayerController!,
+                                      showVideoProgressIndicator: true,
+                                      progressIndicatorColor: AppColors.primary,
+                                      progressColors: ProgressBarColors(
+                                        playedColor: AppColors.primary,
+                                        handleColor: AppColors.primary,
+                                      ),
+                                    )
+                                  : _chewieController != null && _chewieController!.videoPlayerController.value.isInitialized
+                                      ? Chewie(
+                                          key: ValueKey(_currentVideoUrl),
+                                          controller: _chewieController!,
+                                        )
+                                      : const Center(child: CircularProgressIndicator(color: AppColors.primary)),
                     ),
                   ),
 
@@ -215,14 +276,18 @@ class _SubscribedCourseDetailsPageState extends State<SubscribedCourseDetailsPag
   }
 
   Widget _buildLessonsTab(CourseData data) {
-    final hasGlobalLessons = data.lessons != null && data.lessons!.isNotEmpty;
-    final hasSections = data.sections != null && data.sections!.isNotEmpty;
-
-    if (!hasGlobalLessons && !hasSections) {
-      return _buildEmptyState('لا توجد دروس متاحة حالياً', Icons.play_lesson_outlined);
+    // If only global lessons, show them as a single list
+    if (data.lessons != null && data.lessons!.isNotEmpty && (data.sections == null || data.sections!.isEmpty)) {
+      return ListView.separated(
+        padding: const EdgeInsets.all(16),
+        itemCount: data.lessons!.length,
+        separatorBuilder: (context, index) => const SizedBox(height: 12),
+        itemBuilder: (context, index) => _buildLessonItem(data.lessons![index], index),
+      );
     }
-
-    if (hasSections && !hasGlobalLessons) {
+    
+    // If we have sections, show them with collapsible headers
+    if (data.sections != null && data.sections!.isNotEmpty) {
       return ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: data.sections!.length,
@@ -232,30 +297,22 @@ class _SubscribedCourseDetailsPageState extends State<SubscribedCourseDetailsPag
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildSectionHeader(context, section, widget.courseId, sections: data.sections, currentIndex: sIndex),
-              if (section.lessons == null || section.lessons!.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(12),
-                  child: Text('سيتم إضافة الدروس قريباً', style: TextStyle(color: Colors.grey, fontSize: 13)),
-                )
-              else
-                ...section.lessons!.map((l) => _buildLessonItem(l, data.lessons?.indexOf(l) ?? 0)),
+              SectionLessonsList(
+                sectionId: section.id.toString(),
+                onItemBuilder: (lesson) => _buildLessonItem(lesson, data.lessons?.indexOf(lesson) ?? 0),
+              ),
               const Divider(height: 30),
             ],
           );
         },
       );
     }
-
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: data.lessons?.length ?? 0,
-      separatorBuilder: (context, index) => const SizedBox(height: 12),
-      itemBuilder: (context, index) => _buildLessonItem(data.lessons![index], index),
-    );
+    
+    return _buildEmptyState('لا توجد دروس متاحة حالياً', Icons.play_lesson_outlined);
   }
 
   Widget _buildLessonItem(Lesson lesson, int index) {
-    final isPlaying = _videoPlayerController?.dataSource == lesson.videoUrl;
+    final isPlaying = _currentVideoUrl == lesson.videoUrl;
     return InkWell(
       onTap: () => _initializePlayer(lesson.videoUrl ?? ""),
       child: Container(
@@ -420,7 +477,7 @@ class _SubscribedCourseDetailsPageState extends State<SubscribedCourseDetailsPag
           ),
           ElevatedButton(
             onPressed: () {
-              // TODO: Navigate to Exam
+              context.pushNamed(AppRoutes.examTaking, extra: exam.id.toString());
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
@@ -516,9 +573,27 @@ class _SubscribedCourseDetailsPageState extends State<SubscribedCourseDetailsPag
   }
 
   Widget _buildPDFsTab(CourseData data) {
-    return _buildEmptyState(
-      'سيتم توفير ملفات PDF والملخصات قريباً',
-      Icons.picture_as_pdf_outlined,
+    if (data.sections == null || data.sections!.isEmpty) {
+      return _buildEmptyState(
+        'سيتم توفير ملفات PDF والملخصات قريباً',
+        Icons.picture_as_pdf_outlined,
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: data.sections!.length,
+      itemBuilder: (context, sIndex) {
+        final section = data.sections![sIndex];
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionHeader(context, section, widget.courseId, sections: data.sections, currentIndex: sIndex),
+            SectionPrintLinksList(sectionId: section.id.toString()),
+            const Divider(height: 30),
+          ],
+        );
+      },
     );
   }
 
@@ -684,7 +759,7 @@ class _SubscribedCourseDetailsPageState extends State<SubscribedCourseDetailsPag
         );
         // If the user picked a video from the section page, play it here
         if (result is String && result.isNotEmpty) {
-          _initializePlayer(result);
+          _initializePlayer(result, forcePlay: true);
         }
       },
       child: Padding(

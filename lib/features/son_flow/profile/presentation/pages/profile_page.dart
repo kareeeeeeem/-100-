@@ -45,11 +45,31 @@ class _ProfilePageState extends State<ProfilePage> {
       },
       child: BlocBuilder<ProfileCubit, ProfileState>(
         builder: (context, state) {
-          if (state is ProfileLoading) {
+          // جلب الداتا القديمة من الـ State لو كانت موجودة
+          ProfileResponseModel? profileModel;
+          if (state is ProfileSuccess) {
+            profileModel = state.profileModel;
+          } else {
+            // كحل احتياطي، بنشوف لو الـ State القديمة كان فيها داتا
+            final currentState = context.read<ProfileCubit>().state;
+            if (currentState is ProfileSuccess) {
+              profileModel = currentState.profileModel;
+            } else if (currentState is ProfileUpdateSuccess) {
+               // We might need to keep a cached copy in the cubit or use a more robust state pattern
+               // For now, if we are in a loading/update state, we'll try to find the last success data
+            }
+          }
+
+          if (state is ProfileLoading && profileModel == null) {
             return const Center(child: CircularProgressIndicator());
-          } else if (state is ProfileSuccess) {
-            // هنا الداتا بقت جاهزة
-            final data = state.profileModel.data;
+          } 
+          
+          if (state is ProfileError && profileModel == null) {
+            return Center(child: Text(state.message));
+          }
+
+          if (profileModel != null) {
+            final data = profileModel.data;
 
             return SafeArea(
               child: SingleChildScrollView(
@@ -61,16 +81,12 @@ class _ProfilePageState extends State<ProfilePage> {
                       // 1. صورة البروفايل
                       ProfileImageAndEdit(
                         imageSize: 150,
-                        // نقوم بتمرير رابط صورة التلميذ من البيانات القادمة
-                        // إذا كان data.image فارغاً، يمكنك وضع رابط لصورة افتراضية (placeholder)
-                        imagePath:
-                            data?.image ?? 'assets/images/default_student.png',
-                        onEditTap: () =>
-                            context.pushNamed(AppRoutes.sonProfileDetails),
+                        imagePath: data?.image ?? 'assets/images/default_student.png',
+                        onEditTap: () => context.pushNamed(AppRoutes.sonProfileDetails),
                       ),
                       const SizedBox(height: 10),
 
-                      // 2. الاسم (اللي هينطق eeee)
+                      // 2. الاسم
                       Text(
                         data?.name ?? 'اسم المستخدم',
                         style: const TextStyle(
@@ -88,7 +104,15 @@ class _ProfilePageState extends State<ProfilePage> {
                             color: Colors.grey[600],
                           ),
                         ),
+                      
+                      if (state is ProfileUpdateLoading || state is LogoutLoading || state is DeleteAccountLoading)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8.0),
+                          child: LinearProgressIndicator(minHeight: 2),
+                        ),
+
                       const SizedBox(height: 20),
+                      // ... rest of the UI uses 'data'
 
                       // 3. كارت التقدم
                       _buildProgressCard(data?.overallProgress ?? 0),
@@ -155,7 +179,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
 
                       const SizedBox(height: 20),
-                      _buildLiveButton(context),
+                      // _buildLiveButton(context),
                       const SizedBox(height: 12),
                       _buildTransactionsButton(context),
                       const SizedBox(height: 20),
@@ -284,43 +308,43 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildLiveButton(BuildContext context) {
-    return InkWell(
-      onTap: () => context.pushNamed(AppRoutes.availableLives),
-      child: CustomContainer(
-        borderRadius: 10,
-        borderAlpha: 0.4,
-        borderWidth: 0.3,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            spacing: 10,
-            children: [
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.live_tv,
-                  color: AppColors.primary,
-                  size: 30,
-                ),
-              ),
-              const Text(
-                'شاهد البثوث المتاحه',
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-              ),
-              const Spacer(),
-              const Icon(Icons.arrow_forward_ios, color: Colors.black),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  // Widget _buildLiveButton(BuildContext context) {
+  //   return InkWell(
+  //     onTap: () => context.pushNamed(AppRoutes.availableLives),
+  //     child: CustomContainer(
+  //       borderRadius: 10,
+  //       borderAlpha: 0.4,
+  //       borderWidth: 0.3,
+  //       child: Padding(
+  //         padding: const EdgeInsets.all(8.0),
+  //         child: Row(
+  //           spacing: 10,
+  //           children: [
+  //             Container(
+  //               width: 60,
+  //               height: 60,
+  //               decoration: BoxDecoration(
+  //                 color: AppColors.primary.withValues(alpha: 0.1),
+  //                 borderRadius: BorderRadius.circular(10),
+  //               ),
+  //               child: const Icon(
+  //                 Icons.live_tv,
+  //                 color: AppColors.primary,
+  //                 size: 30,
+  //               ),
+  //             ),
+  //             const Text(
+  //               'شاهد البثوث المتاحه',
+  //               style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+  //             ),
+  //             const Spacer(),
+  //             const Icon(Icons.arrow_forward_ios, color: Colors.black),
+  //           ],
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget _buildTransactionsButton(BuildContext context) {
     return InkWell(

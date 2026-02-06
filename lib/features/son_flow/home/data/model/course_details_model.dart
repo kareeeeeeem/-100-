@@ -229,24 +229,96 @@ class PriceInfo {
 }
 
 class Lesson {
-  final int? id;
+  final String? id;
   final String? title;
-  final String? videoUrl;
+  final String? content;
+  final String? order;
+  final bool? isFree;
+  final VideoInfo? videoInfo;
+  final LessonAttachments? attachments;
+  final String? createdAt;
   final String? duration;
 
-  Lesson({this.id, this.title, this.videoUrl, this.duration});
+  Lesson({
+    this.id,
+    this.title,
+    this.content,
+    this.order,
+    this.isFree,
+    this.videoInfo,
+    this.attachments,
+    this.createdAt,
+    this.duration,
+  });
 
   factory Lesson.fromJson(Map<String, dynamic> json) => Lesson(
-        id: int.tryParse(json['id']?.toString() ?? ''),
+        id: json['id']?.toString(),
         title: json['title']?.toString(),
-        videoUrl: json['video_url']?.toString(),
-        duration: json['duration']?.toString(),
+        content: json['content']?.toString(),
+        order: json['order']?.toString(),
+        isFree: json['is_free'] == true || json['is_free']?.toString() == '1',
+        videoInfo: json['video_info'] is Map<String, dynamic> 
+            ? VideoInfo.fromJson(json['video_info']) 
+            : null,
+        attachments: json['attachments'] is Map<String, dynamic>
+            ? LessonAttachments.fromJson(json['attachments'])
+            : null,
+        createdAt: json['created_at']?.toString(),
+        duration: json['duration']?.toString() ?? (json['video_info'] is Map ? json['video_info']['duration']?.toString() : null),
       );
 
   Map<String, dynamic> toJson() => {
         'id': id,
         'title': title,
-        'video_url': videoUrl,
+        'content': content,
+        'order': order,
+        'is_free': isFree,
+        'video_info': videoInfo?.toJson(),
+        'attachments': attachments?.toJson(),
+        'created_at': createdAt,
         'duration': duration,
+      };
+
+  // Convenience getter for video URL
+  String? get videoUrl => videoInfo?.url;
+}
+
+class VideoInfo {
+  final String? provider;
+  final String? url;
+  final String? localPath;
+  final String? duration;
+
+  VideoInfo({this.provider, this.url, this.localPath, this.duration});
+
+  factory VideoInfo.fromJson(Map<String, dynamic> json) => VideoInfo(
+        provider: json['provider']?.toString(),
+        url: json['url']?.toString(),
+        localPath: json['local_path']?.toString(),
+        duration: json['duration']?.toString(),
+      );
+
+  Map<String, dynamic> toJson() => {
+        'provider': provider,
+        'url': url,
+        'local_path': localPath,
+        'duration': duration,
+      };
+}
+
+class LessonAttachments {
+  final String? filePath;
+  final String? fileName;
+
+  LessonAttachments({this.filePath, this.fileName});
+
+  factory LessonAttachments.fromJson(Map<String, dynamic> json) => LessonAttachments(
+        filePath: json['file_path']?.toString(),
+        fileName: json['file_name']?.toString(),
+      );
+
+  Map<String, dynamic> toJson() => {
+        'file_path': filePath,
+        'file_name': fileName,
       };
 }

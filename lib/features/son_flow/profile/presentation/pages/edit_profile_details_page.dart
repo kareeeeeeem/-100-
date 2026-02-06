@@ -53,8 +53,9 @@ class _EditProfileDetailsPageState extends State<EditProfileDetailsPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.message), backgroundColor: Colors.green),
             );
-            // After a successful update, refresh the profile data to ensure UI consistency
-            context.read<ProfileCubit>().getProfileData();
+            // After a successful update, we pop back to the profile details page
+            // The previous page will refresh because it observes the same ProfileCubit
+            Navigator.pop(context);
           } else if (state is ProfileUpdateError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.message), backgroundColor: Colors.red),

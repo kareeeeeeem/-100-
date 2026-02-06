@@ -70,17 +70,21 @@ class ParentApiService {
 
   Future<void> updateChild(int childId, Map<String, dynamic> body) async {
     final token = await _jwtService.getAccessToken();
-    await _apiService.put(
+    await _apiService.post(
       ApiConstants.childDetails(childId),
-      body: body,
+      body: {
+        ...body,
+        '_method': 'PUT',
+      },
       headers: {'Authorization': 'Bearer $token'},
     );
   }
 
   Future<void> deleteChild(int childId) async {
     final token = await _jwtService.getAccessToken();
-    await _apiService.delete(
+    await _apiService.post(
       ApiConstants.childDetails(childId),
+      body: {'_method': 'DELETE'},
       headers: {'Authorization': 'Bearer $token'},
     );
   }

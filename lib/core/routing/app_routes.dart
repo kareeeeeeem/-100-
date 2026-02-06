@@ -24,6 +24,8 @@ class AppRoutes {
   static const String wishlist = '/wishlist';
   static const String transactions = '/transactions';
   static const String courseSectionDetails = '/courseSectionDetails';
+  static const String examTaking = 'examTaking';
+  static const String examResults = 'examResults';
 
 
   // PAREN ROUTES

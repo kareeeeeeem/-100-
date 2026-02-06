@@ -17,24 +17,23 @@ class AuthInterceptor extends Interceptor {
   AuthInterceptor(this.jwtService);
 
   Completer<void>? _refreshTokenCompleter;
+@override
+void onRequest(
+  RequestOptions options,
+  RequestInterceptorHandler handler,
+) async {
+  final accessToken = await jwtService.getAccessToken();
 
-  @override
-  void onRequest(
-    RequestOptions options,
-    RequestInterceptorHandler handler,
-  ) async {
-    // التعديل هنا: فحص المفتاح داخل headers بناءً على طلبك
-    if (options.headers.containsKey(ApiConstants.requiresAuthKey)) {
-      final accessToken = await jwtService.getAccessToken();
-      options.headers.addAll({
-        HttpHeaders.authorizationHeader: 'Bearer $accessToken',
-      });
-      
-      // اختيارياً: يمكنك مسح المفتاح بعد التأكد منه حتى لا يرسل للسيرفر
-      // options.headers.remove(ApiConstants.requiresAuthKey);
-    }
-    handler.next(options);
+  // لو التوكن موجود، ضيفه في كل الحالات أو لو الطلب محتاج auth
+  if (accessToken != null && accessToken.isNotEmpty) {
+    options.headers[HttpHeaders.authorizationHeader] = 'Bearer $accessToken';
   }
+  
+  // تأكد دائماً من وجود الـ Accept header
+  options.headers['Accept'] = 'application/json';
+  
+  handler.next(options);
+}
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {

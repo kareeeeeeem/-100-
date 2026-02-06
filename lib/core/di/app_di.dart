@@ -22,6 +22,8 @@ import 'package:lms/features/son_flow/instructor_profile/di/instructor_di.dart';
 import 'package:lms/features/son_flow/dashboard/di/dashboard_di.dart';
 import 'package:lms/features/son_flow/exams/di/exam_di.dart';
 import 'package:lms/features/son_flow/live_sessions/di/live_session_di.dart';
+import 'package:lms/features/son_flow/pdfs/di/pdfs_di.dart';
+import 'package:lms/features/son_flow/lessons/di/lessons_di.dart';
 import 'package:lms/features/son_flow/community/di/community_di.dart';
 
 class AppDi {
@@ -63,6 +65,8 @@ class AppDi {
     await DashboardDi().init();
     await ExamDi().init();
     await LiveSessionDi().init();
+    await PDFsDi.init();
+    LessonsDi.init(sl);
     await CommunityDi().init();
 
     // تسجيل الـ NotificationsCubit بعد التأكد من تسجيل الـ HomeRepository
@@ -70,6 +74,6 @@ class AppDi {
 
     sl.registerLazySingleton(() => LiveSessionsApiService(sl()));
 
-    sl.registerLazySingleton(() => WishlistCubit());
+    sl.registerLazySingleton(() => WishlistCubit(sl<CacheService>(instanceName: 'SharedPrefsCacheService')));
   }
 }

@@ -68,4 +68,10 @@ class ApiConstants {
   static String examDetails(String id) => 'exams/$id';
   static String submitExam(String id) => 'exams/$id/submit';
   static String examResults(String id) => 'exams/results/$id';
+  
+  // Lessons
+  static String sectionLessons(String sectionId) => 'sections/$sectionId/lessons';
+  
+  // PDFs
+  static String sectionPrintLinks(String sectionId) => 'sections/$sectionId/print-links';
 }

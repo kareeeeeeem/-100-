@@ -6,6 +6,8 @@ import 'package:lms/features/son_flow/exams/data/models/exam_model.dart';
 import 'package:lms/features/son_flow/live_sessions/data/models/live_session_model.dart';
 import 'package:lms/features/son_flow/exams/presentation/manager/exam_cubit.dart';
 import 'package:lms/features/son_flow/live_sessions/presentation/manager/live_session_cubit.dart';
+import 'package:lms/features/son_flow/lessons/presentation/manager/lessons_cubit.dart';
+import 'package:lms/features/son_flow/lessons/presentation/manager/lessons_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:lms/features/son_flow/exams/presentation/manager/exam_state.dart';
@@ -13,6 +15,7 @@ import 'package:lms/features/son_flow/live_sessions/presentation/manager/live_se
 import 'package:go_router/go_router.dart';
 import 'package:lms/core/routing/app_routes.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:lms/features/son_flow/course/presentation/widgets/section_print_links_list.dart';
 
 class CourseSectionDetailsPage extends StatefulWidget {
   final SectionModel section;
@@ -71,22 +74,22 @@ class _CourseSectionDetailsPageState extends State<CourseSectionDetailsPage> wit
           indicatorWeight: 3,
           labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
           tabs: const [
-            Tab(text: 'الدروس'),
+           // Tab(text: 'الدروس'),
             Tab(text: 'الامتحانات'),
             Tab(text: 'بث مباشر'),
             Tab(text: 'ملفات PDF'),
-            Tab(text: 'تفاصيل'),
+           // Tab(text: 'تفاصيل'),
           ],
         ),
       ),
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildLessonsTab(context),
+          //_buildLessonsTab(context),
           _buildExamsTab(context),
           _buildLiveSessionsTab(context),
           _buildPDFsTab(context),
-          _buildDetailsTab(context),
+         // _buildDetailsTab(context),
         ],
       ),
       bottomNavigationBar: _buildBottomAction(),
@@ -143,19 +146,34 @@ class _CourseSectionDetailsPageState extends State<CourseSectionDetailsPage> wit
   }
 
   Widget _buildLessonsTab(BuildContext context) {
-    final lessons = widget.section.lessons ?? [];
-    if (lessons.isEmpty) {
-      return _buildEmptyState('لا توجد دروس في هذا القسم حالياً', Icons.play_lesson_outlined);
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(20),
-      itemCount: lessons.length,
-      itemBuilder: (context, index) => _buildLessonItem(context, lessons[index], index),
+    return BlocProvider(
+      create: (context) => GetIt.instance<LessonsCubit>()..loadSectionLessons(widget.section.id.toString()),
+      child: BlocBuilder<LessonsCubit, LessonsState>(
+        builder: (context, state) {
+          if (state is LessonsLoading) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (state is LessonsLoaded) {
+            if (state.lessons.isEmpty) {
+              return _buildEmptyState('لا توجد دروس في هذا القسم حالياً', Icons.play_lesson_outlined);
+            }
+            return ListView.builder(
+              padding: const EdgeInsets.all(20),
+              itemCount: state.lessons.length,
+              itemBuilder: (context, index) => _buildLessonItem(context, state.lessons[index], index),
+            );
+          } else if (state is LessonsError) {
+            return Center(child: Text('خطأ: ${state.message}', style: const TextStyle(color: Colors.red)));
+          }
+          return const SizedBox();
+        },
+      ),
     );
   }
 
   Widget _buildLessonItem(BuildContext context, Lesson lesson, int index) {
+    final isFree = lesson.isFree ?? false;
+    final hasVideo = lesson.videoUrl != null && lesson.videoUrl!.isNotEmpty;
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -172,20 +190,52 @@ class _CourseSectionDetailsPageState extends State<CourseSectionDetailsPage> wit
             color: Colors.white,
             shape: BoxShape.circle,
           ),
-          child: const Icon(Icons.play_arrow_rounded, color: AppColors.primary, size: 30),
+          child: Icon(
+            hasVideo ? Icons.play_arrow_rounded : Icons.article_outlined,
+            color: AppColors.primary,
+            size: 30,
+          ),
         ),
         title: Text(
           lesson.title ?? 'درس ${index + 1}',
           style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
         ),
-        subtitle: Text(
-          lesson.duration ?? '00:00',
-          style: const TextStyle(color: Colors.grey, fontSize: 13),
+        subtitle: Row(
+          children: [
+            if (lesson.duration != null) ...[
+              const Icon(Icons.access_time, size: 12, color: Colors.grey),
+              const SizedBox(width: 4),
+              Text(
+                lesson.duration!,
+                style: const TextStyle(color: Colors.grey, fontSize: 13),
+              ),
+            ],
+            if (isFree) ...[
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: const Text(
+                  'مجاني',
+                  style: TextStyle(color: Colors.green, fontSize: 10, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ],
         ),
-        trailing: const Icon(Icons.lock_open_rounded, color: Colors.green, size: 20),
-        onTap: () {
-          Navigator.pop(context, lesson.videoUrl);
-        },
+        trailing: Icon(
+          isFree ? Icons.lock_open_rounded : Icons.lock_rounded,
+          color: isFree ? Colors.green : Colors.orange,
+          size: 20,
+        ),
+        onTap: hasVideo
+            ? () {
+                Navigator.pop(context, lesson.videoUrl);
+              }
+            : null,
       ),
     );
   }
@@ -214,30 +264,62 @@ class _CourseSectionDetailsPageState extends State<CourseSectionDetailsPage> wit
       ),
     );
   }
-
+  
   Widget _buildExamItem(BuildContext context, ExamModel exam) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.orange.withOpacity(0.05),
         borderRadius: BorderRadius.circular(15),
         border: Border.all(color: Colors.orange.withOpacity(0.1)),
       ),
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.assignment_rounded, color: Colors.orange),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(exam.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${exam.questionsCount ?? 0} سؤال • ${exam.durationMinutes ?? 0} دقيقة',
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          child: const Icon(Icons.assignment_rounded, color: Colors.orange),
-        ),
-        title: Text(exam.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text('${exam.questionsCount ?? 0} سؤال • ${exam.durationMinutes ?? 0} دقيقة'),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.orange),
-        onTap: () {
-          // Navigate to exam
-        },
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                context.pushNamed('examTaking', extra: exam.id.toString());
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(vertical: 10),
+              ),
+              child: const Text('ابدأ الامتحان', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -313,10 +395,7 @@ class _CourseSectionDetailsPageState extends State<CourseSectionDetailsPage> wit
   }
 
   Widget _buildPDFsTab(BuildContext context) {
-    return _buildEmptyState(
-      'سيتم توفير ملفات PDF والملخصات لهذا القسم قريباً',
-      Icons.picture_as_pdf_outlined,
-    );
+    return SectionPrintLinksList(sectionId: widget.section.id.toString());
   }
 
   Widget _buildDetailsTab(BuildContext context) {

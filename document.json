@@ -1569,6 +1569,104 @@
         }
       }
     },
+    "/v1/sections/{section_id}/print-links": {
+      "get": {
+        "operationId": "examApi.getPrintLinks",
+        "tags": [
+          "ExamApi"
+        ],
+        "parameters": [
+          {
+            "name": "section_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "روابط الملازم جاهزة للتحميل والطباعة"
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "with_answers_url": {
+                          "type": "string"
+                        },
+                        "without_answers_url": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "with_answers_url",
+                        "without_answers_url"
+                      ]
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "القسم غير موجود"
+                      ]
+                    },
+                    "data": {
+                      "type": "null"
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/sections/{section_id}/exams": {
       "get": {
         "operationId": "examApi.getExamsBySection",
@@ -1914,6 +2012,156 @@
           },
           "401": {
             "$ref": "#/components/responses/AuthenticationException"
+          }
+        }
+      }
+    },
+    "/v1/courses/{course_id}/lessons": {
+      "get": {
+        "operationId": "lessonApi.getLessonsByCourse",
+        "summary": "1. جلب دروس كورس كامل (مرتبة حسب الفصول والترتيب الداخلي)",
+        "tags": [
+          "LessonApi"
+        ],
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "تم جلب دروس الدورة بنجاح"
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/LessonResource"
+                      }
+                    },
+                    "errors": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sections/{section_id}/lessons": {
+      "get": {
+        "operationId": "lessonApi.getLessonsBySection",
+        "summary": "2. جلب دروس سكشن (فصل) محدد فقط",
+        "tags": [
+          "LessonApi"
+        ],
+        "parameters": [
+          {
+            "name": "section_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "type": "boolean"
+                        },
+                        "message": {
+                          "type": "string",
+                          "enum": [
+                            "تم جلب دروس القسم بنجاح"
+                          ]
+                        },
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/LessonResource"
+                          }
+                        },
+                        "errors": {
+                          "type": "null"
+                        }
+                      },
+                      "required": [
+                        "status",
+                        "message",
+                        "data",
+                        "errors"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "type": "boolean"
+                        },
+                        "message": {
+                          "type": "string",
+                          "enum": [
+                            "لا توجد دروس في هذا القسم حالياً"
+                          ]
+                        },
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "minItems": 0,
+                          "maxItems": 0,
+                          "additionalItems": false
+                        },
+                        "errors": {
+                          "type": "null"
+                        }
+                      },
+                      "required": [
+                        "status",
+                        "message",
+                        "data",
+                        "errors"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
           }
         }
       }
@@ -3293,7 +3541,10 @@
                     "maxLength": 255
                   },
                   "email": {
-                    "type": "string",
+                    "type": [
+                      "string",
+                      "null"
+                    ],
                     "format": "email"
                   }
                 }
@@ -3791,6 +4042,83 @@
           "assistants"
         ],
         "title": "InstructorResource"
+      },
+      "LessonResource": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "order": {
+            "type": "string",
+            "description": "وصف الدرس"
+          },
+          "is_free": {
+            "type": "boolean"
+          },
+          "video_info": {
+            "type": "object",
+            "properties": {
+              "provider": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string",
+                "description": "vimeo, youtube, local"
+              },
+              "local_path": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "الرابط الخارجي"
+              }
+            },
+            "required": [
+              "provider",
+              "url",
+              "local_path"
+            ]
+          },
+          "attachments": {
+            "type": "object",
+            "properties": {
+              "file_path": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "file_name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "file_path",
+              "file_name"
+            ]
+          },
+          "created_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "content",
+          "order",
+          "is_free",
+          "video_info",
+          "attachments",
+          "created_at"
+        ],
+        "title": "LessonResource"
       },
       "LiveSessionResource": {
         "type": "object",

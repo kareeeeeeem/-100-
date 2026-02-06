@@ -12,6 +12,10 @@ import 'package:lms/features/son_flow/home/data/model/home_response_model.dart';
 import 'package:lms/core/widgets/custom_image.dart';
 import 'package:lms/features/son_flow/home/presentation/manager/profile_cubit.dart';
 import 'package:lms/features/on_boarding/presentation/manger/my_courses_cubit.dart';
+import 'package:lms/features/son_flow/live_sessions/presentation/manager/live_session_cubit.dart';
+import 'package:lms/features/son_flow/live_sessions/presentation/manager/live_session_state.dart';
+import 'package:lms/features/son_flow/live_sessions/data/models/live_session_model.dart';
+
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -30,6 +34,7 @@ class _HomePageState extends State<HomePage> {
     // جلب البيانات عند فتح الصفحة
     GetIt.instance<HomeCubit>().fetchHomeData();
     _carouselController.addListener(_onScroll);
+    context.read<LiveSessionCubit>().loadLiveSessions();
   }
 
   void _onScroll() {
@@ -105,13 +110,42 @@ class _HomePageState extends State<HomePage> {
                     // قسم السلايدر (البث المباشر)
                     SizedBox(
                       height: 85,
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: data.slider.length,
-                        separatorBuilder: (context, index) => const SizedBox(width: 12),
-                        itemBuilder: (context, index) => _buildLiveCircle(data.slider[index]),
-                      ),
+                      child:// قسم البث المباشر الحقيقي
+                     // استبدل الكود اللي إنت بعته بالنسخة دي:
+// استبدل جزء الـ BlocBuilder بتاع اللايفات بهذا الكود المباشر:
+BlocProvider(
+  // بنوفر الكيوبيت هنا مخصوص للهوم عشان ننهي مشكلة الـ Provider NotFound
+  create: (context) => GetIt.instance<LiveSessionCubit>()..loadLiveSessions(),
+  child: BlocBuilder<LiveSessionCubit, LiveSessionState>(
+    builder: (context, state) {
+      if (state is LiveSessionsLoaded) {
+        // بنعرض المتاح والأرشيف عشان نضمن إن الدائرة تظهر لو فيه أي داتا
+        final allLives = [...state.sessions.availableNow, ...state.sessions.archived];
+
+        if (allLives.isEmpty) return const SizedBox.shrink();
+
+        return SizedBox(
+          height: 110,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: allLives.length,
+            separatorBuilder: (context, index) => const SizedBox(width: 12),
+            itemBuilder: (context, index) => _buildActualLiveCircle(allLives[index]),
+          ),
+        );
+      } 
+      
+      if (state is LiveSessionError) {
+        // لو السيرفر مطلع 404 أو أي Error هيظهر هنا بدل التحميل اللانهائي
+        return Center(child: Text("Error: ${state.message}", style: const TextStyle(fontSize: 10)));
+      }
+
+      // حالة التحميل (الـ Loading)
+      return const Center(child: CircularProgressIndicator());
+    },
+  ),
+)
                     ),
                     
                     const SizedBox(height: 25),
@@ -231,6 +265,65 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+
+  Widget _buildActualLiveCircle(LiveSessionModel session) {
+  return GestureDetector(
+    onTap: () {
+      // بينادي على ميثود الانضمام اللي شغالة في القسم التاني
+      context.read<LiveSessionCubit>().joinSession(session.id);
+    },
+    child: Column(
+      children: [
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              width: 70, height: 70,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: [AppColors.primary, Color(0xFF4DC9D1)]),
+                shape: BoxShape.circle
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(2.0),
+                child: Container(
+                  decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                  child: ClipOval(
+                    child: CustomImage(
+                      imagePath: session.thumbnail ?? '',
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 2, right: 2,
+              child: Container(
+                width: 15, height: 15,
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2)
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        SizedBox(
+          width: 75,
+          child: Text(
+            session.title,
+            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    ),
+  );
+}
 
   // ميثود دائرة البث المباشر
   Widget _buildLiveCircle(SliderModel slider) {

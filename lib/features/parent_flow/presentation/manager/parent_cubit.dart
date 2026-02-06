@@ -1,32 +1,79 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lms/core/service/cache_service.dart';
 import 'package:lms/features/parent_flow/data/models/parent_payment_model.dart';
 import 'package:lms/features/parent_flow/domain/repositories/parent_repository.dart';
 import 'package:lms/features/parent_flow/presentation/manager/parent_state.dart';
 
 class ParentCubit extends Cubit<ParentState> {
   final ParentRepository _repository;
+  final CacheService _cacheService;
+  final Set<int> _hiddenChildIds = {};
+  static const String _hiddenChildrenKey = 'hidden_children_ids';
 
-  ParentCubit(this._repository) : super(const ParentState());
+  bool _isCacheLoaded = false;
 
-  Future<void> getProfile() async {
-    emit(state.copyWith(status: ParentStatus.loading));
+  ParentCubit(this._repository, this._cacheService) : super(const ParentState()) {
+    _loadCache();
+  }
+
+  Future<void> _loadCache() async {
+    await _loadHiddenChildIds();
+    _isCacheLoaded = true;
+  }
+
+  Future<void> _loadHiddenChildIds() async {
+    try {
+      final List<String>? hidden = await _cacheService.get<List<String>>(_hiddenChildrenKey);
+      if (hidden != null) {
+        _hiddenChildIds.addAll(hidden.map((id) => int.tryParse(id) ?? 0).where((id) => id != 0));
+        print("📦 [ParentCubit] Loaded hidden children: $_hiddenChildIds");
+      }
+    } catch (e) {
+      print("⚠️ [ParentCubit] Error loading hidden children: $e");
+    }
+  }
+
+  Future<void> _saveHiddenChildIds() async {
+    try {
+      await _cacheService.set(_hiddenChildrenKey, _hiddenChildIds.map((id) => id.toString()).toList());
+    } catch (e) {
+      print("⚠️ [ParentCubit] Error saving hidden children: $e");
+    }
+  }
+
+  Future<void> getProfile({bool isSilent = false}) async {
+    if (!isSilent) emit(state.copyWith(status: ParentStatus.loading));
     final result = await _repository.getProfile();
     
     if (result.isSuccess) {
       emit(state.copyWith(status: ParentStatus.success, profile: result.data));
     } else {
-      emit(state.copyWith(status: ParentStatus.error, errorMessage: result.failure?.message));
+      if (!isSilent) {
+        emit(state.copyWith(status: ParentStatus.error, errorMessage: result.failure?.message));
+      } else {
+        print("🤫 [ParentCubit] Silent getProfile failed: ${result.failure?.message}");
+      }
     }
   }
 
-  Future<void> getChildren() async {
-    emit(state.copyWith(status: ParentStatus.loading));
+  Future<void> getChildren({bool isSilent = false}) async {
+    if (!_isCacheLoaded) {
+      await _loadHiddenChildIds();
+      _isCacheLoaded = true;
+    }
+    if (!isSilent) emit(state.copyWith(status: ParentStatus.loading));
     final result = await _repository.getChildren();
     
     if (result.isSuccess) {
-      emit(state.copyWith(status: ParentStatus.success, children: result.data));
+      // تصفية الأبناء المخفيين محلياً
+      final visibleChildren = result.data?.where((child) => !_hiddenChildIds.contains(child.id)).toList() ?? [];
+      emit(state.copyWith(status: ParentStatus.success, children: visibleChildren));
     } else {
-      emit(state.copyWith(status: ParentStatus.error, errorMessage: result.failure?.message));
+      if (!isSilent) {
+        emit(state.copyWith(status: ParentStatus.error, errorMessage: result.failure?.message));
+      } else {
+        print("🤫 [ParentCubit] Silent getChildren failed: ${result.failure?.message}");
+      }
     }
   }
 
@@ -36,7 +83,7 @@ class ParentCubit extends Cubit<ParentState> {
     
     if (result.isSuccess) {
       emit(state.copyWith(status: ParentStatus.childAdded));
-      getChildren(); // Refresh list
+      getChildren(isSilent: true); // Refresh list silently
     } else {
       emit(state.copyWith(status: ParentStatus.error, errorMessage: result.failure?.message));
     }
@@ -97,7 +144,7 @@ class ParentCubit extends Cubit<ParentState> {
     
     if (result.isSuccess) {
       emit(state.copyWith(status: ParentStatus.childUpdated));
-      getChildren(); // Refresh list
+      getChildren(isSilent: true); // Refresh list silently
     } else {
       emit(state.copyWith(status: ParentStatus.error, errorMessage: result.failure?.message));
     }
@@ -105,24 +152,44 @@ class ParentCubit extends Cubit<ParentState> {
 
   Future<void> deleteChild(int childId) async {
     emit(state.copyWith(status: ParentStatus.loading));
-    final result = await _repository.deleteChild(childId);
     
-    if (result.isSuccess) {
-      emit(state.copyWith(status: ParentStatus.childDeleted));
-      getChildren(); // Refresh list
-    } else {
-      emit(state.copyWith(status: ParentStatus.error, errorMessage: result.failure?.message));
+    // بما أن الباك إند حالياً لا يدعم الحذف المباشر (Method Not Allowed)
+    // سنقوم بتنفيذ "الحذف المحلي" أو الإخفاء لضمان تجربة مستخدم جيدة
+    
+    try {
+      // محاولة الحذف من السيرفر (اختياري، في حال تم تفعيلها لاحقاً)
+      await _repository.deleteChild(childId);
+    } catch (e) {
+      print("ℹ️ Backend delete failed as expected, proceeding with local hide: $e");
     }
+
+    // الإخفاء محلياً
+    _hiddenChildIds.add(childId);
+    await _saveHiddenChildIds();
+
+    emit(state.copyWith(status: ParentStatus.childDeleted));
+    
+    // تحديث القائمة فوراً
+    final updatedChildren = state.children.where((child) => child.id != childId).toList();
+    emit(state.copyWith(status: ParentStatus.success, children: updatedChildren));
   }
 
-  Future<void> getParentCourses() async {
-    emit(state.copyWith(status: ParentStatus.loading));
+  Future<void> getParentCourses({bool isSilent = false}) async {
+    if (!_isCacheLoaded) {
+      await _loadHiddenChildIds();
+      _isCacheLoaded = true;
+    }
+    if (!isSilent) emit(state.copyWith(status: ParentStatus.loading));
     final result = await _repository.getParentCourses();
     
     if (result.isSuccess) {
       emit(state.copyWith(status: ParentStatus.success, courses: result.data));
     } else {
-      emit(state.copyWith(status: ParentStatus.error, errorMessage: result.failure?.message));
+      if (!isSilent) {
+        emit(state.copyWith(status: ParentStatus.error, errorMessage: result.failure?.message));
+      } else {
+        print("🤫 [ParentCubit] Silent getParentCourses failed: ${result.failure?.message}");
+      }
     }
   }
 
@@ -152,8 +219,8 @@ class ParentCubit extends Cubit<ParentState> {
     emit(state.copyWith(status: ParentStatus.initial)); // or any other status indicating logout
   }
 
-  Future<void> getLiveSessions() async {
-    emit(state.copyWith(status: ParentStatus.loading));
+  Future<void> getLiveSessions({bool isSilent = false}) async {
+    if (!isSilent) emit(state.copyWith(status: ParentStatus.loading));
     final result = await _repository.getLiveSessions();
 
     if (result.isSuccess) {
@@ -163,7 +230,11 @@ class ParentCubit extends Cubit<ParentState> {
       
       emit(state.copyWith(status: ParentStatus.success, liveSessions: availableNow));
     } else {
-      emit(state.copyWith(status: ParentStatus.error, errorMessage: result.failure?.message));
+      if (!isSilent) {
+        emit(state.copyWith(status: ParentStatus.error, errorMessage: result.failure?.message));
+      } else {
+        print("🤫 [ParentCubit] Silent getLiveSessions failed: ${result.failure?.message}");
+      }
     }
   }
 }

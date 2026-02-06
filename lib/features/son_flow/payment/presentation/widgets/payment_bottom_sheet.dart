@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lms/core/utils/app_colors.dart';
 import 'package:lms/core/widgets/custom_elevated_button.dart';
 import 'package:lms/features/son_flow/home/presentation/manager/payment_cubit.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:lms/features/son_flow/payment/presentation/pages/payment_webview_page.dart';
 
 class PaymentBottomSheet extends StatefulWidget {
@@ -57,57 +56,6 @@ class _PaymentBottomSheetState extends State<PaymentBottomSheet> {
     super.dispose();
   }
 
-  Future<void> _sendWhatsAppMessage({String? redirectUrl}) async {
-    String phone = _phoneController.text.trim();
-    if (phone.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('يرجى إدخال رقم الهاتف')),
-      );
-      return;
-    }
-
-    // Ensure phone doesn't have + or spaces for wa.me
-    phone = phone.replaceAll(RegExp(r'[^0-9]'), '');
-
-    debugPrint('🔍 WhatsApp Debug: widget.priceLabel = "${widget.priceLabel}"');
-    debugPrint('🔍 WhatsApp Debug: widget.amount = ${widget.amount}');
-
-    final String pricePart = widget.priceLabel.isNotEmpty ? widget.priceLabel : '${widget.amount} SAR';
-    final String courseLink = redirectUrl ?? 'https://100-academy.com/courses/${widget.courseId}';
-
-    String pricingDetails = 'السعر: $pricePart';
-    if (widget.originalPrice != null && widget.originalPrice.toString() != '0' && widget.originalPrice.toString() != widget.amount.toString()) {
-      pricingDetails = 'السعر بعد الخصم: $pricePart\nالسعر الأصلي: ${widget.originalPrice} SAR';
-      if (widget.discountPercentage != null) {
-        pricingDetails += '\nنسبة الخصم: ${widget.discountPercentage}%';
-      }
-    }
-
-    debugPrint('🔍 WhatsApp Debug: final pricePart = "$pricePart"');
-
-    final message =
-        'برجاء دفع تمن دورة: ${widget.courseTitle}\n$pricingDetails\n\nرابط الدفع المباشر:\n$courseLink';
-    final httpsUrl = "https://wa.me/$phone?text=${Uri.encodeComponent(message)}";
-    final whatsappUrl = "whatsapp://send?phone=$phone&text=${Uri.encodeComponent(message)}";
-
-    try {
-      if (await canLaunchUrl(Uri.parse(whatsappUrl))) {
-        await launchUrl(Uri.parse(whatsappUrl));
-      } else if (await canLaunchUrl(Uri.parse(httpsUrl))) {
-        await launchUrl(Uri.parse(httpsUrl), mode: LaunchMode.externalApplication);
-      } else {
-        // Last resort effort
-        await launchUrl(Uri.parse(httpsUrl), mode: LaunchMode.externalApplication);
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('تعذر فتح واتساب. تأكد من تثبيت التطبيق على جهازك.'),
-          duration: Duration(seconds: 5),
-        ),
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -159,25 +107,15 @@ class _PaymentBottomSheetState extends State<PaymentBottomSheet> {
           BlocConsumer<PaymentCubit, PaymentState>(
             listener: (context, state) {
               if (state is PaymentSuccess) {
-                if (_selectedPaymentType == 'ask_parent') {
-                  _sendWhatsAppMessage();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('تم إرسال الطلب بنجاح!')),
-                  );
-                  Navigator.pop(context);
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('تم الاشتراك بنجاح!')),
-                  );
-                  Navigator.pop(context);
-                }
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(_selectedPaymentType == 'ask_parent'
+                        ? 'تم إرسال الطلب بنجاح! سيصل الرابط لولي الأمر قريباً.'
+                        : 'تم الاشتراك بنجاح!'),
+                  ),
+                );
+                Navigator.pop(context);
               } else if (state is PaymentRedirect) {
-                if (_selectedPaymentType == 'ask_parent') {
-                  _sendWhatsAppMessage(redirectUrl: state.url);
-                  // We might still want to open the webview if the parent has to pay there,
-                  // but usually for "ask parent" the student just pings the parent.
-                  // The screenshot shows a confirmation page. Let's open it.
-                }
                 _openPaymentWebView(state.url);
               } else if (state is PaymentError) {
                 setState(() {
@@ -309,7 +247,7 @@ class _PaymentBottomSheetState extends State<PaymentBottomSheet> {
           ),
           const SizedBox(height: 8),
           const Text(
-            'سيتم إرسال رابط الدفع المباشر لهذا الرقم ليقوم ولي أمرك بالسداد.',
+            'سيتم إرسال رسالة آلية تحتوي على رابط الدفع لولي أمرك للسداد.',
             style: TextStyle(fontSize: 12, color: AppColors.c8C8C8C),
           ),
           if (errorMessage != null) ...[

@@ -271,7 +271,7 @@ Stack(
                       const SizedBox(height: 20),
 
                       // --- قائمة الدروس أو السكاشن ---
-                      if ((course.sections != null && course.sections!.isNotEmpty) || (course.lessons != null && course.lessons!.isNotEmpty))
+                      if (course.isSubscribed && ((course.sections != null && course.sections!.isNotEmpty) || (course.lessons != null && course.lessons!.isNotEmpty)))
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -330,14 +330,14 @@ Stack(
                                           child: Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              Text(
-                                                '${section.lessons?.length ?? 0} درس',
-                                                style: const TextStyle(
-                                                  fontSize: 12,
-                                                  color: AppColors.primary,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
+                                              // Text(
+                                              //   '${section.lessons?.length ?? 0} درس',
+                                              //   style: const TextStyle(
+                                              //     fontSize: 12,
+                                              //     color: AppColors.primary,
+                                              //     fontWeight: FontWeight.bold,
+                                              //   ),
+                                              // ),
                                               const SizedBox(width: 4),
                                               const Icon(Icons.arrow_forward_ios, size: 12, color: AppColors.primary),
                                             ],

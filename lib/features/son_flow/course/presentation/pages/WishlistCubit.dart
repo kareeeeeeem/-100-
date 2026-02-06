@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:lms/core/network/service/api_service.dart';
+import 'package:lms/core/service/cache_service.dart';
 import 'package:lms/core/service/jwt_service.dart';
 
 // --- الحالات (States) ---
@@ -32,12 +33,44 @@ class WishlistError extends WishlistState {
 class WishlistCubit extends Cubit<WishlistState> {
   final ApiService _apiService = GetIt.instance<ApiService>();
   final JwtService _jwtService = GetIt.instance<JwtService>();
+  final CacheService _cacheService;
+
+  static const String _favKey = 'local_favorited_ids';
+  static const String _unfavKey = 'local_unfavorited_ids';
 
   // للمحافظة على الحالة حتى لو السيرفر اتأخر في الرد بـ GET
   final Set<int> _favoritedIds = {};
   final Set<int> _unfavoritedIds = {};
 
-  WishlistCubit() : super(WishlistInitial());
+  WishlistCubit(this._cacheService) : super(WishlistInitial()) {
+    _loadLocalState();
+  }
+
+  Future<void> _loadLocalState() async {
+    try {
+      final List<String>? favs = await _cacheService.get<List<String>>(_favKey);
+      final List<String>? unfavs = await _cacheService.get<List<String>>(_unfavKey);
+
+      if (favs != null) {
+        _favoritedIds.addAll(favs.map((id) => int.tryParse(id) ?? 0).where((id) => id != 0));
+      }
+      if (unfavs != null) {
+        _unfavoritedIds.addAll(unfavs.map((id) => int.tryParse(id) ?? 0).where((id) => id != 0));
+      }
+      print("📦 [WishlistCubit] Local State Loaded: Favs=$_favoritedIds, Unfavs=$_unfavoritedIds");
+    } catch (e) {
+      print("⚠️ [WishlistCubit] Error loading local state: $e");
+    }
+  }
+
+  Future<void> _saveLocalState() async {
+    try {
+      await _cacheService.set(_favKey, _favoritedIds.map((id) => id.toString()).toList());
+      await _cacheService.set(_unfavKey, _unfavoritedIds.map((id) => id.toString()).toList());
+    } catch (e) {
+      print("⚠️ [WishlistCubit] Error saving local state: $e");
+    }
+  }
 
   Future<void> toggleFavorite(int courseId) async {
     try {
@@ -72,6 +105,9 @@ class WishlistCubit extends Cubit<WishlistState> {
           _favoritedIds.remove(courseId);
         }
 
+        // حفظ الحالة محلياً
+        await _saveLocalState();
+
         List<dynamic> currentCourses = [];
         if (state is WishlistLoaded) {
           currentCourses = (state as WishlistLoaded).courses;
@@ -83,7 +119,7 @@ class WishlistCubit extends Cubit<WishlistState> {
           return id != courseId;
         }).toList();
 
-        emit(WishlistToggleSuccess(courseId, isFavorited, response['message'], updatedCourses));
+        emit(WishlistToggleSuccess(courseId, isFavorited, response['message'] ?? "", updatedCourses));
         
         // تحديث القائمة في الخلفية
         await getWishlist(isBackground: true); 
@@ -110,6 +146,7 @@ class WishlistCubit extends Cubit<WishlistState> {
           'courses?is_favorited=1',
           headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'},
         );
+        print("📥 [WishlistCubit] Get Favorites Response: $regularResponse");
       } catch (_) {}
 
       // جلب بيانات الهوم لاستخراج الكورسات القادمة (Upcoming) المفضلة
@@ -146,7 +183,9 @@ class WishlistCubit extends Cubit<WishlistState> {
             final bool isNewlyFav = _favoritedIds.contains(id);
             final bool isUnfavored = _unfavoritedIds.contains(id);
             
-            return (isFavInHome || isNewlyFav) && !isUnfavored;
+            // الـ local override (Unfavored) له الأولوية القصوى
+            if (isUnfavored) return false;
+            return (isFavInHome || isNewlyFav);
           }).toList();
           
           // دمجهم بدون تكرار
@@ -164,7 +203,7 @@ class WishlistCubit extends Cubit<WishlistState> {
         }
       }
 
-      // 3. تصفية نهائية بناءً على الـ IDs اللي اتمسحت في الجلسة الحالية
+      // 3. تصفية نهائية بناءً على الـ IDs اللي اتمسحت في الجلسة الحالية أو محلياً
       final finalCourses = allFavorited.where((c) {
         final dynamic rawId = c['id'] ?? c['course_id'];
         final int id = rawId is int ? rawId : (int.tryParse(rawId?.toString() ?? '') ?? 0);
