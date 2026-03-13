@@ -21,7 +21,7 @@ class _AddNewSonPageState extends State<AddNewSonPage> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _identityNumberController = TextEditingController();
+  //final _identityNumberController = TextEditingController();
 
   @override
   void dispose() {
@@ -29,7 +29,7 @@ class _AddNewSonPageState extends State<AddNewSonPage> {
     _emailController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
-    _identityNumberController.dispose();
+    //_identityNumberController.dispose();
     super.dispose();
   }
 
@@ -40,7 +40,7 @@ class _AddNewSonPageState extends State<AddNewSonPage> {
         'email': _emailController.text.trim(),
         'phone': _phoneController.text.trim(),
         'password': _passwordController.text,
-        'identity_number': _identityNumberController.text.trim(),
+       // 'identity_number': _identityNumberController.text.trim(),
       };
       
       context.read<ParentCubit>().addChild(data);
@@ -64,7 +64,7 @@ class _AddNewSonPageState extends State<AddNewSonPage> {
           } else if (state.status == ParentStatus.error) {
             String message = state.errorMessage ?? 'حدث خطأ ما';
             if (message.contains('validation.exists')) {
-              message = 'البريد الإلكتروني أو الهاتف أو الرقم القومي مسجل مسبقاً';
+              message = 'البريد الإلكتروني أو الهاتف مسجل مسبقاً لمستخدم آخر';
             }
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -128,22 +128,22 @@ class _AddNewSonPageState extends State<AddNewSonPage> {
                       },
                     ),
                     const SizedBox(height: 20),
-                    ProfileTextFormField(
-                      controller: _identityNumberController,
-                      hintText: 'الرقم القومي',
-                      prefix: const Icon(Icons.badge, color: AppColors.cADB3BC),
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'الرجاء إدخال الرقم القومي';
-                        }
-                        if (value.length != 14) {
-                          return 'الرقم القومي يجب أن يكون 14 رقم';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 20),
+                    // ProfileTextFormField(
+                    //   controller: _identityNumberController,
+                    //   hintText: 'الرقم القومي',
+                    //   prefix: const Icon(Icons.badge, color: AppColors.cADB3BC),
+                    //   keyboardType: TextInputType.number,
+                    //   validator: (value) {
+                    //     if (value == null || value.trim().isEmpty) {
+                    //       return 'الرجاء إدخال الرقم القومي';
+                    //     }
+                    //     if (value.length != 14) {
+                    //       return 'الرقم القومي يجب أن يكون 14 رقم';
+                    //     }
+                    //     return null;
+                    //   },
+                    // ),
+                    // const SizedBox(height: 20),
                     ProfileTextFormField(
                       controller: _passwordController,
                       hintText: 'كلمة السر (8 أحرف على الأقل)',

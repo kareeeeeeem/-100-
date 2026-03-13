@@ -8,13 +8,13 @@ import 'package:lms/core/flavors/flavors.dart';
 import 'package:lms/core/utils/bloc_observer.dart';
 import 'package:lms/firebase_options.dart';
 
+const String appFlavor = 'dev';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   SystemChrome.setEnabledSystemUIMode(
     SystemUiMode.manual,
     overlays: SystemUiOverlay.values,

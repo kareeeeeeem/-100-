@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "5155552973-7dcpkgntn97jdibtrjjsfrehvfmvv0ba.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.dev",
+            "certificate_hash": "6436ba0fb0fcc7c005320008e5d0524f183566aa"
+          }
+        },
+        {
           "client_id": "5155552973-051phe26pke8h2l6ocjet4dsn1ob1cg7.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -49,6 +57,66 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "5155552973-ftn9impk38286032ee64lion37dbamqi.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.lms",
+            "certificate_hash": "6436ba0fb0fcc7c005320008e5d0524f183566aa"
+          }
+        },
+        {
+          "client_id": "5155552973-051phe26pke8h2l6ocjet4dsn1ob1cg7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD8dTNTEtWVf-S2eZm10RWPbfznLOsZZe8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "5155552973-051phe26pke8h2l6ocjet4dsn1ob1cg7.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "5155552973-08r0tsciob53k5dm04mm98nrcp4bjois.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.lms"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:5155552973:android:9141a88cef26b868fd7384",
+        "android_client_info": {
+          "package_name": "com.kareem.lms"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "5155552973-915so5ik6aadratkdh84qlhfhd9t5627.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kareem.lms",
+            "certificate_hash": "7ded8ef1ba672718d27e35ce88fcef727880ac31"
+          }
+        },
+        {
+          "client_id": "5155552973-njs85sm4av2o3v1nuk4kthdnhcpgatfk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kareem.lms",
+            "certificate_hash": "6436ba0fb0fcc7c005320008e5d0524f183566aa"
+          }
+        },
         {
           "client_id": "5155552973-051phe26pke8h2l6ocjet4dsn1ob1cg7.apps.googleusercontent.com",
           "client_type": 3

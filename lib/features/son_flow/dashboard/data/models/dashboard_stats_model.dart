@@ -6,15 +6,15 @@ part 'dashboard_stats_model.g.dart';
 class DashboardStatsModel {
   @JsonKey(name: 'general_progress')
   final dynamic generalProgress; // Can be number or 0
-  
+
   @JsonKey(name: 'enrolled_courses')
   final String enrolledCourses;
-  
+
   @JsonKey(name: 'completed_tasks')
   final String completedTasks;
-  
+
   final String certificates;
-  
+
   @JsonKey(name: 'study_hours_week')
   final List<int> studyHoursWeek;
 
@@ -30,7 +30,7 @@ class DashboardStatsModel {
       _$DashboardStatsModelFromJson(json);
 
   Map<String, dynamic> toJson() => _$DashboardStatsModelToJson(this);
-  
+
   // Helper getter for progress as double
   double get progressValue {
     if (generalProgress is num) {

@@ -334,18 +334,25 @@ class _ExamTakingPageState extends State<ExamTakingPage> {
             ),
           ),
           // Question image
-          if (question.questionImage != null && question.questionImage!.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: CustomImage(
-                imagePath: question.questionImage,
-                width: double.infinity,
-                height: 200,
-                fit: BoxFit.cover,
-              ),
-            ),
-          ],
+         // ابحث عن السطر ده وغيره:
+if (question.questionImage != null && question.questionImage!.isNotEmpty) ...[
+  const SizedBox(height: 12),
+  ClipRRect(
+    borderRadius: BorderRadius.circular(8),
+    child: Container(
+      color: Colors.black12, // خلفية خفيفة عشان لو الصورة بيضاء تبان
+      child: InteractiveViewer( // الطالب يقدر يزوم بصوابعه
+        clipBehavior: Clip.none,
+        child: CustomImage(
+          imagePath: question.questionImage,
+          width: double.infinity,
+          // height: 200, // امسح الارتفاع الثابت أو خليه maxHeight
+          fit: BoxFit.contain, // ✅ الحل هنا: contain بيعرض الصورة كاملة
+        ),
+      ),
+    ),
+  ),
+],
           const SizedBox(height: 16),
           // Options
           if (question.isMultipleChoice)
@@ -363,18 +370,19 @@ class _ExamTakingPageState extends State<ExamTakingPage> {
                     optionValueString,
                     style: const TextStyle(fontSize: 15),
                   );
-                } else if (rawOption.containsKey('image')) {
-                  optionValueString = rawOption['image']?.toString() ?? '';
-                  optionContent = ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: CustomImage(
-                      imagePath: optionValueString,
-                      height: 120,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                    ),
-                  );
-                } else {
+                } // ابحث عن الجزء ده في الـ Options list وغيره:
+else if (rawOption.containsKey('image')) {
+  optionValueString = rawOption['image']?.toString() ?? '';
+  optionContent = ClipRRect(
+    borderRadius: BorderRadius.circular(8),
+    child: CustomImage(
+      imagePath: optionValueString,
+      height: 150, // كبر الارتفاع شوية للاختيارات
+      width: double.infinity,
+      fit: BoxFit.contain, // ✅ غيرها من cover لـ contain
+    ),
+  );
+}else {
                   optionValueString = rawOption.toString();
                   optionContent = Text(optionValueString);
                 }

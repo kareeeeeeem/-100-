@@ -11,10 +11,7 @@ class DashboardPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('لوحة التحكم'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('لوحة التحكم'), centerTitle: true),
       body: BlocBuilder<DashboardCubit, DashboardState>(
         builder: (context, state) {
           if (state is DashboardLoading) {
@@ -67,9 +64,10 @@ class DashboardPage extends StatelessWidget {
                                   value: stats.progressValue / 100,
                                   strokeWidth: 12,
                                   backgroundColor: Colors.grey[200],
-                                  valueColor: const AlwaysStoppedAnimation<Color>(
-                                    AppColors.primary,
-                                  ),
+                                  valueColor:
+                                      const AlwaysStoppedAnimation<Color>(
+                                        AppColors.primary,
+                                      ),
                                 ),
                               ),
                               Text(
@@ -87,14 +85,11 @@ class DashboardPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 30),
-                  
+
                   // Statistics Cards
                   const Text(
                     'الإحصائيات',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 12),
                   Row(
@@ -128,14 +123,11 @@ class DashboardPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 30),
-                  
+
                   // Weekly Study Hours Chart
                   const Text(
                     'ساعات الدراسة الأسبوعية',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 12),
                   CustomContainer(
@@ -201,7 +193,7 @@ class DashboardPage extends StatelessWidget {
 
   Widget _buildWeeklyChart(List<int> data) {
     final maxValue = data.reduce((a, b) => a > b ? a : b).toDouble();
-    
+
     return SizedBox(
       height: 150,
       child: Row(
@@ -210,7 +202,7 @@ class DashboardPage extends StatelessWidget {
         children: data.asMap().entries.map((entry) {
           final value = entry.value;
           final heightPercentage = maxValue > 0 ? value / maxValue : 0;
-          
+
           return Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4.0),
@@ -242,8 +234,16 @@ class DashboardPage extends StatelessWidget {
   }
 
   Widget _buildWeekDays() {
-    const days = ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
-    
+    const days = [
+      'السبت',
+      'الأحد',
+      'الاثنين',
+      'الثلاثاء',
+      'الأربعاء',
+      'الخميس',
+      'الجمعة',
+    ];
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: days.map((day) {
@@ -251,10 +251,7 @@ class DashboardPage extends StatelessWidget {
           child: Text(
             day,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w400,
-            ),
+            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w400),
           ),
         );
       }).toList(),

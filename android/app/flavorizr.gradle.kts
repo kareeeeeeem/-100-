@@ -9,7 +9,7 @@ android.apply {
         create("dev") {
             dimension = "flavor-type"
             applicationId = "com.example.dev"
-            resValue(type = "string", name = "app_name", value = "Lms App Dev")
+            resValue(type = "string", name = "app_name", value = "منصة 100 للقدرات")
         }
         create("stag") {
             dimension = "flavor-type"
@@ -18,8 +18,8 @@ android.apply {
         }
         create("prod") {
             dimension = "flavor-type"
-            applicationId = "com.example"
-            resValue(type = "string", name = "app_name", value = "Lms App")
+            applicationId = "com.kareem.lms"
+            resValue(type = "string", name = "app_name", value = "منصه 100 للقدرات")
         }
     }
 }

@@ -55,6 +55,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
               if (course == null) return const Center(child: Text("لا توجد بيانات"));
 
               return SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
@@ -68,78 +69,80 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                           borderRadius: BorderRadius.circular(25.15),
                         ),
                         child: // داخل Column في الـ SingleChildScrollView
-Stack(
-  children: [
-    // 1. الصورة (أول طبقة تحت)
-    Positioned.fill(
-      child: CustomImage(
-        imagePath: course.thumbnail,
-        fit: BoxFit.cover,
-        width: double.infinity,
-        height: double.infinity,
-      ),
-    ),
-    
-    // 2. التدرج الأسود (لازم يكون فوق الصورة وتحت الزرار)
-    Positioned.fill(
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Colors.black.withOpacity(0.0), Colors.black.withOpacity(0.8)],
-          ),
-        ),
-      ),
-    ),
+                        Stack(
+                          children: [
+                            // 1. الصورة (أول طبقة تحت)
+                            Positioned.fill(
+                              child: CustomImage(
+                                imagePath: course.thumbnail,
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                height: double.infinity,
+                              ),
+                            ),
+                            
+                            // 2. التدرج الأسود (لازم يكون فوق الصورة وتحت الزرار)
+                            Positioned.fill(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [Colors.black.withOpacity(0.0), Colors.black.withOpacity(0.8)],
+                                  ),
+                                ),
+                              ),
+                            ),
 
-    // 3. زر القلب (آخر طبقة فوق عشان يلمس)
-    Positioned(
-      top: 15,
-      left: 15,
-      child: BlocConsumer<WishlistCubit, WishlistState>(
-        listener: (context, state) {
-          if (state is WishlistToggleSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: AppColors.primary),
-            );
-          } else if (state is WishlistError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: Colors.red),
-            );
-          }
-        },
-        builder: (context, state) {
-          final cubit = context.read<WishlistCubit>();
-          final bool isFav = cubit.isCourseFavorited(widget.courseId, course.isFavorited);
+                            // 3. زر القلب (آخر طبقة فوق عشان يلمس)
+                            Positioned(
+                              top: 15,
+                              left: 15,
+                              child: BlocConsumer<WishlistCubit, WishlistState>(
+                                listener: (context, state) {
+                                  if (state is WishlistToggleSuccess) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text(state.message), backgroundColor: AppColors.primary),
+                                    );
+                                  } else if (state is WishlistError) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+                                    );
+                                  }
+                                },
+                                builder: (context, state) {
+                                  final cubit = context.read<WishlistCubit>();
+                                  final bool isFav = cubit.isCourseFavorited(widget.courseId, course.isFavorited);
 
-          return Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () {
-                print("🖱️ [UI] Toggle Favorite Clicked for ID: ${widget.courseId}");
-                cubit.toggleFavorite(widget.courseId);
-              },
-              child: CircleAvatar(
-                backgroundColor: Colors.white.withOpacity(0.9),
-                child: (state is WishlistLoading)
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
-                      )
-                    : Icon(
-                        isFav ? Icons.favorite : Icons.favorite_border,
-                        color: isFav ? Colors.red : Colors.grey,
-                      ),
-              ),
-            ),
-          );
-        },
-      ),
-    ),
-  ],
-),
+                                  return Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: () {
+                                        print("🖱️ [UI] Toggle Favorite Clicked for ID: ${widget.courseId}");
+                                        cubit.toggleFavorite(widget.courseId);
+                                      },
+                                      child: CircleAvatar(
+                                        backgroundColor: Colors.white.withOpacity(0.9),
+                                        child: (state is WishlistLoading)
+                                            ? const SizedBox(
+                                                width: 20,
+                                                height: 20,
+                                                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+                                              )
+                                            : Icon(
+                                                isFav ? Icons.favorite : Icons.favorite_border,
+                                                color: isFav ? Colors.red : Colors.grey,
+                                              ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                       
+                       
+                        ),
                       ),
                       const SizedBox(height: 10),
 
@@ -182,8 +185,8 @@ Stack(
 
                       Row(
                         children: [
-                          _buildTag('${course.lessonsCount ?? course.lessons?.length ?? 0} دروس', AppColors.primary),
-                          const SizedBox(width: 10),
+                        // استعمل الحقل الذي ظهر في الـ Log
+                        _buildTag('${course.totalLessonsCount ?? course.lessonsCount ?? 0} دروس', AppColors.primary),                          const SizedBox(width: 10),
                           if (course.pricing?.hasDiscount == true) ...[
                               _buildTag('${course.pricing?.originalPrice} SAR', Colors.grey, isLineThrough: true),
                               const SizedBox(width: 10),
@@ -211,65 +214,74 @@ Stack(
                       ),
                       const SizedBox(height: 20),
 
-                      // --- بيانات المدرس ---
-                    InkWell(
-  onTap: () {
-    if (course.instructor?.id != null) {
-      // بنستخدم navigatorKey عشان نتخطى أي مشاكل في الـ context
-      AppRouter.navigatorKey.currentContext?.pushNamed(
-        AppRoutes.instructorProfile,
-        extra: course.instructor!.id.toString(),
-      );
-    } else {
-      print("Instructor ID is null!"); // عشان تتأكد في الـ Terminal لو الداتا ناقصة
-    }
-  },
-                        child: Row(
-                          children: [
-                            Container(
-                                width: 42,
-                                height: 42,
-                                decoration: const BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Colors.black12,
-                                ),
-                               child: ClipOval(
-                                  child: CustomImage(
-                                    imagePath: course.instructor?.image,
-                                    width: 42,
-                                    height: 42,
-                                    fit: BoxFit.cover,
-                                    isUserProfile: true, // Use avatar placeholder
-                                  ),
-                                ),
-                              ),
-                            const SizedBox(width: 10),
-
-                            
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  course.instructor?.name ?? 'مدرس الدورة',
-                                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                                ),
-                                if (course.instructor?.stats != null)
-                                  Text(
-                                    '${course.instructor?.stats?.students ?? 0} طالب | ${course.instructor?.stats?.courses ?? 0} دورة',
-                                    style: const TextStyle(fontSize: 10, color: AppColors.c9D9FA0),
-                                  )
-                                // else
-                                //   const Text(
-                                //     'مدرب معتمد',
-                                //     style: TextStyle(fontSize: 10, color: AppColors.c9D9FA0),
-                                //   ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
+              // --- قسم المدرسين ---
+if (course.instructors != null && course.instructors!.isNotEmpty) ...[
+  const SizedBox(height: 24),
+  const Padding(
+    padding: EdgeInsets.symmetric(horizontal: 4),
+    child: Text(
+      'مدرسين الدورة',
+      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.c1E1E1E),
+    ),
+  ),
+  const SizedBox(height: 12),
+  ...course.instructors!.map((instructor) => Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: ListTile(
+          onTap: () {
+            if (instructor.id != null) {
+              context.pushNamed(
+                AppRoutes.instructorProfile,
+                extra: instructor.id.toString(),
+              );
+            }
+          },
+          leading: Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.primary.withOpacity(0.2), width: 2),
+            ),
+            child: ClipOval(
+              child: CustomImage(
+                imagePath: instructor.image,
+                width: 50,
+                height: 50,
+                fit: BoxFit.cover,
+                isUserProfile: true,
+              ),
+            ),
+          ),
+          title: Text(
+            instructor.name ?? 'مدرس غير معروف',
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+          subtitle: const Text(
+            'عرض السيرة الذاتية والملف الشخصي',
+            style: TextStyle(color: AppColors.primary, fontSize: 12),
+          ),
+          trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.primary),
+        ),
+      )).toList(),
+],
+// --- نهاية بيانات المدرس --
                       const SizedBox(height: 20),
-
+// Container(
+//   width: double.infinity,
+//   padding: EdgeInsets.all(10),
+//   color: Colors.red,
+//   child: Text("عدد المدرسين في الداتا: ${course.instructors?.length}"),
+// ),
                       // --- قائمة الدروس أو السكاشن ---
                       if (course.isSubscribed && ((course.sections != null && course.sections!.isNotEmpty) || (course.lessons != null && course.lessons!.isNotEmpty)))
                         Column(
@@ -327,7 +339,7 @@ Stack(
                                             color: AppColors.primary.withOpacity(0.1),
                                             borderRadius: BorderRadius.circular(6),
                                           ),
-                                          child: Row(
+                                          child: const Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
                                               // Text(
@@ -338,8 +350,8 @@ Stack(
                                               //     fontWeight: FontWeight.bold,
                                               //   ),
                                               // ),
-                                              const SizedBox(width: 4),
-                                              const Icon(Icons.arrow_forward_ios, size: 12, color: AppColors.primary),
+                                              SizedBox(width: 4),
+                                              Icon(Icons.arrow_forward_ios, size: 12, color: AppColors.primary),
                                             ],
                                           ),
                                         ),
@@ -367,10 +379,19 @@ Stack(
                               ),
                           ],
                         ),
+                        const SizedBox(height: 120),
                     ],
                   ),
+              
+              
+              
+              
+              
+              
+              
                 ),
               );
+              
             }
             return const SizedBox();
           },

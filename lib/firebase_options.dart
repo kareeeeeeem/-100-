@@ -52,7 +52,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyD8dTNTEtWVf-S2eZm10RWPbfznLOsZZe8',
-    appId: '1:5155552973:android:6bd343d7a2e9d021fd7384',
+    appId: '1:5155552973:android:9141a88cef26b868fd7384',
     messagingSenderId: '5155552973',
     projectId: 'lmss-5a470',
     storageBucket: 'lmss-5a470.firebasestorage.app',
@@ -60,22 +60,24 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyDOnoYyNExqtrtrhR508vdLiZNl0wjJEyQ',
-    appId: '1:5155552973:ios:47d31f67adc2dcbafd7384',
+    appId: '1:5155552973:ios:ec32697bb058ffbbfd7384',
     messagingSenderId: '5155552973',
     projectId: 'lmss-5a470',
     storageBucket: 'lmss-5a470.firebasestorage.app',
-    iosClientId: '5155552973-08r0tsciob53k5dm04mm98nrcp4bjois.apps.googleusercontent.com',
-    iosBundleId: 'com.example.lms',
+    iosClientId:
+        '5155552973-08r0tsciob53k5dm04mm98nrcp4bjois.apps.googleusercontent.com',
+    iosBundleId: 'com.kareem.lms',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyDOnoYyNExqtrtrhR508vdLiZNl0wjJEyQ',
-    appId: '1:5155552973:ios:47d31f67adc2dcbafd7384',
+    appId: '1:5155552973:ios:ec32697bb058ffbbfd7384',
     messagingSenderId: '5155552973',
     projectId: 'lmss-5a470',
     storageBucket: 'lmss-5a470.firebasestorage.app',
-    iosClientId: '5155552973-08r0tsciob53k5dm04mm98nrcp4bjois.apps.googleusercontent.com',
-    iosBundleId: 'com.example.lms',
+    iosClientId:
+        '5155552973-08r0tsciob53k5dm04mm98nrcp4bjois.apps.googleusercontent.com',
+    iosBundleId: 'com.kareem.lms',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(

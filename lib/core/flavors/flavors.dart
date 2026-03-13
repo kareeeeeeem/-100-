@@ -8,11 +8,11 @@ class F {
   static String get title {
     switch (appFlavor) {
       case Flavor.dev:
-        return 'Rcvry App Dev';
+        return 'منصة 100 للقدرات';
       case Flavor.stag:
-        return 'Rcvry App Stag';
+        return 'منصة 100 للقدرات';
       case Flavor.prod:
-        return 'Rcvry App';
+        return 'منصه 100 للقدرات';
     }
   }
 }

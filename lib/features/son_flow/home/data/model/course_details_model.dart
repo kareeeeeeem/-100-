@@ -6,6 +6,7 @@ class CourseDetailsResponseModel {
   final bool? status;
   final String? message;
   final CourseData? data;
+  
 
   CourseDetailsResponseModel({this.status, this.message, this.data});
 
@@ -23,7 +24,7 @@ class CourseData {
   final String? thumbnail; // الصورة
   final String? duration;   // مدة الكورس الإجمالية
   final String? category;   // القسم
-  final Instructor? instructor; // بيانات المدرس
+  final List<Instructor>? instructors; // قائمة المدرسين
   final PriceInfo? price;       // السعر
   final List<Lesson>? lessons;
   final List<ExamModel>? exams; // Added exams
@@ -37,7 +38,7 @@ class CourseData {
 
   CourseData({
     this.id, this.title, this.description, this.thumbnail, 
-    this.duration, this.category, this.instructor, this.price, this.lessons,
+    this.duration, this.category, this.instructors, this.price, this.lessons,
     this.exams,
     this.isFavorited = false,
     this.isSubscribed = false,
@@ -83,7 +84,11 @@ class CourseData {
           ? (json['duration']['value'] ?? '').toString().trim() 
           : (json['duration']?.toString())?.trim(),
       category: (json['category']?.toString())?.trim(),
-      instructor: json['instructor'] is Map<String, dynamic> ? Instructor.fromJson(json['instructor']) : null,
+      instructors: json['instructors'] != null 
+    ? parseList<Instructor>(json['instructors'], Instructor.fromJson)
+    : (json['instructor'] != null 
+        ? [Instructor.fromJson(json['instructor'])] 
+        : []),
       price: json['price'] is Map<String, dynamic> ? PriceInfo.fromJson(json['price']) : null,
       lessons: lessons,
       exams: exams,
@@ -104,7 +109,7 @@ class CourseData {
         'thumbnail': thumbnail,
         'duration': duration,
         'category': category,
-        'instructor': instructor?.toJson(),
+       'instructors': instructors?.map((v) => v.toJson()).toList(),
         'price': price?.toJson(),
         'lessons': lessons?.map((e) => e.toJson()).toList(),
         'exams': exams?.map((e) => e.toJson()).toList(),
@@ -238,6 +243,7 @@ class Lesson {
   final LessonAttachments? attachments;
   final String? createdAt;
   final String? duration;
+  final String? studentIdentityNumber; // 1. أضف السطر ده هنا
 
   Lesson({
     this.id,
@@ -248,7 +254,7 @@ class Lesson {
     this.videoInfo,
     this.attachments,
     this.createdAt,
-    this.duration,
+    this.duration, this.studentIdentityNumber,
   });
 
   factory Lesson.fromJson(Map<String, dynamic> json) => Lesson(
@@ -265,6 +271,10 @@ class Lesson {
             : null,
         createdAt: json['created_at']?.toString(),
         duration: json['duration']?.toString() ?? (json['video_info'] is Map ? json['video_info']['duration']?.toString() : null),
+     studentIdentityNumber: json['student_identity_number']?.toString(), // 3. اقرأه من الـ JSON هنا
+     
+     
+     
       );
 
   Map<String, dynamic> toJson() => {
@@ -277,6 +287,7 @@ class Lesson {
         'attachments': attachments?.toJson(),
         'created_at': createdAt,
         'duration': duration,
+        'student_identity_number': studentIdentityNumber, // 4. أضفه هنا
       };
 
   // Convenience getter for video URL

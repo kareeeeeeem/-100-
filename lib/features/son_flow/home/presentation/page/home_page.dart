@@ -15,6 +15,7 @@ import 'package:lms/features/on_boarding/presentation/manger/my_courses_cubit.da
 import 'package:lms/features/son_flow/live_sessions/presentation/manager/live_session_cubit.dart';
 import 'package:lms/features/son_flow/live_sessions/presentation/manager/live_session_state.dart';
 import 'package:lms/features/son_flow/live_sessions/data/models/live_session_model.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 
 class HomePage extends StatefulWidget {
@@ -34,7 +35,6 @@ class _HomePageState extends State<HomePage> {
     // جلب البيانات عند فتح الصفحة
     GetIt.instance<HomeCubit>().fetchHomeData();
     _carouselController.addListener(_onScroll);
-    context.read<LiveSessionCubit>().loadLiveSessions();
   }
 
   void _onScroll() {
@@ -105,49 +105,42 @@ class _HomePageState extends State<HomePage> {
                       child: Text('البث المباشر', 
                         style: TextStyle(fontSize: 18.86, fontWeight: FontWeight.w600, color: AppColors.c303030)),
                     ),
-                    const SizedBox(height: 10),
-                    
-                    // قسم السلايدر (البث المباشر)
-                    SizedBox(
-                      height: 85,
-                      child:// قسم البث المباشر الحقيقي
-                     // استبدل الكود اللي إنت بعته بالنسخة دي:
-// استبدل جزء الـ BlocBuilder بتاع اللايفات بهذا الكود المباشر:
-BlocProvider(
-  // بنوفر الكيوبيت هنا مخصوص للهوم عشان ننهي مشكلة الـ Provider NotFound
-  create: (context) => GetIt.instance<LiveSessionCubit>()..loadLiveSessions(),
-  child: BlocBuilder<LiveSessionCubit, LiveSessionState>(
-    builder: (context, state) {
-      if (state is LiveSessionsLoaded) {
-        // بنعرض المتاح والأرشيف عشان نضمن إن الدائرة تظهر لو فيه أي داتا
-        final allLives = [...state.sessions.availableNow, ...state.sessions.archived];
+          // --- استبدل من أول هنا لحد بداية قسم الأقسام ---
 
-        if (allLives.isEmpty) return const SizedBox.shrink();
+const SizedBox(height: 10),
 
-        return SizedBox(
-          height: 110,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: allLives.length,
-            separatorBuilder: (context, index) => const SizedBox(width: 12),
-            itemBuilder: (context, index) => _buildActualLiveCircle(allLives[index]),
+// ده الكود الصافي اللي بيقرأ اللايفات من الهوم مباشرة
+SizedBox(
+  height: 115, 
+  child: Builder(
+    builder: (context) {
+      // هنا بناخد اللايفات من داتا الهوم اللي اتحملت فعلاً
+      final lives = data.activeLives; 
+
+      if (lives.isEmpty) {
+        return const Center(
+          child: Text(
+            "لا توجد بثوث مباشرة حالياً", 
+            style: TextStyle(fontSize: 12, color: Colors.grey),
           ),
         );
-      } 
-      
-      if (state is LiveSessionError) {
-        // لو السيرفر مطلع 404 أو أي Error هيظهر هنا بدل التحميل اللانهائي
-        return Center(child: Text("Error: ${state.message}", style: const TextStyle(fontSize: 10)));
       }
 
-      // حالة التحميل (الـ Loading)
-      return const Center(child: CircularProgressIndicator());
+      return ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: lives.length,
+        separatorBuilder: (context, index) => const SizedBox(width: 12),
+        itemBuilder: (context, index) {
+          return _buildActualLiveCircle(lives[index]);
+        },
+      );
     },
   ),
-)
-                    ),
-                    
+),
+
+
+// --- نهاية الاستبدال، هنا يبدأ قسم الأقسام ---    
                     const SizedBox(height: 25),
                     
                     // قسم الأقسام
@@ -268,9 +261,33 @@ BlocProvider(
 
   Widget _buildActualLiveCircle(LiveSessionModel session) {
   return GestureDetector(
-    onTap: () {
-      // بينادي على ميثود الانضمام اللي شغالة في القسم التاني
-      context.read<LiveSessionCubit>().joinSession(session.id);
+    onTap: () async {
+      final String? urlString = session.liveUrl;
+
+      if (urlString != null && urlString.isNotEmpty) {
+        try {
+          final Uri url = Uri.parse(urlString.trim());
+          
+          // استخدام وضع LaunchMode.externalApplication لضمان فتح الكاميرا والمايك في المتصفح
+          if (await canLaunchUrl(url)) {
+            await launchUrl(url, mode: LaunchMode.externalApplication);
+          } else {
+            throw 'Could not launch $url';
+          }
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("عذراً، رابط البث غير صالح")),
+            );
+          }
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("رابط البث غير متاح حالياً")),
+          );
+        }
+      }
     },
     child: Column(
       children: [
@@ -279,8 +296,8 @@ BlocProvider(
           children: [
             Container(
               width: 70, height: 70,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [AppColors.primary, Color(0xFF4DC9D1)]),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(colors: [AppColors.primary, Color(0xFF4DC9D1)]),
                 shape: BoxShape.circle
               ),
               child: Padding(
@@ -296,17 +313,19 @@ BlocProvider(
                 ),
               ),
             ),
-            Positioned(
-              bottom: 2, right: 2,
-              child: Container(
-                width: 15, height: 15,
-                decoration: BoxDecoration(
-                  color: Colors.red,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2)
+            // النقطة الحمراء تظهر فقط لو البث مباشر فعلاً
+            if (session.isLive == true)
+              Positioned(
+                bottom: 2, right: 2,
+                child: Container(
+                  width: 15, height: 15,
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2)
+                  ),
                 ),
               ),
-            ),
           ],
         ),
         const SizedBox(height: 4),

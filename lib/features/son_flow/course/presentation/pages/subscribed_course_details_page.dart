@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:chewie/chewie.dart';
 import 'package:video_player/video_player.dart';
@@ -43,15 +44,26 @@ class _SubscribedCourseDetailsPageState extends State<SubscribedCourseDetailsPag
   late TabController _tabController;
   bool _isYoutubeVideo = false;
   String? _currentVideoUrl;
+  String? _studentId; // متغير جديد لحفظ رقم هوية الطالب
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 5, vsync: this);
     context.read<CourseDetailsCubit>().fetchCourseDetails(widget.courseId);
+
+
+     // السماح بدوران الشاشة (Portrait + Landscape)
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
+  ]);
   }
 
-  void _initializePlayer(String url, {bool forcePlay = false}) async {
+  
+  void _initializePlayer(String url, String? studentId, {bool forcePlay = false}) async {
     if (url.isEmpty) {
       debugPrint('⚠️ _initializePlayer called with empty URL');
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('رابط الفيديو غير متوفر')));
@@ -63,9 +75,10 @@ class _SubscribedCourseDetailsPageState extends State<SubscribedCourseDetailsPag
     }
     
     debugPrint('🎬 Initializing player for: $url (Force: $forcePlay)');
-    setState(() {
-      _currentVideoUrl = url;
-    });
+   setState(() {
+    _currentVideoUrl = url;
+    _studentId = studentId; // حفظ الرقم هنا
+  });
     
     // Dispose previous players
     final oldVideoController = _videoPlayerController;
@@ -110,19 +123,37 @@ class _SubscribedCourseDetailsPageState extends State<SubscribedCourseDetailsPag
         _videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(url));
         await _videoPlayerController!.initialize();
         
+
         _chewieController = ChewieController(
-          videoPlayerController: _videoPlayerController!,
-          autoPlay: true,
-          looping: false,
-          aspectRatio: 16 / 9,
-          allowFullScreen: true,
-          materialProgressColors: ChewieProgressColors(
-            playedColor: AppColors.primary,
-            handleColor: AppColors.primary,
-            backgroundColor: Colors.grey,
-            bufferedColor: Colors.white.withOpacity(0.5),
+  videoPlayerController: _videoPlayerController!,
+  autoPlay: true,
+  looping: false,
+  aspectRatio: 16 / 9,
+  allowFullScreen: true,
+  // ✅ الووتر مارك في المنتصف تماماً للمشغل المحلي
+  overlay: IgnorePointer(
+    child: Center( 
+      child: Opacity(
+        opacity: 0.6, // قلل الشفافية شوية عشان ما تزعجش الطالب في نص الشاشة
+        child: Text(
+          _studentId ?? '',
+          style: const TextStyle(
+            fontSize: 22, // كبر الخط شوية لأنها في النص
+            fontWeight: FontWeight.bold,
+            color: Colors.white70,
+            shadows: [Shadow(blurRadius: 10, color: Colors.black)],
           ),
-        );
+        ),
+      ),
+    ),
+  ),
+  materialProgressColors: ChewieProgressColors(
+    playedColor: AppColors.primary,
+    handleColor: AppColors.primary,
+    backgroundColor: Colors.grey,
+    bufferedColor: Colors.white.withOpacity(0.5),
+  ),
+);
       }
     } catch (e) {
       debugPrint('❌ Error initializing video player: $e');
@@ -137,16 +168,21 @@ class _SubscribedCourseDetailsPageState extends State<SubscribedCourseDetailsPag
     _chewieController?.dispose();
     _youtubePlayerController?.dispose();
     _tabController.dispose();
-    super.dispose();
+
+
+        super.dispose();
+
   }
 
   @override
   Widget build(BuildContext context) {
+      final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
+
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('محتوى الدورة'),
-        actions: [
+     appBar: isLandscape ? null : AppBar(
+      title: const Text('محتوى الدورة'),
+              actions: [
           IconButton(
             icon: const Icon(Icons.comment_outlined),
             onPressed: () {
@@ -176,47 +212,15 @@ class _SubscribedCourseDetailsPageState extends State<SubscribedCourseDetailsPag
           } else if (state is CourseDetailsSuccess) {
             final data = state.model.data;
             if (data == null) return const Center(child: Text("لا توجد بيانات"));
-
+if (isLandscape) {
+            return _buildVideoPlayer(MediaQuery.of(context).size.height);
+          }
             return NestedScrollView(
               headerSliverBuilder: (context, innerBoxIsScrolled) {
                 return [
                   // --- Video Player Section (Sliver) ---
-                  SliverToBoxAdapter(
-                    child: Container(
-                      width: double.infinity,
-                      height: MediaQuery.sizeOf(context).height / 3.5,
-                      decoration: const BoxDecoration(color: Colors.black),
-                      child: (data.lessons?.isEmpty ?? true) && (data.sections?.isEmpty ?? true)
-                          ? const Center(child: Text('لا توجد فيديوهات متاحة', style: TextStyle(color: Colors.white)))
-                          : _currentVideoUrl == null
-                              ? const Center(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(Icons.play_circle_outline, color: Colors.white, size: 48),
-                                      SizedBox(height: 8),
-                                      Text('اختر درساً للبدء', style: TextStyle(color: Colors.white, fontSize: 16)),
-                                    ],
-                                  ),
-                                )
-                              : _isYoutubeVideo && _youtubePlayerController != null
-                                  ? YoutubePlayer(
-                                      key: ValueKey(_currentVideoUrl),
-                                      controller: _youtubePlayerController!,
-                                      showVideoProgressIndicator: true,
-                                      progressIndicatorColor: AppColors.primary,
-                                      progressColors: ProgressBarColors(
-                                        playedColor: AppColors.primary,
-                                        handleColor: AppColors.primary,
-                                      ),
-                                    )
-                                  : _chewieController != null && _chewieController!.videoPlayerController.value.isInitialized
-                                      ? Chewie(
-                                          key: ValueKey(_currentVideoUrl),
-                                          controller: _chewieController!,
-                                        )
-                                      : const Center(child: CircularProgressIndicator(color: AppColors.primary)),
-                    ),
+                  SliverToBoxAdapter(  child: _buildVideoPlayer(MediaQuery.of(context).size.height / 3.5),
+
                   ),
 
                   // --- TabBar Section (Persistent Sliver) ---
@@ -314,7 +318,11 @@ class _SubscribedCourseDetailsPageState extends State<SubscribedCourseDetailsPag
   Widget _buildLessonItem(Lesson lesson, int index) {
     final isPlaying = _currentVideoUrl == lesson.videoUrl;
     return InkWell(
-      onTap: () => _initializePlayer(lesson.videoUrl ?? ""),
+      // داخل _buildLessonItem
+onTap: () => _initializePlayer(
+  lesson.videoUrl ?? "", 
+  lesson.studentIdentityNumber // ابعت الرقم من هنا
+),
       child: Container(
         padding: const EdgeInsets.all(12),
         margin: const EdgeInsets.only(bottom: 12),
@@ -497,52 +505,7 @@ class _SubscribedCourseDetailsPageState extends State<SubscribedCourseDetailsPag
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // const Text(
-          //   'نبذة عن الدورة',
-          //   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.c303030),
-          // ),
-          // const SizedBox(height: 12),
-          // Text(
-          //   data.description ?? 'لا يوجد وصف متاح لهذه الدورة حالياً.',
-          //   style: const TextStyle(fontSize: 15, height: 1.6, color: AppColors.c303030),
-          // ),
-          // const SizedBox(height: 25),
-          const Text(
-            'المدرس',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.c303030),
-          ),
-          const SizedBox(height: 15),
-          Row(
-            children: [
-              ClipOval(
-                child: CustomImage(
-                  imagePath: data.instructor?.image,
-                  width: 60,
-                  height: 60,
-                  fit: BoxFit.cover,
-                  isUserProfile: true,
-                ),
-              ),
-              const SizedBox(width: 15),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      data.instructor?.name ?? '',
-                      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      data.instructor?.bio ?? 'مدرس معتمد لدى أكاديمية 100',
-                      style: const TextStyle(fontSize: 13, color: Colors.grey),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+        children: [ 
           const SizedBox(height: 30),
           _buildInfoRow(Icons.category_outlined, 'القسم', data.category ?? 'عام'),
           _buildInfoRow(Icons.timer_outlined, 'المدة الإجمالية', data.duration ?? '0 ساعة'),
@@ -759,7 +722,7 @@ class _SubscribedCourseDetailsPageState extends State<SubscribedCourseDetailsPag
         );
         // If the user picked a video from the section page, play it here
         if (result is String && result.isNotEmpty) {
-          _initializePlayer(result, forcePlay: true);
+          _initializePlayer(result, _studentId, forcePlay: true);
         }
       },
       child: Padding(
@@ -782,6 +745,88 @@ class _SubscribedCourseDetailsPageState extends State<SubscribedCourseDetailsPag
       ),
     );
   }
+
+
+
+
+Widget _buildVideoPlayer(double defaultHeight) {
+  return OrientationBuilder(
+    builder: (context, orientation) {
+      final isLandscape = orientation == Orientation.landscape;
+
+      if (_currentVideoUrl == null) {
+        return Container(
+          height: defaultHeight,
+          color: Colors.black,
+          child: const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.play_circle_outline, color: Colors.white, size: 48),
+                SizedBox(height: 8),
+                Text('اختر درساً للبدء', style: TextStyle(color: Colors.white, fontSize: 16)),
+              ],
+            ),
+          ),
+        );
+      }
+
+      Widget player;
+      if (_isYoutubeVideo && _youtubePlayerController != null) {
+        player = YoutubePlayer(
+          controller: _youtubePlayerController!,
+          showVideoProgressIndicator: true,
+          progressIndicatorColor: AppColors.primary,
+          width: MediaQuery.of(context).size.width, 
+        );
+      } else if (_chewieController != null) {
+        player = Chewie(controller: _chewieController!);
+      } else {
+        return Container(height: defaultHeight, child: const Center(child: CircularProgressIndicator()));
+      }
+
+     return Container(
+  width: double.infinity,
+  height: isLandscape ? MediaQuery.of(context).size.height : defaultHeight,
+  color: Colors.black,
+  child: Stack(
+    children: [
+      // 1. مشغل الفيديو
+      Center(child: player),
+
+      // 2. العلامة المائية في منتصف الشاشة تماماً
+      Positioned.fill( // بياخد مساحة الـ Stack كلها
+        child: IgnorePointer(
+          child: Center( // ✅ يضمن التوسط في الطول والعرض
+            child: Opacity(
+              opacity: 0.6, 
+              child: Text(
+                _studentId ?? '', 
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: isLandscape ? 28 : 18, 
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white70,
+                  letterSpacing: 1.5,
+                  shadows: const [
+                    Shadow(
+                      blurRadius: 5.0,
+                      color: Colors.black54,
+                      offset: Offset(1, 1),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    ],
+  ),
+);
+    },
+  );
+}
 
   Widget _buildEmptyState(String message, IconData icon) {
     return Center(

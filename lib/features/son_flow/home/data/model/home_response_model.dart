@@ -1,3 +1,5 @@
+import 'package:lms/features/son_flow/live_sessions/data/models/live_session_model.dart';
+
 class HomeResponseModel {
   final bool status;
   final String message;
@@ -11,25 +13,30 @@ class HomeResponseModel {
         data: HomeData.fromJson(json['data'] ?? {}),
       );
 }
+
+
 class HomeData {
   final List<SliderModel> slider;
   final List<CategoryModel> categories;
   final List<CourseModel> featuredCourses;
   final List<CourseModel> upcomingCourses;
+  final List<LiveSessionModel> activeLives; // 1. أضف هذا السطر
 
   HomeData({
     required this.slider, 
     required this.categories, 
     required this.featuredCourses,
     required this.upcomingCourses,
+    required this.activeLives, // 2. أضفه هنا
   });
 
   factory HomeData.fromJson(Map<String, dynamic> json) => HomeData(
-        // استخدمت ?? [] لضمان أنه في حالة عدم وجود المفتاح لا يعطي Null
         slider: List<SliderModel>.from((json['slider'] ?? []).map((x) => SliderModel.fromJson(x))),
         categories: List<CategoryModel>.from((json['categories'] ?? []).map((x) => CategoryModel.fromJson(x))),
         featuredCourses: List<CourseModel>.from((json['featured_courses'] ?? []).map((x) => CourseModel.fromJson(x))),
         upcomingCourses: List<CourseModel>.from((json['upcoming_courses'] ?? []).map((x) => CourseModel.fromJson(x))),
+        // 3. أضف السطر ده عشان يقرأ اللايفات من الـ API بتاع الهوم
+        activeLives: List<LiveSessionModel>.from((json['active_lives'] ?? []).map((x) => LiveSessionModel.fromJson(x))),
       );
 }
 class SliderModel {

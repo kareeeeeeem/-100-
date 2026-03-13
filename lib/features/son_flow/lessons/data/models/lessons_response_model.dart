@@ -5,12 +5,14 @@ class LessonsResponseModel {
   final String? message;
   final List<Lesson>? data;
   final dynamic errors;
+  final String? studentIdentityNumber; // ضيف السطر ده
 
   LessonsResponseModel({
     this.status,
     this.message,
     this.data,
     this.errors,
+    this.studentIdentityNumber,
   });
 
   factory LessonsResponseModel.fromJson(Map<String, dynamic> json) {
@@ -26,6 +28,7 @@ class LessonsResponseModel {
       message: json['message']?.toString(),
       data: lessons,
       errors: json['errors'],
+      studentIdentityNumber: json['student_identity_number']?.toString(), // ضيف السطر ده
     );
   }
 
@@ -34,5 +37,6 @@ class LessonsResponseModel {
         'message': message,
         'data': data?.map((e) => e.toJson()).toList(),
         'errors': errors,
+        'student_identity_number': studentIdentityNumber, // ضيف السطر ده
       };
 }

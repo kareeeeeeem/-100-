@@ -1,7 +1,7 @@
 flavors:
   dev:
     app:
-      name: "Lms App Dev"
+      name: "منصة 100 للقدرات"
     android:
       applicationId: "com.example.dev"
     ios:
@@ -17,8 +17,8 @@ flavors:
 
   prod:
     app:
-      name: "Lms App"
+      name: "منصه 100 للقدرات"
     android:
-      applicationId: "com.example"
+      applicationId: "com.kareem.lms"
     ios:
-      bundleId: "com.example"
+      bundleId: "com.kareem.lms"
